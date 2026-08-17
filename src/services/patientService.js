@@ -20,7 +20,7 @@ export const patientService = {
       .from('patient_profiles')
       .select('*')
       .eq('profile_id', profile.id)
-      .single();
+      .maybeSingle();
 
     return { ...profile, patient_profile: patientProfile };
   },
@@ -64,7 +64,7 @@ export const patientService = {
       .range((page - 1) * perPage, page * perPage - 1);
 
     if (type) query = query.eq('record_type', type);
-    if (search) query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%`);
+    if (search) query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%,provider_name.ilike.%${search}%,organization_name.ilike.%${search}%`);
 
     const { data, error, count } = await query;
     if (error) throw error;
@@ -74,8 +74,8 @@ export const patientService = {
   /**
    * Get prescriptions for the current patient.
    */
-  async getPrescriptions({ page = 1, perPage = 20 } = {}) {
-    const { data, error, count } = await supabase
+  async getPrescriptions({ page = 1, perPage = 20, search = '' } = {}) {
+    let query = supabase
       .from('prescriptions')
       .select(`
         *,
@@ -85,6 +85,11 @@ export const patientService = {
       .order('prescription_date', { ascending: false })
       .range((page - 1) * perPage, page * perPage - 1);
 
+    if (search) {
+      query = query.ilike('diagnosis', `%${search}%`);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
     return { prescriptions: data || [], total: count || 0 };
   },
@@ -92,8 +97,8 @@ export const patientService = {
   /**
    * Get diagnostic reports for the current patient.
    */
-  async getDiagnosticReports({ page = 1, perPage = 20 } = {}) {
-    const { data, error, count } = await supabase
+  async getDiagnosticReports({ page = 1, perPage = 20, search = '' } = {}) {
+    let query = supabase
       .from('diagnostic_reports')
       .select(`
         *,
@@ -103,6 +108,11 @@ export const patientService = {
       .order('report_date', { ascending: false })
       .range((page - 1) * perPage, page * perPage - 1);
 
+    if (search) {
+      query = query.or(`test_name.ilike.%${search}%,summary.ilike.%${search}%`);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
     return { reports: data || [], total: count || 0 };
   },
@@ -110,8 +120,8 @@ export const patientService = {
   /**
    * Get hospital visits for the current patient.
    */
-  async getHospitalVisits({ page = 1, perPage = 20 } = {}) {
-    const { data, error, count } = await supabase
+  async getHospitalVisits({ page = 1, perPage = 20, search = '' } = {}) {
+    let query = supabase
       .from('hospital_visits')
       .select(`
         *,
@@ -121,6 +131,11 @@ export const patientService = {
       .order('admission_date', { ascending: false })
       .range((page - 1) * perPage, page * perPage - 1);
 
+    if (search) {
+      query = query.or(`reason.ilike.%${search}%,diagnosis_summary.ilike.%${search}%,department.ilike.%${search}%`);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
     return { visits: data || [], total: count || 0 };
   },
@@ -133,10 +148,10 @@ export const patientService = {
       .from('patient_provider_relationships')
       .select(`
         *,
-        provider:provider_profile_id(id, full_name, email, role),
-        organization:organization_id(id, name, type)
+        provider:provider_profile_id(id, full_name, email, role, phone),
+        organization:organization_id(id, name, type, address, phone, email)
       `)
-      .eq('status', 'active');
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
@@ -198,7 +213,53 @@ export const patientService = {
   },
 
   /**
-   * Get dashboard stats.
+   * Get dashboard metrics and recent clinical items.
+   */
+  async getDashboardData() {
+    const [
+      statsRes,
+      recordsRes,
+      latestPrescriptionRes,
+      latestReportRes,
+      latestVisitRes,
+      providersRes,
+    ] = await Promise.all([
+      // Counts
+      Promise.all([
+        supabase.from('prescriptions').select('id', { count: 'exact', head: true }),
+        supabase.from('diagnostic_reports').select('id', { count: 'exact', head: true }),
+        supabase.from('hospital_visits').select('id', { count: 'exact', head: true }),
+        supabase.from('patient_provider_relationships').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      ]),
+      // Recent timeline records
+      supabase.from('medical_records').select('*').order('record_date', { ascending: false }).limit(4),
+      // Latest prescription
+      supabase.from('prescriptions').select('*, doctor:doctor_id(full_name), hospital:hospital_id(name)').order('prescription_date', { ascending: false }).limit(1),
+      // Latest report
+      supabase.from('diagnostic_reports').select('*, diagnostics_org:diagnostics_organization_id(name)').order('report_date', { ascending: false }).limit(1),
+      // Latest hospital visit
+      supabase.from('hospital_visits').select('*, hospital:hospital_id(name)').order('admission_date', { ascending: false }).limit(1),
+      // Providers
+      supabase.from('patient_provider_relationships').select('*, provider:provider_profile_id(full_name), organization:organization_id(name, type)').eq('status', 'active').limit(4),
+    ]);
+
+    return {
+      stats: {
+        prescriptions: statsRes[0].count || 0,
+        reports: statsRes[1].count || 0,
+        visits: statsRes[2].count || 0,
+        providers: statsRes[3].count || 0,
+      },
+      recentRecords: recordsRes.data || [],
+      latestPrescription: latestPrescriptionRes.data?.[0] || null,
+      latestReport: latestReportRes.data?.[0] || null,
+      latestVisit: latestVisitRes.data?.[0] || null,
+      providers: providersRes.data || [],
+    };
+  },
+
+  /**
+   * Get basic dashboard counts.
    */
   async getDashboardStats() {
     const [prescriptions, reports, visits, providers] = await Promise.all([

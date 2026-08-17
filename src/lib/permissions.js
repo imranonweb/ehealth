@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Pill, Activity,
   ClipboardList, Building2, Stethoscope, Settings, User,
-  FlaskConical, BedDouble, Upload, Plus, UserCircle,
+  FlaskConical, BedDouble, Upload, Plus, UserCircle, Sparkles,
 } from 'lucide-react';
 
 /* ───────────────────────────────────────────────────────────
@@ -24,18 +24,26 @@ export const roleConfig = {
     label: 'Patient Portal',
     color: 'teal',
     sidebar: [
-      { label: 'Overview',           path: '/patient',              icon: LayoutDashboard },
-      { label: 'Medical History',    path: '/patient/history',      icon: Activity },
-      { label: 'Prescriptions',     path: '/patient/prescriptions', icon: Pill },
-      { label: 'Diagnostic Reports', path: '/patient/reports',      icon: FlaskConical },
-      { label: 'Hospitals & Doctors',path: '/patient/providers',    icon: Building2 },
-      { label: 'Profile',           path: '/patient/profile',       icon: UserCircle },
+      { label: 'Dashboard',           path: '/patient',                  icon: LayoutDashboard },
+      { label: 'Medical History',     path: '/patient/history',          icon: Activity },
+      { label: 'Prescriptions',       path: '/patient/prescriptions',    icon: Pill },
+      { label: 'Diagnostic Reports',  path: '/patient/reports',          icon: FlaskConical },
+      { label: 'Hospital Records',    path: '/patient/hospital-records', icon: BedDouble },
+      { label: 'Healthcare Providers',path: '/patient/providers',        icon: Building2 },
+      { label: 'AI Health Assistant', path: '/patient/ai-assistant',     icon: Sparkles },
+      { label: 'Profile',            path: '/patient/profile',          icon: UserCircle },
     ],
     routes: [
-      '/patient', '/patient/history', '/patient/prescriptions',
-      '/patient/reports', '/patient/providers', '/patient/profile',
+      '/patient',
+      '/patient/history',
+      '/patient/prescriptions',
+      '/patient/reports',
+      '/patient/hospital-records',
+      '/patient/providers',
+      '/patient/ai-assistant',
+      '/patient/profile',
     ],
-    fab: null,  // read-only role
+    fab: null,  // Read-only role: patients cannot create clinical records
   },
 
   /* ── Doctor ──────────────────────────────────────────── */
@@ -108,7 +116,6 @@ export const roleConfig = {
 
 /**
  * Check whether a role is permitted to access a given path.
- * Uses startsWith so /doctor/patients/:id passes the /doctor/patients check.
  */
 export function canAccessRoute(role, path) {
   const config = roleConfig[role];

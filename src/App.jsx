@@ -23,7 +23,9 @@ import { PatientDashboard } from './pages/patient/Dashboard';
 import { MedicalHistory } from './pages/patient/MedicalHistory';
 import { PatientPrescriptions } from './pages/patient/Prescriptions';
 import { PatientDiagnosticReports } from './pages/patient/DiagnosticReports';
+import { PatientHospitalRecords } from './pages/patient/HospitalRecords';
 import { PatientProviders } from './pages/patient/Providers';
+import { PatientAiAssistant } from './pages/patient/AiAssistant';
 import { PatientProfile } from './pages/patient/Profile';
 
 // Doctor Pages
@@ -83,7 +85,9 @@ export default function App() {
               <Route path="history" element={<MedicalHistory />} />
               <Route path="prescriptions" element={<PatientPrescriptions />} />
               <Route path="reports" element={<PatientDiagnosticReports />} />
+              <Route path="hospital-records" element={<PatientHospitalRecords />} />
               <Route path="providers" element={<PatientProviders />} />
+              <Route path="ai-assistant" element={<PatientAiAssistant />} />
               <Route path="profile" element={<PatientProfile />} />
             </Route>
 

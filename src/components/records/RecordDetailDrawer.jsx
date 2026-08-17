@@ -1,13 +1,17 @@
-import { X, Download, Pill, FlaskConical, Building2, FileText, Calendar, User, Stethoscope } from 'lucide-react';
-import { Drawer } from '../ui/Drawer';
-import { formatDate, parseMedications } from '../../lib/utils';
 import { useState, useEffect } from 'react';
+import {
+  X, Download, Pill, FlaskConical, Building2, FileText, Calendar,
+  User, Stethoscope, Eye, AlertCircle, Sparkles
+} from 'lucide-react';
+import { Drawer } from '../ui/Drawer';
+import { DocumentViewer } from '../documents/DocumentViewer';
+import { formatDate, parseMedications } from '../../lib/utils';
 import { patientService } from '../../services/patientService';
-import { storageService } from '../../services/storageService';
 
 export function RecordDetailDrawer({ isOpen, onClose, record }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [docViewerOpen, setDocViewerOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && record) {
@@ -31,179 +35,247 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
         case 'hospital_visit':
           data = await patientService.getHospitalVisitById(record.record_reference_id);
           break;
+        default:
+          data = null;
       }
       setDetail(data);
     } catch (err) {
-      console.error('Error loading detail:', err);
+      console.error('Error loading clinical record detail:', err);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDownload() {
-    if (!detail?.document_path) return;
-    try {
-      const url = await storageService.getSignedUrl(detail.document_path);
-      window.open(url, '_blank');
-    } catch (err) {
-      console.error('Download error:', err);
-    }
-  }
-
   const typeLabels = {
-    prescription: 'Prescription',
-    diagnostic_report: 'Diagnostic Report',
-    hospital_visit: 'Hospital Visit',
+    prescription: 'Prescription Details',
+    diagnostic_report: 'Diagnostic Report Findings',
+    hospital_visit: 'Hospital Encounter Record',
   };
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose} title={typeLabels[record?.record_type] || 'Record Detail'}>
-      {loading ? (
-        <div style={{ padding: 'var(--sp-6)', textAlign: 'center' }}>
-          <div className="auth-loading-spinner" />
-          <p className="text-muted" style={{ marginTop: 12 }}>Loading record details…</p>
-        </div>
-      ) : detail ? (
-        <div className="record-detail">
-          {/* Header info */}
-          <div className="record-detail-header">
-            <div className="record-detail-date">
-              <Calendar size={14} />
-              {formatDate(detail.prescription_date || detail.report_date || detail.admission_date)}
+    <>
+      <Drawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title={typeLabels[record?.record_type] || 'Medical Record Detail'}
+        width={560}
+      >
+        {loading ? (
+          <div style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
+            <div className="auth-loading-spinner" style={{ margin: '0 auto' }} />
+            <p className="text-muted" style={{ marginTop: 12, fontSize: '0.875rem' }}>
+              Retrieving verified medical record…
+            </p>
+          </div>
+        ) : detail ? (
+          <div className="record-detail">
+            {/* Header info */}
+            <div className="record-detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+              <div className="record-detail-date">
+                <Calendar size={15} color="var(--primary)" />
+                <span>Recorded on {formatDate(detail.prescription_date || detail.report_date || detail.admission_date)}</span>
+              </div>
+              <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
+                Immutable Record
+              </span>
+            </div>
+
+            {/* Prescription detail */}
+            {record.record_type === 'prescription' && (
+              <>
+                <DetailSection title="Clinical Diagnosis" icon={Stethoscope}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                    {detail.diagnosis || 'Clinical Diagnosis'}
+                  </p>
+                  {detail.clinical_notes && (
+                    <p style={{ marginTop: 6, color: 'var(--text-2)', fontSize: '0.875rem' }}>
+                      {detail.clinical_notes}
+                    </p>
+                  )}
+                </DetailSection>
+
+                {parseMedications(detail.medications).length > 0 && (
+                  <DetailSection title="Prescribed Medicines & Dosage" icon={Pill}>
+                    <div className="medication-list-detail">
+                      {parseMedications(detail.medications).map((med, i) => (
+                        <div key={i} className="medication-item-detail">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div className="med-name">{med.name}</div>
+                            <span className="badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 600 }}>
+                              {med.dosage}
+                            </span>
+                          </div>
+                          <div className="med-info" style={{ marginTop: 4 }}>
+                            Schedule: <strong>{med.frequency}</strong> · Duration: {med.duration}
+                          </div>
+                          {med.instructions && (
+                            <div className="med-instructions" style={{ marginTop: 6 }}>
+                              💡 {med.instructions}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </DetailSection>
+                )}
+
+                {detail.instructions && (
+                  <DetailSection title="Patient Instructions & Advice" icon={FileText}>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.instructions}</p>
+                  </DetailSection>
+                )}
+
+                <DetailSection title="Authoring Healthcare Provider" icon={User}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                    {detail.doctor?.full_name || 'Practitioner'}
+                  </div>
+                  {detail.hospital?.name && (
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                      Affiliated Hospital: {detail.hospital.name}
+                    </div>
+                  )}
+                </DetailSection>
+
+                {/* AI-assisted summary disclaimer */}
+                {detail.ai_extraction?.length > 0 && (
+                  <DetailSection title="AI-Extracted Clinical Summary" icon={Sparkles}>
+                    <div className="ai-disclaimer">
+                      ⚠️ AI-generated summary for educational preview only. Verify against original prescription.
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>
+                      {detail.ai_extraction[0].summary}
+                    </p>
+                  </DetailSection>
+                )}
+              </>
+            )}
+
+            {/* Diagnostic report detail */}
+            {record.record_type === 'diagnostic_report' && (
+              <>
+                <DetailSection title="Investigation / Test Name" icon={FlaskConical}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                    {detail.test_name}
+                  </p>
+                  {detail.test_category && (
+                    <span className="badge" style={{ marginTop: 6, background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>
+                      Category: {detail.test_category}
+                    </span>
+                  )}
+                </DetailSection>
+
+                <DetailSection title="Results Summary & Findings" icon={FileText}>
+                  <p style={{ fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {detail.summary || 'No summary entered.'}
+                  </p>
+                </DetailSection>
+
+                {detail.doctor_notes && (
+                  <DetailSection title="Pathologist / Consultant Remarks" icon={Stethoscope}>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.doctor_notes}</p>
+                  </DetailSection>
+                )}
+
+                <DetailSection title="Diagnostic Laboratory" icon={Building2}>
+                  <p style={{ fontWeight: 600 }}>{detail.diagnostics_org?.name || 'Diagnostic Center'}</p>
+                  {detail.doctor && (
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                      Referring Doctor: {detail.doctor.full_name}
+                    </p>
+                  )}
+                </DetailSection>
+              </>
+            )}
+
+            {/* Hospital visit detail */}
+            {record.record_type === 'hospital_visit' && (
+              <>
+                <DetailSection title="Encounter Logistics" icon={Building2}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.875rem' }}>
+                    <div>
+                      <span className="text-muted">Type:</span> <strong>{detail.visit_type?.replace('_', ' ').toUpperCase()}</strong>
+                    </div>
+                    <div>
+                      <span className="text-muted">Department:</span> <strong>{detail.department || 'General'}</strong>
+                    </div>
+                    <div>
+                      <span className="text-muted">Admission:</span> <strong>{formatDate(detail.admission_date)}</strong>
+                    </div>
+                    <div>
+                      <span className="text-muted">Discharge:</span> <strong>{detail.discharge_date ? formatDate(detail.discharge_date) : 'Active / Same-day'}</strong>
+                    </div>
+                  </div>
+                </DetailSection>
+
+                <DetailSection title="Chief Complaint & Reason" icon={FileText}>
+                  <p style={{ fontSize: '0.875rem' }}>{detail.reason || 'Not specified'}</p>
+                </DetailSection>
+
+                {detail.diagnosis_summary && (
+                  <DetailSection title="Discharge / Diagnosis Summary" icon={Stethoscope}>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.diagnosis_summary}</p>
+                  </DetailSection>
+                )}
+
+                {detail.notes && (
+                  <DetailSection title="Clinical Course & Internal Notes" icon={FileText}>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.notes}</p>
+                  </DetailSection>
+                )}
+
+                <DetailSection title="Hospital Facility" icon={Building2}>
+                  <p style={{ fontWeight: 600 }}>{detail.hospital?.name || 'Hospital'}</p>
+                  {detail.doctor && (
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                      Attending Physician: {detail.doctor.full_name}
+                    </p>
+                  )}
+                </DetailSection>
+              </>
+            )}
+
+            {/* Document attachment button or empty document notice */}
+            <div className="record-detail-document" style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--border)' }}>
+              {detail.document_path ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-md w-full"
+                  onClick={() => setDocViewerOpen(true)}
+                >
+                  <Eye size={16} /> View Original Document Attachment
+                </button>
+              ) : (
+                <div style={{
+                  padding: '12px 14px',
+                  background: 'var(--surface-2)',
+                  border: '1px dashed var(--border)',
+                  borderRadius: 'var(--r-md)',
+                  fontSize: '0.8125rem',
+                  color: 'var(--text-3)',
+                  textAlign: 'center',
+                }}>
+                  📄 Structured digital record. (No scanned physical paper was attached)
+                </div>
+              )}
             </div>
           </div>
+        ) : (
+          <div style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
+            <p className="text-muted">No details found for this record.</p>
+          </div>
+        )}
+      </Drawer>
 
-          {/* Prescription detail */}
-          {record.record_type === 'prescription' && (
-            <>
-              <DetailSection title="Diagnosis" icon={Stethoscope}>
-                <p>{detail.diagnosis || 'Not specified'}</p>
-              </DetailSection>
-
-              <DetailSection title="Clinical Notes" icon={FileText}>
-                <p>{detail.clinical_notes || 'No notes'}</p>
-              </DetailSection>
-
-              {parseMedications(detail.medications).length > 0 && (
-                <DetailSection title="Medications" icon={Pill}>
-                  <div className="medication-list-detail">
-                    {parseMedications(detail.medications).map((med, i) => (
-                      <div key={i} className="medication-item-detail">
-                        <div className="med-name">{med.name}</div>
-                        <div className="med-info">{med.dosage} · {med.frequency} · {med.duration}</div>
-                        {med.instructions && <div className="med-instructions">{med.instructions}</div>}
-                      </div>
-                    ))}
-                  </div>
-                </DetailSection>
-              )}
-
-              {detail.instructions && (
-                <DetailSection title="Instructions" icon={FileText}>
-                  <p>{detail.instructions}</p>
-                </DetailSection>
-              )}
-
-              <DetailSection title="Prescribed By" icon={User}>
-                <p>{detail.doctor?.full_name || 'Unknown'}</p>
-                {detail.hospital?.name && <p className="text-muted body-sm">{detail.hospital.name}</p>}
-              </DetailSection>
-
-              {/* AI Extraction */}
-              {detail.ai_extraction?.length > 0 && (
-                <DetailSection title="AI-Extracted Summary" icon={FileText}>
-                  <div className="ai-disclaimer">
-                    ⚠️ AI-generated information. Please verify against the original prescription.
-                  </div>
-                  <p>{detail.ai_extraction[0].summary}</p>
-                </DetailSection>
-              )}
-            </>
-          )}
-
-          {/* Diagnostic report detail */}
-          {record.record_type === 'diagnostic_report' && (
-            <>
-              <DetailSection title="Test" icon={FlaskConical}>
-                <p><strong>{detail.test_name}</strong></p>
-                {detail.test_category && <p className="text-muted body-sm">Category: {detail.test_category}</p>}
-              </DetailSection>
-
-              <DetailSection title="Summary" icon={FileText}>
-                <p>{detail.summary || 'No summary available'}</p>
-              </DetailSection>
-
-              {detail.doctor_notes && (
-                <DetailSection title="Doctor's Notes" icon={Stethoscope}>
-                  <p>{detail.doctor_notes}</p>
-                </DetailSection>
-              )}
-
-              <DetailSection title="Lab" icon={Building2}>
-                <p>{detail.diagnostics_org?.name || 'Unknown'}</p>
-              </DetailSection>
-
-              {detail.doctor && (
-                <DetailSection title="Referring Doctor" icon={User}>
-                  <p>{detail.doctor.full_name}</p>
-                </DetailSection>
-              )}
-            </>
-          )}
-
-          {/* Hospital visit detail */}
-          {record.record_type === 'hospital_visit' && (
-            <>
-              <DetailSection title="Visit Details" icon={Building2}>
-                <p><strong>Type:</strong> {detail.visit_type?.replace('_', ' ')}</p>
-                {detail.department && <p><strong>Department:</strong> {detail.department}</p>}
-                <p><strong>Admission:</strong> {formatDate(detail.admission_date)}</p>
-                {detail.discharge_date && <p><strong>Discharge:</strong> {formatDate(detail.discharge_date)}</p>}
-              </DetailSection>
-
-              <DetailSection title="Reason" icon={FileText}>
-                <p>{detail.reason || 'Not specified'}</p>
-              </DetailSection>
-
-              {detail.diagnosis_summary && (
-                <DetailSection title="Diagnosis" icon={Stethoscope}>
-                  <p>{detail.diagnosis_summary}</p>
-                </DetailSection>
-              )}
-
-              {detail.notes && (
-                <DetailSection title="Notes" icon={FileText}>
-                  <p>{detail.notes}</p>
-                </DetailSection>
-              )}
-
-              <DetailSection title="Hospital" icon={Building2}>
-                <p>{detail.hospital?.name || 'Unknown'}</p>
-              </DetailSection>
-
-              {detail.doctor && (
-                <DetailSection title="Attending Doctor" icon={User}>
-                  <p>{detail.doctor.full_name}</p>
-                </DetailSection>
-              )}
-            </>
-          )}
-
-          {/* Document attachment */}
-          {detail.document_path && (
-            <div className="record-detail-document">
-              <button className="btn btn-outline btn-md w-full" onClick={handleDownload}>
-                <Download size={16} /> View / Download Document
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ padding: 'var(--sp-6)', textAlign: 'center' }}>
-          <p className="text-muted">No details available</p>
-        </div>
+      {/* Embedded Document Viewer Modal */}
+      {detail?.document_path && (
+        <DocumentViewer
+          isOpen={docViewerOpen}
+          onClose={() => setDocViewerOpen(false)}
+          documentPath={detail.document_path}
+          title={typeLabels[record?.record_type] || 'Medical Document'}
+        />
       )}
-    </Drawer>
+    </>
   );
 }
 
@@ -211,7 +283,7 @@ function DetailSection({ title, icon: Icon, children }) {
   return (
     <div className="detail-section">
       <div className="detail-section-header">
-        <Icon size={14} />
+        <Icon size={14} color="var(--primary)" />
         <span>{title}</span>
       </div>
       <div className="detail-section-body">{children}</div>

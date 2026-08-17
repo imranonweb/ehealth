@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Activity, Search, Filter, Pill, FlaskConical, Building2 } from 'lucide-react';
+import { Activity, Search, Filter, Pill, FlaskConical, BedDouble, RefreshCw } from 'lucide-react';
 import { useMedicalRecords } from '../../hooks/useMedicalRecords';
 import { MedicalTimeline } from '../../components/records/MedicalTimeline';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -7,18 +7,30 @@ import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer'
 export function MedicalHistory() {
   const [filterType, setFilterType] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { records, total, loading, error, refresh } = useMedicalRecords({
     type: filterType || null,
     search: search || '',
-    perPage: 50,
+    page,
+    perPage: 30,
   });
 
   const handleViewDetail = (record) => {
     setSelectedRecord(record);
     setDrawerOpen(true);
+  };
+
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    setPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPage(1);
   };
 
   return (
@@ -28,9 +40,18 @@ export function MedicalHistory() {
         <div>
           <h1 className="page-title">Medical History Timeline</h1>
           <p className="page-sub">
-            Your comprehensive, lifetime medical record across all healthcare providers.
+            Your unified, lifetime clinical history across all treating doctors, labs, and hospitals.
           </p>
         </div>
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          onClick={refresh}
+          disabled={loading}
+          title="Refresh timeline records"
+        >
+          <RefreshCw size={14} className={loading ? 'spin' : ''} /> Refresh
+        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -42,9 +63,9 @@ export function MedicalHistory() {
             <input
               type="text"
               className="input has-icon"
-              placeholder="Search diagnoses, doctors, tests..."
+              placeholder="Search diagnoses, doctors, hospital departments, or lab tests..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               style={{ width: '100%' }}
             />
           </div>
@@ -52,28 +73,32 @@ export function MedicalHistory() {
           {/* Type Filter Buttons */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
+              type="button"
               className={`btn btn-sm ${filterType === '' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setFilterType('')}
+              onClick={() => handleFilterChange('')}
             >
               All Records
             </button>
             <button
+              type="button"
               className={`btn btn-sm ${filterType === 'prescription' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setFilterType('prescription')}
+              onClick={() => handleFilterChange('prescription')}
             >
               <Pill size={14} /> Prescriptions
             </button>
             <button
+              type="button"
               className={`btn btn-sm ${filterType === 'diagnostic_report' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setFilterType('diagnostic_report')}
+              onClick={() => handleFilterChange('diagnostic_report')}
             >
-              <FlaskConical size={14} /> Reports
+              <FlaskConical size={14} /> Diagnostic Reports
             </button>
             <button
+              type="button"
               className={`btn btn-sm ${filterType === 'hospital_visit' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setFilterType('hospital_visit')}
+              onClick={() => handleFilterChange('hospital_visit')}
             >
-              <Building2 size={14} /> Hospital Visits
+              <BedDouble size={14} /> Hospital Encounters
             </button>
           </div>
         </div>
@@ -81,8 +106,10 @@ export function MedicalHistory() {
 
       {/* Timeline Stream */}
       <div className="card" style={{ padding: 'var(--sp-6)' }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: 'var(--sp-4)' }}>
-          Showing {records.length} {filterType ? filterType.replace('_', ' ') : 'total'} record(s)
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
+          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-3)' }}>
+            Showing {records.length} {filterType ? filterType.replace('_', ' ') : 'clinical'} record(s)
+          </div>
         </div>
 
         <MedicalTimeline
@@ -90,7 +117,7 @@ export function MedicalHistory() {
           loading={loading}
           error={error}
           onViewDetail={handleViewDetail}
-          emptyMessage="No medical records match the selected filter criteria."
+          emptyMessage="No clinical records match your current filter or search criteria."
         />
       </div>
 

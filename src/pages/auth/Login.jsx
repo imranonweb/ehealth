@@ -26,13 +26,13 @@ export function Login() {
       const data = await signIn(email.trim(), password);
       success('Logged in successfully!');
       
-      // Determine redirection
+      // Determine redirection based on authenticated profile role
       const destination = location.state?.from?.pathname;
       if (destination) {
         navigate(destination, { replace: true });
       } else {
-        // Fallback default redirect
-        navigate('/patient', { replace: true });
+        const userRole = data?.role || 'patient';
+        navigate(getDefaultRoute(userRole), { replace: true });
       }
     } catch (err) {
       console.error('Sign in failed:', err);
@@ -44,8 +44,8 @@ export function Login() {
     }
   };
 
-  // Demo accounts helper
-  const fillDemo = (demoEmail, demoPw = 'Demo@12345') => {
+  // Demo accounts helper (all demo passwords: 1234)
+  const fillDemo = (demoEmail, demoPw = '1234') => {
     setEmail(demoEmail);
     setPassword(demoPw);
   };
@@ -149,13 +149,14 @@ export function Login() {
       {/* Demo helper quick fills */}
       <div style={{ marginTop: 24, padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Quick Demo Accounts (Password: Demo@12345)
+          Quick Demo Accounts (Password: 1234)
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('patient1@ehealth.demo')}>Patient (Rafiq)</button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('dr.rahman@ehealth.demo')}>Doctor (Dr. Rahman)</button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('populardiag@ehealth.demo')}>Diagnostics (Popular)</button>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('greencare@ehealth.demo')}>Hospital (Green Care)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('patient1@ehealth.demo', '1234')}>Patient 1 (Rafiq)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('patient2@ehealth.demo', '1234')}>Patient 2 (Fatima)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('dr.rahman@ehealth.demo', '1234')}>Doctor (Dr. Rahman)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('populardiag@ehealth.demo', '1234')}>Diagnostics (Popular)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('greencare@ehealth.demo', '1234')}>Hospital (Green Care)</button>
         </div>
       </div>
 
