@@ -1,0 +1,97 @@
+import { supabase } from '../lib/supabase';
+import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '../lib/validators';
+
+export const storageService = {
+  /**
+   * Upload a file to the medical-records bucket.
+   * Path: patients/{patientId}/{category}/{filename}
+   */
+  async uploadFile(file, patientId, category = 'general') {
+    // Validate
+    if (!file) throw new Error('No file provided');
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      throw new Error('File must be PDF, JPG, or PNG');
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size must be under 10 MB');
+    }
+
+    // Sanitize filename
+    const ext = file.name.split('.').pop();
+    const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const path = `patients/${patientId}/${category}/${safeName}`;
+
+    const { data, error } = await supabase.storage
+      .from('medical-records')
+      .upload(path, file, {
+        cacheControl: '3600',
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) throw error;
+    return { path: data.path, fullPath: data.fullPath };
+  },
+
+  /**
+   * Get a signed URL to view/download a file (valid for 1 hour).
+   */
+  async getSignedUrl(path) {
+    if (!path) throw new Error('No path provided');
+
+    const { data, error } = await supabase.storage
+      .from('medical-records')
+      .createSignedUrl(path, 3600); // 1 hour
+
+    if (error) throw error;
+    return data.signedUrl;
+  },
+
+  /**
+   * Delete a file from storage.
+   */
+  async deleteFile(path) {
+    const { error } = await supabase.storage
+      .from('medical-records')
+      .remove([path]);
+
+    if (error) throw error;
+  },
+
+  /**
+   * Create a document record in the documents table.
+   */
+  async createDocumentRecord({ patientId, uploadedBy, recordType, recordId, storagePath, fileName, mimeType, fileSize }) {
+    const { data, error } = await supabase
+      .from('documents')
+      .insert([{
+        patient_id: patientId,
+        uploaded_by: uploadedBy,
+        record_type: recordType,
+        record_id: recordId,
+        storage_path: storagePath,
+        file_name: fileName,
+        mime_type: mimeType,
+        file_size: fileSize,
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Get documents for a patient record.
+   */
+  async getDocuments(recordId) {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('record_id', recordId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+};

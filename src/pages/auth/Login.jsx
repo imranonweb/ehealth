@@ -1,29 +1,59 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Mail, Lock, Eye, EyeOff, User, Stethoscope, Building2, ShieldCheck, ArrowRight } from 'lucide-react';
-
-const roles = [
-  { id: 'patient',  label: 'Patient',  icon: User,        color: '#0F766E', desc: 'View records & appointments' },
-  { id: 'doctor',   label: 'Doctor',   icon: Stethoscope, color: '#3B82F6', desc: 'Manage patients & prescriptions' },
-  { id: 'hospital', label: 'Hospital', icon: Building2,   color: '#8B5CF6', desc: 'Hospital management portal' },
-  { id: 'admin',    label: 'Admin',    icon: ShieldCheck, color: '#F59E0B', desc: 'System administration' },
-];
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { getDefaultRoute } from '../../lib/permissions';
 
 export function Login() {
-  const [role, setRole]     = useState('patient');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
-  const navigate            = useNavigate();
-  const selected            = roles.find(r => r.id === role);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-  const handleSubmit = (e) => {
+  const { signIn, profile } = useAuth();
+  const { success, error: toastError } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate(`/${role}`);
+    setErrorMsg(null);
+    setLoading(true);
+
+    try {
+      const data = await signIn(email.trim(), password);
+      success('Logged in successfully!');
+      
+      // Determine redirection
+      const destination = location.state?.from?.pathname;
+      if (destination) {
+        navigate(destination, { replace: true });
+      } else {
+        // Fallback default redirect
+        navigate('/patient', { replace: true });
+      }
+    } catch (err) {
+      console.error('Sign in failed:', err);
+      const msg = err?.message || 'Invalid email or password. Please try again.';
+      setErrorMsg(msg);
+      toastError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Demo accounts helper
+  const fillDemo = (demoEmail, demoPw = 'Demo@12345') => {
+    setEmail(demoEmail);
+    setPassword(demoPw);
   };
 
   return (
     <div style={{ width: '100%', maxWidth: 460 }}>
-      {/* Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 36 }}>
+      {/* Brand Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
         <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Activity size={18} color="#fff" />
         </div>
@@ -31,32 +61,24 @@ export function Login() {
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Welcome back</h1>
-      <p className="body-sm text-muted" style={{ marginBottom: 28 }}>Sign in to your healthcare portal</p>
+      <p className="body-sm text-muted" style={{ marginBottom: 24 }}>Sign in to access your secure medical portal</p>
 
-      {/* Role selector */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
-        {roles.map(r => {
-          const Icon = r.icon;
-          const active = role === r.id;
-          return (
-            <button key={r.id} type="button" onClick={() => setRole(r.id)} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-              gap: 6, padding: '14px', textAlign: 'left',
-              border: `2px solid ${active ? r.color : 'var(--border)'}`,
-              borderRadius: 'var(--r-lg)',
-              background: active ? `${r.color}0a` : 'var(--surface)',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: active ? `${r.color}18` : 'var(--surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={16} style={{ color: active ? r.color : 'var(--text-3)' }} />
-              </div>
-              <div style={{ fontSize: '0.875rem', fontWeight: active ? 700 : 500, color: active ? r.color : 'var(--text-1)' }}>{r.label}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', lineHeight: 1.3 }}>{r.desc}</div>
-            </button>
-          );
-        })}
-      </div>
+      {errorMsg && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 14px',
+          background: 'var(--danger-bg)',
+          color: 'var(--danger)',
+          borderRadius: 'var(--r-md)',
+          fontSize: '0.875rem',
+          marginBottom: 20
+        }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -64,32 +86,82 @@ export function Login() {
           <label className="field-label">Email address</label>
           <div className="input-wrap">
             <Mail size={16} className="input-icon" />
-            <input className="input has-icon" type="email" placeholder={`${role}@hospital.com`} required />
+            <input
+              className="input has-icon"
+              type="email"
+              placeholder="name@ehealth.demo"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+            />
           </div>
         </div>
 
         <div className="field">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label className="field-label">Password</label>
-            <a href="#" style={{ fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 500 }}>Forgot password?</a>
+            <Link to="/forgot-password" style={{ fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 500 }}>
+              Forgot password?
+            </Link>
           </div>
           <div className="input-wrap">
             <Lock size={16} className="input-icon" />
-            <input className="input has-icon" type={showPw ? 'text' : 'password'} placeholder="Enter your password" required style={{ paddingRight: 40 }} />
-            <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}>
+            <input
+              className="input has-icon"
+              type={showPw ? 'text' : 'password'}
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              style={{ paddingRight: 40 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw(!showPw)}
+              tabIndex={-1}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}
+            >
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary btn-full btn-lg" style={{ marginTop: 4 }}>
-          Sign in as {selected?.label} <ArrowRight size={16} />
+        <button
+          type="submit"
+          className="btn btn-primary btn-full btn-lg"
+          disabled={loading}
+          style={{ marginTop: 8 }}
+        >
+          {loading ? (
+            <>
+              <Loader2 size={16} className="spin" /> Signing In…
+            </>
+          ) : (
+            <>
+              Sign In <ArrowRight size={16} />
+            </>
+          )}
         </button>
       </form>
 
+      {/* Demo helper quick fills */}
+      <div style={{ marginTop: 24, padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Quick Demo Accounts (Password: Demo@12345)
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('patient1@ehealth.demo')}>Patient (Rafiq)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('dr.rahman@ehealth.demo')}>Doctor (Dr. Rahman)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('populardiag@ehealth.demo')}>Diagnostics (Popular)</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fillDemo('greencare@ehealth.demo')}>Hospital (Green Care)</button>
+        </div>
+      </div>
+
       <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.875rem', color: 'var(--text-2)' }}>
         Don't have an account?{' '}
-        <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>Create one</Link>
+        <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>Create an account</Link>
       </p>
     </div>
   );

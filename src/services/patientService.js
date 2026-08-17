@@ -1,0 +1,218 @@
+import { supabase } from '../lib/supabase';
+
+export const patientService = {
+  /**
+   * Get the current patient's profile with patient-specific details.
+   */
+  async getProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: profile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (profileErr) throw profileErr;
+
+    const { data: patientProfile } = await supabase
+      .from('patient_profiles')
+      .select('*')
+      .eq('profile_id', profile.id)
+      .single();
+
+    return { ...profile, patient_profile: patientProfile };
+  },
+
+  /**
+   * Update limited personal information.
+   */
+  async updateProfile(profileId, updates) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', profileId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Update patient-specific profile.
+   */
+  async updatePatientProfile(profileId, updates) {
+    const { data, error } = await supabase
+      .from('patient_profiles')
+      .update(updates)
+      .eq('profile_id', profileId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Get unified medical history timeline.
+   */
+  async getMedicalHistory({ page = 1, perPage = 20, type = null, search = '' } = {}) {
+    let query = supabase
+      .from('medical_records')
+      .select('*', { count: 'exact' })
+      .order('record_date', { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1);
+
+    if (type) query = query.eq('record_type', type);
+    if (search) query = query.or(`title.ilike.%${search}%,summary.ilike.%${search}%`);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+    return { records: data || [], total: count || 0 };
+  },
+
+  /**
+   * Get prescriptions for the current patient.
+   */
+  async getPrescriptions({ page = 1, perPage = 20 } = {}) {
+    const { data, error, count } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        doctor:doctor_id(id, full_name, email),
+        hospital:hospital_id(id, name)
+      `, { count: 'exact' })
+      .order('prescription_date', { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1);
+
+    if (error) throw error;
+    return { prescriptions: data || [], total: count || 0 };
+  },
+
+  /**
+   * Get diagnostic reports for the current patient.
+   */
+  async getDiagnosticReports({ page = 1, perPage = 20 } = {}) {
+    const { data, error, count } = await supabase
+      .from('diagnostic_reports')
+      .select(`
+        *,
+        diagnostics_org:diagnostics_organization_id(id, name),
+        doctor:doctor_id(id, full_name)
+      `, { count: 'exact' })
+      .order('report_date', { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1);
+
+    if (error) throw error;
+    return { reports: data || [], total: count || 0 };
+  },
+
+  /**
+   * Get hospital visits for the current patient.
+   */
+  async getHospitalVisits({ page = 1, perPage = 20 } = {}) {
+    const { data, error, count } = await supabase
+      .from('hospital_visits')
+      .select(`
+        *,
+        hospital:hospital_id(id, name),
+        doctor:doctor_id(id, full_name)
+      `, { count: 'exact' })
+      .order('admission_date', { ascending: false })
+      .range((page - 1) * perPage, page * perPage - 1);
+
+    if (error) throw error;
+    return { visits: data || [], total: count || 0 };
+  },
+
+  /**
+   * Get healthcare providers associated with this patient.
+   */
+  async getProviders() {
+    const { data, error } = await supabase
+      .from('patient_provider_relationships')
+      .select(`
+        *,
+        provider:provider_profile_id(id, full_name, email, role),
+        organization:organization_id(id, name, type)
+      `)
+      .eq('status', 'active');
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * Get a single prescription by ID.
+   */
+  async getPrescriptionById(id) {
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .select(`
+        *,
+        doctor:doctor_id(id, full_name, email),
+        hospital:hospital_id(id, name),
+        ai_extraction:prescription_ai_extractions(*)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Get a single diagnostic report by ID.
+   */
+  async getDiagnosticReportById(id) {
+    const { data, error } = await supabase
+      .from('diagnostic_reports')
+      .select(`
+        *,
+        diagnostics_org:diagnostics_organization_id(id, name),
+        doctor:doctor_id(id, full_name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Get a single hospital visit by ID.
+   */
+  async getHospitalVisitById(id) {
+    const { data, error } = await supabase
+      .from('hospital_visits')
+      .select(`
+        *,
+        hospital:hospital_id(id, name),
+        doctor:doctor_id(id, full_name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Get dashboard stats.
+   */
+  async getDashboardStats() {
+    const [prescriptions, reports, visits, providers] = await Promise.all([
+      supabase.from('prescriptions').select('id', { count: 'exact', head: true }),
+      supabase.from('diagnostic_reports').select('id', { count: 'exact', head: true }),
+      supabase.from('hospital_visits').select('id', { count: 'exact', head: true }),
+      supabase.from('patient_provider_relationships').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+    ]);
+
+    return {
+      prescriptions: prescriptions.count || 0,
+      reports: reports.count || 0,
+      visits: visits.count || 0,
+      providers: providers.count || 0,
+    };
+  },
+};

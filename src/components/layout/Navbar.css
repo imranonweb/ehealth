@@ -16,6 +16,19 @@
   background: rgba(255,255,255,0.90);
 }
 
+/* Mobile menu button */
+.navbar-menu-btn {
+  display: none;
+  width: 38px; height: 38px;
+  border-radius: var(--r-md);
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* Search */
 .navbar-search {
   position: relative;
@@ -75,6 +88,7 @@
 }
 
 /* User profile chip */
+.navbar-profile-wrap { position: relative; }
 .navbar-profile {
   display: flex;
   align-items: center;
@@ -95,6 +109,40 @@
 .navbar-profile-name { font-size: 0.8125rem; font-weight: 600; color: var(--text-1); }
 .navbar-profile-role { font-size: 0.6875rem; color: var(--text-3); }
 
+/* Profile dropdown */
+.navbar-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 200;
+  animation: fadeUp 0.2s ease both;
+}
+.navbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: background var(--t-fast);
+  text-align: left;
+}
+.navbar-dropdown-item:hover { background: var(--surface-2); }
+.navbar-dropdown-item.danger { color: var(--danger); }
+.navbar-dropdown-item.danger:hover { background: var(--danger-bg); }
+.navbar-dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
 /* Page title */
 .navbar-title {
   font-size: 0.8125rem;
@@ -103,7 +151,12 @@
   letter-spacing: 0.01em;
 }
 
+@media (max-width: 1024px) {
+  .navbar-menu-btn { display: flex; }
+}
+
 @media (max-width: 640px) {
   .navbar-search { display: none; }
   .navbar-title  { display: none; }
+  .navbar-profile-info { display: none; }
 }

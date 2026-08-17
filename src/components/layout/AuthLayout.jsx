@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { Activity, ShieldCheck, Clock, Users } from 'lucide-react';
+import { Activity, ShieldCheck, Clock, Users, Lock, HeartPulse } from 'lucide-react';
 import './AuthLayout.css';
 
 export function AuthLayout() {
@@ -18,19 +18,19 @@ export function AuthLayout() {
 
           <div className="auth-panel-headline">
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', marginBottom: 16 }}>
-              Healthcare,<br />reimagined<br />for the digital age.
+              One patient.<br />One medical history.<br />One trusted record.
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '1rem', lineHeight: 1.6 }}>
-              Centralized records. Fewer repeated tests. Better care for every patient.
+            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+              Centralized digital health platform connecting patients, doctors, diagnostic centers, and hospitals seamlessly.
             </p>
           </div>
 
           {/* Highlights */}
           <div className="auth-highlights">
             {[
-              { icon: ShieldCheck, title: 'Bank-grade Security', desc: 'HIPAA compliant, fully encrypted' },
-              { icon: Clock,       title: 'Instant Access',      desc: 'Complete patient history in seconds' },
-              { icon: Users,       title: 'Trusted by 2,000+',   desc: 'Doctors and hospitals nationwide' },
+              { icon: ShieldCheck, title: 'Role-Based Access Control', desc: 'Patients, doctors, and hospitals access only authorized clinical records' },
+              { icon: HeartPulse,  title: 'Unified Medical Timeline', desc: 'Prescriptions, lab reports, and admissions in one chronological view' },
+              { icon: Lock,        title: 'Privacy-First Architecture', desc: 'Secure database row-level security and signed document access' },
             ].map((h, i) => {
               const Icon = h.icon;
               return (
@@ -40,7 +40,7 @@ export function AuthLayout() {
                   </div>
                   <div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{h.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>{h.desc}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{h.desc}</div>
                   </div>
                 </div>
               );

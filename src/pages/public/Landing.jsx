@@ -1,142 +1,225 @@
 import { Link } from 'react-router-dom';
-import { Activity, Shield, Clock, Users, ArrowRight, CheckCircle, Star, Zap, HeartPulse } from 'lucide-react';
+import { Activity, ShieldCheck, FileText, Pill, FlaskConical, Building2, Stethoscope, ArrowRight, CheckCircle2, ChevronRight, Lock, Clock, Database } from 'lucide-react';
+import './Landing.css';
 
 export function Landing() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-
-      {/* Nav */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        backdropFilter: 'blur(16px)',
-        background: 'rgba(248,250,252,0.85)',
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, var(--primary), var(--secondary))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(15,118,110,0.3)' }}>
-              <Activity size={18} color="#fff" />
+    <div className="landing-page">
+      {/* Navigation Header */}
+      <header className="landing-header">
+        <div className="container landing-nav">
+          <div className="landing-logo">
+            <div className="sidebar-brand-icon">
+              <Activity size={20} color="#fff" />
             </div>
-            <span style={{ fontWeight: 800, fontSize: '1.0625rem', letterSpacing: '-0.02em', color: 'var(--text-1)' }}>E-Health</span>
+            <span style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>E-Health</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {['Features', 'About', 'Contact'].map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} style={{ padding: '8px 14px', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', borderRadius: 'var(--r-md)', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.target.style.background = 'var(--surface-3)'; e.target.style.color = 'var(--text-1)'; }}
-                onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = 'var(--text-2)'; }}>
-                {l}
-              </a>
-            ))}
-            <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
-            <Link to="/login" className="btn btn-ghost btn-sm">Log in</Link>
-            <Link to="/register" className="btn btn-primary btn-sm">Get Started →</Link>
+
+          <nav className="landing-nav-links">
+            <a href="#features">Features</a>
+            <a href="#roles">Portals</a>
+            <a href="#security">Security</a>
+            <Link to="/contact">Contact & Team</Link>
+          </nav>
+
+          <div className="landing-nav-actions">
+            <Link to="/login" className="btn btn-ghost btn-md">Sign In</Link>
+            <Link to="/register" className="btn btn-primary btn-md">Get Started <ArrowRight size={16} /></Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main style={{ flex: 1 }}>
-
-        {/* Hero */}
-        <section style={{ padding: '100px 32px 80px', background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(15,118,110,0.08) 0%, transparent 70%)' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: 'var(--r-full)', padding: '6px 14px', fontSize: '0.8125rem', fontWeight: 600, marginBottom: 24 }} className="animate-up">
-              <Zap size={13} /> Trusted by 2,000+ Healthcare Professionals
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="container hero-container">
+          <div className="hero-content">
+            <div className="hero-badge">
+              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', marginRight: 8 }} />
+              Centralized Digital Health Records
             </div>
-            <h1 className="display animate-up stagger-1" style={{ color: 'var(--text-1)', marginBottom: 24 }}>
-              Modern Healthcare Records,<br />
-              <span style={{ color: 'var(--primary)' }}>Zero Redundancy</span>
+            <h1 className="hero-title">
+              One patient.<br />
+              One medical history.<br />
+              <span className="text-gradient">One trusted record.</span>
             </h1>
-            <p className="body-lg text-muted animate-up stagger-2" style={{ maxWidth: 620, margin: '0 auto 40px', lineHeight: 1.7 }}>
-              A centralized, secure, and intelligent healthcare management platform. Connect patients, doctors, and hospitals to eliminate repeated tests and improve patient outcomes.
+            <p className="hero-subtitle">
+              Eliminate redundant diagnostic tests and fragmented prescriptions. E-Health connects patients, doctors, labs, and hospitals in a single, privacy-focused medical timeline.
             </p>
-            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }} className="animate-up stagger-3">
-              <Link to="/register" className="btn btn-primary btn-xl">
-                Start for Free <ArrowRight size={18} />
+            <div className="hero-actions">
+              <Link to="/register" className="btn btn-primary btn-lg">
+                Create Free Account <ArrowRight size={18} />
               </Link>
-              <Link to="/login" className="btn btn-secondary btn-xl">
-                Access Portal
+              <Link to="/login" className="btn btn-outline btn-lg">
+                Sign In to Portal
               </Link>
-            </div>
-            <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 40, flexWrap: 'wrap' }} className="animate-up stagger-4">
-              {['HIPAA Compliant', '256-bit Encryption', 'Instant Access', '99.9% Uptime'].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--text-2)', fontWeight: 500 }}>
-                  <CheckCircle size={14} style={{ color: 'var(--success)' }} /> {f}
-                </div>
-              ))}
             </div>
           </div>
-        </section>
 
-        {/* Feature cards */}
-        <section id="features" style={{ padding: '80px 32px', background: 'var(--surface)' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <p className="overline text-primary" style={{ marginBottom: 12 }}>Why E-Health</p>
-              <h2 className="h1">Everything your healthcare team needs</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-              {[
-                { icon: Shield,     color: '#0F766E', title: 'Enterprise Security',    desc: 'End-to-end encryption and role-based access ensure sensitive medical data remains strictly confidential.' },
-                { icon: Clock,      color: '#3B82F6', title: 'Save Time & Costs',      desc: 'Eliminate redundant tests by giving providers instant access to a patient\'s complete medical history.' },
-                { icon: Users,      color: '#8B5CF6', title: 'Unified Collaboration',  desc: 'Doctors, hospitals, and patients share diagnoses, prescriptions, and reports in a single workflow.' },
-                { icon: HeartPulse, color: '#EC4899', title: 'Real-time Analytics',    desc: 'Beautiful charts and health dashboards give clinicians at-a-glance insights for better decisions.' },
-                { icon: Zap,        color: '#F59E0B', title: 'Lightning Fast',         desc: 'Instant record retrieval. No waiting rooms for your data — results and history in under a second.' },
-                { icon: Star,       color: '#10B981', title: 'Patient-Centered',       desc: 'Patients own their data. Full transparency with appointment management and prescription tracking.' },
-              ].map((f, i) => {
-                const Icon = f.icon;
-                return (
-                  <div key={i} style={{
-                    padding: 28, borderRadius: 'var(--r-xl)',
-                    border: '1.5px solid var(--border)',
-                    background: 'var(--bg)',
-                    transition: 'all 0.2s',
-                    cursor: 'default',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.borderColor = f.color+'40'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 'var(--r-md)', background: `${f.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-                      <Icon size={22} style={{ color: f.color }} />
-                    </div>
-                    <h3 className="h4" style={{ marginBottom: 8 }}>{f.title}</h3>
-                    <p className="body-sm text-muted">{f.desc}</p>
+          <div className="hero-image-wrapper">
+            {/* Interactive/Visual Timeline Preview Card */}
+            <div className="card" style={{ padding: 'var(--sp-6)', boxShadow: 'var(--shadow-xl)', border: '1.5px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className="avatar avatar-sm avatar-teal">RA</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Rafiq Ahmed</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>ID: P-9824F1A2 · Blood: B+</div>
                   </div>
-                );
-              })}
+                </div>
+                <span className="badge badge-success">Active Profile</span>
+              </div>
+
+              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-2)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Recent Chronological Records
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 12, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59,130,246,0.12)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Pill size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.8125rem' }}>Prescription — Hypertension</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Dr. Sarah Rahman · Green Care Hospital</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FlaskConical size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.8125rem' }}>Complete Blood Count (CBC)</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Popular Diagnostics · All normal</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--r-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(15,118,110,0.12)', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Building2 size={16} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.8125rem' }}>Hospital Visit — Internal Medicine</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Green Care Hospital · Outpatient Follow-up</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA */}
-        <section style={{ padding: '80px 32px', background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)' }}>
-          <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', marginBottom: 16, letterSpacing: '-0.02em' }}>Ready to transform your practice?</h2>
-            <p style={{ color: 'rgba(255,255,255,0.75)', marginBottom: 36, fontSize: '1.0625rem' }}>Join thousands of healthcare professionals using E-Health every day.</p>
-            <Link to="/register" className="btn btn-xl" style={{ background: '#fff', color: 'var(--primary)', fontWeight: 700 }}>
-              Create Free Account <ArrowRight size={18} />
-            </Link>
+      {/* Value Pillars */}
+      <section id="features" className="features-section">
+        <div className="container">
+          <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 60px' }}>
+            <h2 className="h2" style={{ marginBottom: 12 }}>Why E-Health Makes a Difference</h2>
+            <p className="text-muted">
+              Designed specifically to solve medical fragmentation in healthcare systems through strict role boundaries and unified history.
+            </p>
           </div>
-        </section>
-      </main>
+
+          <div className="grid-3" style={{ gap: 'var(--sp-6)' }}>
+            <div className="feature-card">
+              <div className="feature-icon"><Clock size={24} /></div>
+              <h3>Save Time & Costs</h3>
+              <p>Eliminate repeated diagnostic tests and missing paper files. Doctors immediately view historical reports and medication response.</p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon"><Lock size={24} /></div>
+              <h3>Role-Based Access Control</h3>
+              <p>Granular database Row Level Security guarantees patients own their data while doctors and labs only write authenticated clinical entries.</p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon"><Database size={24} /></div>
+              <h3>Immutable Clinical History</h3>
+              <p>Authorized medical entries cannot be altered retroactively without full audit trails, protecting clinical integrity.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Role-Based Portals */}
+      <section id="roles" style={{ padding: '80px 0', background: 'var(--surface-2)' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 50px' }}>
+            <h2 className="h2" style={{ marginBottom: 12 }}>Specialized Portals for Every Role</h2>
+            <p className="text-muted">Tailored interfaces for patients and clinical providers.</p>
+          </div>
+
+          <div className="grid-4" style={{ gap: 'var(--sp-5)' }}>
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(15,118,110,0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Activity size={22} />
+              </div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 8 }}>Patient Portal</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
+                Access lifetime medical records, prescriptions, lab results, and healthcare provider directory.
+              </p>
+              <Link to="/register" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Join as Patient <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59,130,246,0.1)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Stethoscope size={22} />
+              </div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 8 }}>Doctor Portal</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
+                Look up patient history, issue structured e-prescriptions, and review diagnostic lab results.
+              </p>
+              <Link to="/register" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#3B82F6', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Doctor Registration <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <FlaskConical size={22} />
+              </div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 8 }}>Diagnostics Portal</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
+                Upload official test reports, imaging scans, and summaries directly to the patient's record.
+              </p>
+              <Link to="/register" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B5CF6', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Lab Portal <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16,185,129,0.1)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Building2 size={22} />
+              </div>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 8 }}>Hospital Portal</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-3)', lineHeight: 1.5, marginBottom: 16 }}>
+                Record inpatient & outpatient admissions, emergency visits, and hospital-based discharges.
+              </p>
+              <Link to="/register" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#10B981', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Hospital Sign Up <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer style={{ background: 'var(--sidebar-bg)', padding: '32px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+      <footer className="landing-footer">
+        <div className="container footer-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, var(--primary), var(--secondary))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Activity size={15} color="#fff" />
-            </div>
-            <span style={{ fontWeight: 700, color: '#fff', letterSpacing: '-0.01em' }}>E-Health</span>
+            <Activity size={18} color="var(--primary)" />
+            <span style={{ fontWeight: 800, fontSize: '1rem' }}>E-Health Platform</span>
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8125rem' }}>© 2026 E-Health Platform. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: 20 }}>
-            {['Privacy', 'Terms', 'Security'].map(l => (
-              <a key={l} href="#" style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.45)', transition: 'color 0.15s' }}
-                onMouseEnter={e => e.target.style.color = '#fff'}
-                onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.45)'}>
-                {l}
-              </a>
-            ))}
+          <div className="footer-links">
+            <Link to="/contact">Contact & Team</Link>
+            <Link to="/login">Sign In</Link>
+            <Link to="/register">Register</Link>
           </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+            © {new Date().getFullYear()} E-Health. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

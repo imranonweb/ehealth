@@ -1,0 +1,201 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FlaskConical, Save, Loader2 } from 'lucide-react';
+import { PatientSearch } from './PatientSearch';
+import { FileUpload } from '../ui/FileUpload';
+import { diagnosticsService } from '../../services/diagnosticsService';
+import { storageService } from '../../services/storageService';
+import { useToast } from '../../contexts/ToastContext';
+
+export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/reports' }) {
+  const navigate = useNavigate();
+  const { success, error: toastError } = useToast();
+
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [testName, setTestName] = useState('');
+  const [testCategory, setTestCategory] = useState('Hematology');
+  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [summary, setSummary] = useState('');
+  const [doctorNotes, setDoctorNotes] = useState('');
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedPatient) {
+      toastError('Please select a patient.');
+      return;
+    }
+    if (!testName.trim()) {
+      toastError('Please provide a test name.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let documentPath = null;
+
+      if (file) {
+        setUploading(true);
+        const uploadResult = await storageService.uploadFile(file, selectedPatient.id, 'diagnostic_reports');
+        documentPath = uploadResult.path;
+        setUploading(false);
+      }
+
+      const payload = {
+        patient_id: selectedPatient.id,
+        test_name: testName.trim(),
+        test_category: testCategory,
+        report_date: reportDate,
+        summary: summary.trim(),
+        doctor_notes: doctorNotes.trim(),
+        document_path: documentPath,
+      };
+
+      const result = await diagnosticsService.createReport(payload);
+      success('Diagnostic report uploaded and linked to patient record.');
+
+      if (onSuccess) {
+        onSuccess(result);
+      } else {
+        navigate(redirectPath);
+      }
+    } catch (err) {
+      console.error('Failed to create diagnostic report:', err);
+      toastError(err.message || 'Failed to upload report');
+    } finally {
+      setLoading(false);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* 1. Patient Lookup */}
+      <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
+          1. Select Patient
+        </h3>
+        <PatientSearch
+          selectedPatient={selectedPatient}
+          onSelectPatient={setSelectedPatient}
+          onClear={() => setSelectedPatient(null)}
+        />
+      </div>
+
+      {/* 2. Test Details */}
+      <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
+          2. Test Details & Results
+        </h3>
+        
+        <div className="form-row">
+          <div className="field">
+            <label className="field-label">Test Name</label>
+            <input
+              className="input"
+              type="text"
+              placeholder="e.g. Complete Blood Count, Lipid Profile, Chest X-Ray"
+              value={testName}
+              onChange={(e) => setTestName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="field">
+            <label className="field-label">Test Category</label>
+            <select
+              className="select"
+              value={testCategory}
+              onChange={(e) => setTestCategory(e.target.value)}
+            >
+              <option value="Hematology">Hematology</option>
+              <option value="Biochemistry">Biochemistry</option>
+              <option value="Microbiology">Microbiology</option>
+              <option value="Immunology">Immunology</option>
+              <option value="Radiology & Imaging">Radiology & Imaging</option>
+              <option value="Pathology">Pathology</option>
+              <option value="Cardiology">Cardiology / ECG</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label className="field-label">Report Date</label>
+          <input
+            className="input"
+            type="date"
+            value={reportDate}
+            onChange={(e) => setReportDate(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label className="field-label">Key Findings & Values Summary</label>
+          <textarea
+            className="textarea"
+            placeholder="Summarize key parameter values, normal/abnormal flags..."
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            required
+            style={{ minHeight: 90 }}
+          />
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label className="field-label">Pathologist / Lab Consultant Remarks (Optional)</label>
+          <textarea
+            className="textarea"
+            placeholder="Clinical interpretations or remarks..."
+            value={doctorNotes}
+            onChange={(e) => setDoctorNotes(e.target.value)}
+            style={{ minHeight: 70 }}
+          />
+        </div>
+      </div>
+
+      {/* 3. Document Attachment */}
+      <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
+          3. Attach Official Report Document (PDF/Image)
+        </h3>
+        <FileUpload
+          file={file}
+          onFileSelect={setFile}
+          onRemove={() => setFile(null)}
+          uploading={uploading}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-md"
+          onClick={() => navigate(-1)}
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary btn-lg"
+          disabled={loading || !selectedPatient}
+        >
+          {loading ? (
+            <>
+              <Loader2 size={16} className="spin" /> Uploading Report…
+            </>
+          ) : (
+            <>
+              <Save size={16} /> Save & Upload Report
+            </>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+}
