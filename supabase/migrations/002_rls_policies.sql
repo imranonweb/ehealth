@@ -1,9 +1,9 @@
 -- ═══════════════════════════════════════════════════════════
 -- E-Health Platform — Migration 002: Row Level Security Policies
 -- ═══════════════════════════════════════════════════════════
--- Description: Strict role-based access control policies.
--- Enforces that patients access only their own medical history,
--- and providers only access patients with active relationships.
+-- Description: Strict role-based access control, role escalation
+-- prevention, patient confidentiality isolation, and relationship-gated
+-- clinical data access.
 -- ═══════════════════════════════════════════════════════════
 
 -- ───────────────────────────────────────────────────────────
@@ -24,126 +24,225 @@ ALTER TABLE documents                      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs                     ENABLE ROW LEVEL SECURITY;
 
 
+-- ───────────────────────────────────────────────────────────
+-- 2. INTEGRITY TRIGGERS (DATABASE-LEVEL IMMUTABILITY & ANTI-ESCALATION)
+-- ───────────────────────────────────────────────────────────
+
+-- Trigger 2.1: Prevent users from escalating their own role in profiles
+CREATE OR REPLACE FUNCTION public.enforce_profile_role_integrity()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' AND OLD.role IS DISTINCT FROM NEW.role THEN
+    IF current_user NOT IN ('postgres', 'service_role', 'supabase_admin') THEN
+      RAISE EXCEPTION 'Security violation: Account roles cannot be modified by the user.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_profile_role_integrity ON profiles;
+CREATE TRIGGER trg_profile_role_integrity
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_profile_role_integrity();
+
+-- Trigger 2.2: Prevent tampering with relationship participants and granting authority
+CREATE OR REPLACE FUNCTION public.enforce_ppr_immutable_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    IF OLD.patient_profile_id IS DISTINCT FROM NEW.patient_profile_id OR
+       OLD.provider_profile_id IS DISTINCT FROM NEW.provider_profile_id OR
+       OLD.organization_id IS DISTINCT FROM NEW.organization_id OR
+       OLD.granted_by IS DISTINCT FROM NEW.granted_by THEN
+      RAISE EXCEPTION 'Security violation: Cannot modify relationship participants or granting authority.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_ppr_immutable_fields ON patient_provider_relationships;
+CREATE TRIGGER trg_ppr_immutable_fields
+  BEFORE UPDATE ON patient_provider_relationships
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_ppr_immutable_fields();
+
+
+-- ───────────────────────────────────────────────────────────
+-- 3. SECURE PATIENT LOOKUP FUNCTION (NO BROAD DIRECTORY ACCESS)
+-- ───────────────────────────────────────────────────────────
+
+-- Controlled lookup: Providers CANNOT browse all patients.
+-- They can only query a single patient by exact Patient Identifier (e.g. P-9824F1A2).
+CREATE OR REPLACE FUNCTION public.lookup_patient_by_identifier(p_identifier TEXT)
+RETURNS TABLE (
+  patient_profile_id UUID,
+  full_name TEXT,
+  patient_identifier TEXT,
+  gender gender_type,
+  date_of_birth DATE
+) AS $$
+BEGIN
+  -- Only authenticated provider roles can perform lookup
+  IF public.get_my_role() NOT IN ('doctor', 'diagnostics', 'hospital') THEN
+    RAISE EXCEPTION 'Access denied: Provider role required for patient lookup.';
+  END IF;
+
+  RETURN QUERY
+  SELECT 
+    p.id AS patient_profile_id,
+    p.full_name,
+    pp.patient_identifier,
+    p.gender,
+    p.date_of_birth
+  FROM public.profiles p
+  JOIN public.patient_profiles pp ON pp.profile_id = p.id
+  WHERE pp.patient_identifier = upper(trim(p_identifier))
+    AND p.role = 'patient';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
+
+
 -- ═══════════════════════════════════════════════════════════
--- 2. PROFILES
+-- 4. PROFILES RLS
 -- ═══════════════════════════════════════════════════════════
 
--- Users can read their own full profile
+DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
 CREATE POLICY "profiles_select_own"
   ON profiles FOR SELECT
   USING (auth_user_id = auth.uid());
 
--- Users can update their own profile
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
+-- Normal self-signup must ONLY allow creating a 'patient' role
+CREATE POLICY "profiles_insert_own"
+  ON profiles FOR INSERT
+  WITH CHECK (
+    auth_user_id = auth.uid()
+    AND role = 'patient'
+  );
+
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+-- Users can update their profile information but NEVER change their role
 CREATE POLICY "profiles_update_own"
   ON profiles FOR UPDATE
   USING (auth_user_id = auth.uid())
-  WITH CHECK (auth_user_id = auth.uid());
+  WITH CHECK (
+    auth_user_id = auth.uid()
+    AND role = (SELECT p.role FROM profiles p WHERE p.auth_user_id = auth.uid())
+  );
 
--- Users can insert their own profile on registration
-CREATE POLICY "profiles_insert_own"
-  ON profiles FOR INSERT
-  WITH CHECK (auth_user_id = auth.uid());
-
--- Authenticated providers can read patient profiles ONLY for patients they have active relationships with
-CREATE POLICY "profiles_select_by_authorized_providers"
+DROP POLICY IF EXISTS "profiles_select_authorized_providers" ON profiles;
+-- Providers can read patient profiles ONLY for patients they have an active relationship with
+CREATE POLICY "profiles_select_authorized_providers"
   ON profiles FOR SELECT
   USING (
     role = 'patient'
     AND is_provider_authorized_for_patient(id)
   );
 
--- Authenticated providers can search basic patient identity for lookup (to establish relationship/triage)
-CREATE POLICY "profiles_lookup_by_providers"
-  ON profiles FOR SELECT
-  USING (
-    role = 'patient'
-    AND get_my_role() IN ('doctor', 'diagnostics', 'hospital')
-  );
-
--- Anyone authenticated can view doctor and organization profiles in directories
-CREATE POLICY "profiles_select_providers_directory"
+DROP POLICY IF EXISTS "profiles_select_provider_identities" ON profiles;
+-- Public directory access to doctor and organization profile names
+CREATE POLICY "profiles_select_provider_identities"
   ON profiles FOR SELECT
   USING (role IN ('doctor', 'hospital', 'diagnostics'));
 
 
 -- ═══════════════════════════════════════════════════════════
--- 3. ORGANIZATIONS
+-- 5. PATIENT PROFILES RLS
 -- ═══════════════════════════════════════════════════════════
 
--- Anyone authenticated can view verified organizations (hospitals & diagnostic centers)
-CREATE POLICY "orgs_select_all_authenticated"
-  ON organizations FOR SELECT
-  USING (auth.uid() IS NOT NULL);
-
--- Organization owner can update their organization
-CREATE POLICY "orgs_update_by_owner"
-  ON organizations FOR UPDATE
-  USING (profile_id = get_my_profile_id())
-  WITH CHECK (profile_id = get_my_profile_id());
-
--- Organization owner can create organization upon registration
-CREATE POLICY "orgs_insert_by_owner"
-  ON organizations FOR INSERT
-  WITH CHECK (profile_id = get_my_profile_id());
-
-
--- ═══════════════════════════════════════════════════════════
--- 4. DOCTOR PROFILES
--- ═══════════════════════════════════════════════════════════
-
--- Anyone authenticated can view doctor directory profiles
-CREATE POLICY "doctor_profiles_select_all"
-  ON doctor_profiles FOR SELECT
-  USING (auth.uid() IS NOT NULL);
-
--- Doctors can update their own professional profile
-CREATE POLICY "doctor_profiles_update_own"
-  ON doctor_profiles FOR UPDATE
-  USING (profile_id = get_my_profile_id())
-  WITH CHECK (profile_id = get_my_profile_id());
-
--- Doctors can insert their own professional profile
-CREATE POLICY "doctor_profiles_insert_own"
-  ON doctor_profiles FOR INSERT
-  WITH CHECK (profile_id = get_my_profile_id());
-
-
--- ═══════════════════════════════════════════════════════════
--- 5. PATIENT PROFILES
--- ═══════════════════════════════════════════════════════════
-
--- Patients can read their own patient profile
+DROP POLICY IF EXISTS "patient_profiles_select_own" ON patient_profiles;
 CREATE POLICY "patient_profiles_select_own"
   ON patient_profiles FOR SELECT
   USING (profile_id = get_my_profile_id());
 
--- Patients can update their own patient profile
-CREATE POLICY "patient_profiles_update_own"
-  ON patient_profiles FOR UPDATE
-  USING (profile_id = get_my_profile_id())
-  WITH CHECK (profile_id = get_my_profile_id());
-
--- Patients can insert their own patient profile upon signup
+DROP POLICY IF EXISTS "patient_profiles_insert_own" ON patient_profiles;
+-- Only patients can insert a patient_profile row
 CREATE POLICY "patient_profiles_insert_own"
   ON patient_profiles FOR INSERT
-  WITH CHECK (profile_id = get_my_profile_id());
+  WITH CHECK (
+    profile_id = get_my_profile_id()
+    AND get_my_role() = 'patient'
+  );
 
--- Providers can read patient profiles ONLY for patients they are authorized to treat
+DROP POLICY IF EXISTS "patient_profiles_update_own" ON patient_profiles;
+CREATE POLICY "patient_profiles_update_own"
+  ON patient_profiles FOR UPDATE
+  USING (profile_id = get_my_profile_id() AND get_my_role() = 'patient')
+  WITH CHECK (profile_id = get_my_profile_id() AND get_my_role() = 'patient');
+
+DROP POLICY IF EXISTS "patient_profiles_select_authorized_providers" ON patient_profiles;
+-- Authorized providers can view patient clinical flags (allergies, emergency contact)
 CREATE POLICY "patient_profiles_select_authorized_providers"
   ON patient_profiles FOR SELECT
   USING (is_provider_authorized_for_patient(profile_id));
 
 
 -- ═══════════════════════════════════════════════════════════
--- 6. PATIENT-PROVIDER RELATIONSHIPS (Authorization Control)
+-- 6. DOCTOR PROFILES RLS
 -- ═══════════════════════════════════════════════════════════
 
--- Patients can see all relationships granted for their record
+DROP POLICY IF EXISTS "doctor_profiles_select_all" ON doctor_profiles;
+CREATE POLICY "doctor_profiles_select_all"
+  ON doctor_profiles FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "doctor_profiles_insert_own" ON doctor_profiles;
+-- Requires user role to be 'doctor'
+CREATE POLICY "doctor_profiles_insert_own"
+  ON doctor_profiles FOR INSERT
+  WITH CHECK (
+    profile_id = get_my_profile_id()
+    AND get_my_role() = 'doctor'
+  );
+
+DROP POLICY IF EXISTS "doctor_profiles_update_own" ON doctor_profiles;
+CREATE POLICY "doctor_profiles_update_own"
+  ON doctor_profiles FOR UPDATE
+  USING (profile_id = get_my_profile_id() AND get_my_role() = 'doctor')
+  WITH CHECK (profile_id = get_my_profile_id() AND get_my_role() = 'doctor');
+
+
+-- ═══════════════════════════════════════════════════════════
+-- 7. ORGANIZATIONS RLS
+-- ═══════════════════════════════════════════════════════════
+
+DROP POLICY IF EXISTS "orgs_select_all" ON organizations;
+CREATE POLICY "orgs_select_all"
+  ON organizations FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+DROP POLICY IF EXISTS "orgs_insert_by_owner" ON organizations;
+-- Role-scoped creation: hospital creates hospital org, diagnostics creates diagnostics org
+CREATE POLICY "orgs_insert_by_owner"
+  ON organizations FOR INSERT
+  WITH CHECK (
+    profile_id = get_my_profile_id()
+    AND (
+      (type = 'hospital' AND get_my_role() = 'hospital') OR
+      (type = 'diagnostics' AND get_my_role() = 'diagnostics')
+    )
+  );
+
+DROP POLICY IF EXISTS "orgs_update_by_owner" ON organizations;
+CREATE POLICY "orgs_update_by_owner"
+  ON organizations FOR UPDATE
+  USING (profile_id = get_my_profile_id())
+  WITH CHECK (profile_id = get_my_profile_id());
+
+
+-- ═══════════════════════════════════════════════════════════
+-- 8. PATIENT-PROVIDER RELATIONSHIPS RLS
+-- ═══════════════════════════════════════════════════════════
+
+DROP POLICY IF EXISTS "ppr_select_patient" ON patient_provider_relationships;
 CREATE POLICY "ppr_select_patient"
   ON patient_provider_relationships FOR SELECT
   USING (patient_profile_id = get_my_profile_id());
 
--- Providers can see relationships where they are the designated provider/organization
+DROP POLICY IF EXISTS "ppr_select_provider" ON patient_provider_relationships;
 CREATE POLICY "ppr_select_provider"
   ON patient_provider_relationships FOR SELECT
   USING (
@@ -151,64 +250,75 @@ CREATE POLICY "ppr_select_provider"
     OR organization_id = get_my_organization_id()
   );
 
--- Patients can grant / insert relationships for themselves
+DROP POLICY IF EXISTS "ppr_insert_by_patient" ON patient_provider_relationships;
+-- Patients can create active or pending relationships for themselves
 CREATE POLICY "ppr_insert_by_patient"
   ON patient_provider_relationships FOR INSERT
   WITH CHECK (
     patient_profile_id = get_my_profile_id()
+    AND status IN ('active', 'pending')
   );
 
--- Providers can ONLY create a relationship with status 'pending' (unless authorized via clinical protocol)
+DROP POLICY IF EXISTS "ppr_insert_by_provider" ON patient_provider_relationships;
+-- Providers can ONLY initiate relationships with status 'pending' (MUST NOT be active)
 CREATE POLICY "ppr_insert_by_provider"
   ON patient_provider_relationships FOR INSERT
   WITH CHECK (
     (provider_profile_id = get_my_profile_id() OR organization_id = get_my_organization_id())
     AND get_my_role() IN ('doctor', 'diagnostics', 'hospital')
+    AND status = 'pending'
   );
 
--- Patients can update/revoke relationships to cancel access anytime
+DROP POLICY IF EXISTS "ppr_update_by_patient" ON patient_provider_relationships;
+-- Patients can approve pending relationships to 'active', or revoke them
 CREATE POLICY "ppr_update_by_patient"
   ON patient_provider_relationships FOR UPDATE
   USING (patient_profile_id = get_my_profile_id())
-  WITH CHECK (patient_profile_id = get_my_profile_id());
+  WITH CHECK (
+    patient_profile_id = get_my_profile_id()
+    AND status IN ('active', 'revoked')
+  );
 
--- Providers can only update relationship status to 'inactive' (relinquish access)
+DROP POLICY IF EXISTS "ppr_update_by_provider" ON patient_provider_relationships;
+-- Providers can ONLY relinquish access by moving relationship from active to revoked
 CREATE POLICY "ppr_update_by_provider"
   ON patient_provider_relationships FOR UPDATE
   USING (
-    provider_profile_id = get_my_profile_id()
-    OR organization_id = get_my_organization_id()
+    (provider_profile_id = get_my_profile_id() OR organization_id = get_my_organization_id())
+    AND status = 'active'
   )
   WITH CHECK (
-    status IN ('inactive', 'pending')
+    (provider_profile_id = get_my_profile_id() OR organization_id = get_my_organization_id())
+    AND status = 'revoked'
   );
 
 
 -- ═══════════════════════════════════════════════════════════
--- 7. PRESCRIPTIONS
+-- 9. PRESCRIPTIONS RLS
 -- ═══════════════════════════════════════════════════════════
 
--- 1) Patient can read their own prescriptions
+DROP POLICY IF EXISTS "prescriptions_select_patient" ON prescriptions;
 CREATE POLICY "prescriptions_select_patient"
   ON prescriptions FOR SELECT
   USING (patient_id = get_my_profile_id());
 
--- 2) Author doctor can read prescriptions they wrote
+DROP POLICY IF EXISTS "prescriptions_select_author_doctor" ON prescriptions;
 CREATE POLICY "prescriptions_select_author_doctor"
   ON prescriptions FOR SELECT
   USING (doctor_id = get_my_profile_id());
 
--- 3) Issuing hospital can read prescriptions issued under their facility
+DROP POLICY IF EXISTS "prescriptions_select_issuing_hospital" ON prescriptions;
 CREATE POLICY "prescriptions_select_issuing_hospital"
   ON prescriptions FOR SELECT
   USING (hospital_id = get_my_organization_id());
 
--- 4) Authorized providers can read prescriptions ONLY if they have an active relationship with the patient
+DROP POLICY IF EXISTS "prescriptions_select_authorized_providers" ON prescriptions;
 CREATE POLICY "prescriptions_select_authorized_providers"
   ON prescriptions FOR SELECT
   USING (is_provider_authorized_for_patient(patient_id));
 
--- 5) Doctors can insert prescriptions ONLY for patients they have an active relationship with
+DROP POLICY IF EXISTS "prescriptions_insert_doctor" ON prescriptions;
+-- Doctors can insert prescriptions ONLY for authorized patients
 CREATE POLICY "prescriptions_insert_doctor"
   ON prescriptions FOR INSERT
   WITH CHECK (
@@ -218,7 +328,8 @@ CREATE POLICY "prescriptions_insert_doctor"
     AND is_provider_authorized_for_patient(patient_id)
   );
 
--- 6) Hospitals can insert hospital-associated prescriptions ONLY for authorized patients
+DROP POLICY IF EXISTS "prescriptions_insert_hospital" ON prescriptions;
+-- Hospitals can insert prescriptions ONLY for authorized patients
 CREATE POLICY "prescriptions_insert_hospital"
   ON prescriptions FOR INSERT
   WITH CHECK (
@@ -228,26 +339,24 @@ CREATE POLICY "prescriptions_insert_hospital"
     AND is_provider_authorized_for_patient(patient_id)
   );
 
--- 7) Author doctor can update their own prescription
+DROP POLICY IF EXISTS "prescriptions_update_doctor" ON prescriptions;
 CREATE POLICY "prescriptions_update_doctor"
   ON prescriptions FOR UPDATE
   USING (doctor_id = get_my_profile_id() AND get_my_role() = 'doctor')
   WITH CHECK (doctor_id = get_my_profile_id() AND get_my_role() = 'doctor');
 
--- 8) Hospital staff can update hospital prescriptions they created
+DROP POLICY IF EXISTS "prescriptions_update_hospital" ON prescriptions;
 CREATE POLICY "prescriptions_update_hospital"
   ON prescriptions FOR UPDATE
   USING (hospital_id = get_my_organization_id() AND created_by = get_my_profile_id() AND get_my_role() = 'hospital')
   WITH CHECK (hospital_id = get_my_organization_id() AND created_by = get_my_profile_id() AND get_my_role() = 'hospital');
 
--- NOTE: Diagnostics & Patients have NO INSERT/UPDATE policies on prescriptions (Strictly enforced).
-
 
 -- ═══════════════════════════════════════════════════════════
--- 8. PRESCRIPTION AI EXTRACTIONS (Inherits Parent Permissions)
+-- 10. PRESCRIPTION AI EXTRACTIONS RLS (Inherits Parent Permissions)
 -- ═══════════════════════════════════════════════════════════
 
--- Read access is strictly inherited from the parent prescription
+DROP POLICY IF EXISTS "pai_select_inherited" ON prescription_ai_extractions;
 CREATE POLICY "pai_select_inherited"
   ON prescription_ai_extractions FOR SELECT
   USING (
@@ -263,7 +372,7 @@ CREATE POLICY "pai_select_inherited"
     )
   );
 
--- Insertion restricted to creator of the prescription or authorized doctor/hospital
+DROP POLICY IF EXISTS "pai_insert_authorized" ON prescription_ai_extractions;
 CREATE POLICY "pai_insert_authorized"
   ON prescription_ai_extractions FOR INSERT
   WITH CHECK (
@@ -280,25 +389,26 @@ CREATE POLICY "pai_insert_authorized"
 
 
 -- ═══════════════════════════════════════════════════════════
--- 9. DIAGNOSTIC REPORTS
+-- 11. DIAGNOSTIC REPORTS RLS
 -- ═══════════════════════════════════════════════════════════
 
--- 1) Patient can read their own diagnostic reports
+DROP POLICY IF EXISTS "reports_select_patient" ON diagnostic_reports;
 CREATE POLICY "reports_select_patient"
   ON diagnostic_reports FOR SELECT
   USING (patient_id = get_my_profile_id());
 
--- 2) Issuing diagnostic facility can read their own reports
+DROP POLICY IF EXISTS "reports_select_issuing_org" ON diagnostic_reports;
 CREATE POLICY "reports_select_issuing_org"
   ON diagnostic_reports FOR SELECT
   USING (diagnostics_organization_id = get_my_organization_id());
 
--- 3) Authorized providers can read reports for patients they treat
+DROP POLICY IF EXISTS "reports_select_authorized_providers" ON diagnostic_reports;
 CREATE POLICY "reports_select_authorized_providers"
   ON diagnostic_reports FOR SELECT
   USING (is_provider_authorized_for_patient(patient_id));
 
--- 4) Diagnostics organizations can insert reports ONLY for patients they are authorized for
+DROP POLICY IF EXISTS "reports_insert_diagnostics" ON diagnostic_reports;
+-- Only diagnostics organizations can insert reports for authorized patients
 CREATE POLICY "reports_insert_diagnostics"
   ON diagnostic_reports FOR INSERT
   WITH CHECK (
@@ -308,35 +418,34 @@ CREATE POLICY "reports_insert_diagnostics"
     AND is_provider_authorized_for_patient(patient_id)
   );
 
--- 5) Issuing diagnostic organization can update their own reports
+DROP POLICY IF EXISTS "reports_update_diagnostics" ON diagnostic_reports;
 CREATE POLICY "reports_update_diagnostics"
   ON diagnostic_reports FOR UPDATE
   USING (diagnostics_organization_id = get_my_organization_id() AND get_my_role() = 'diagnostics')
   WITH CHECK (diagnostics_organization_id = get_my_organization_id() AND get_my_role() = 'diagnostics');
 
--- NOTE: Doctors, Hospitals, and Patients cannot insert diagnostic reports.
-
 
 -- ═══════════════════════════════════════════════════════════
--- 10. HOSPITAL VISITS
+-- 12. HOSPITAL VISITS RLS
 -- ═══════════════════════════════════════════════════════════
 
--- 1) Patient can read their own hospital visits
+DROP POLICY IF EXISTS "visits_select_patient" ON hospital_visits;
 CREATE POLICY "visits_select_patient"
   ON hospital_visits FOR SELECT
   USING (patient_id = get_my_profile_id());
 
--- 2) Hospital can read visits recorded at their facility
+DROP POLICY IF EXISTS "visits_select_hospital" ON hospital_visits;
 CREATE POLICY "visits_select_hospital"
   ON hospital_visits FOR SELECT
   USING (hospital_id = get_my_organization_id());
 
--- 3) Authorized providers can read hospital visits for patients they treat
+DROP POLICY IF EXISTS "visits_select_authorized_providers" ON hospital_visits;
 CREATE POLICY "visits_select_authorized_providers"
   ON hospital_visits FOR SELECT
   USING (is_provider_authorized_for_patient(patient_id));
 
--- 4) Hospitals can insert visit records ONLY for authorized patients
+DROP POLICY IF EXISTS "visits_insert_hospital" ON hospital_visits;
+-- Only hospital organizations can insert hospital visit records for authorized patients
 CREATE POLICY "visits_insert_hospital"
   ON hospital_visits FOR INSERT
   WITH CHECK (
@@ -346,7 +455,7 @@ CREATE POLICY "visits_insert_hospital"
     AND is_provider_authorized_for_patient(patient_id)
   );
 
--- 5) Hospital staff can update visit records issued by their hospital
+DROP POLICY IF EXISTS "visits_update_hospital" ON hospital_visits;
 CREATE POLICY "visits_update_hospital"
   ON hospital_visits FOR UPDATE
   USING (hospital_id = get_my_organization_id() AND get_my_role() = 'hospital')
@@ -354,20 +463,21 @@ CREATE POLICY "visits_update_hospital"
 
 
 -- ═══════════════════════════════════════════════════════════
--- 11. MEDICAL RECORDS (Unified Timeline Index)
+-- 13. MEDICAL RECORDS RLS (Timeline Index)
 -- ═══════════════════════════════════════════════════════════
 
--- 1) Patient can read their own unified timeline
+DROP POLICY IF EXISTS "timeline_select_patient" ON medical_records;
 CREATE POLICY "timeline_select_patient"
   ON medical_records FOR SELECT
   USING (patient_id = get_my_profile_id());
 
--- 2) Authorized providers can read timeline entries for patients they treat
+DROP POLICY IF EXISTS "timeline_select_authorized_providers" ON medical_records;
 CREATE POLICY "timeline_select_authorized_providers"
   ON medical_records FOR SELECT
   USING (is_provider_authorized_for_patient(patient_id));
 
--- 3) Authorized providers can insert timeline index entries ONLY for authorized patients
+DROP POLICY IF EXISTS "timeline_insert_authorized_providers" ON medical_records;
+-- Timeline entries can ONLY be inserted by authorized providers treating the patient
 CREATE POLICY "timeline_insert_authorized_providers"
   ON medical_records FOR INSERT
   WITH CHECK (
@@ -376,7 +486,7 @@ CREATE POLICY "timeline_insert_authorized_providers"
     AND (created_by IS NULL OR created_by = get_my_profile_id())
   );
 
--- 4) Modifying timeline entries restricted to creator
+DROP POLICY IF EXISTS "timeline_update_creator" ON medical_records;
 CREATE POLICY "timeline_update_creator"
   ON medical_records FOR UPDATE
   USING (created_by = get_my_profile_id())
@@ -384,25 +494,26 @@ CREATE POLICY "timeline_update_creator"
 
 
 -- ═══════════════════════════════════════════════════════════
--- 12. DOCUMENTS (Metadata referencing Private Storage)
+-- 14. DOCUMENTS RLS (Metadata referencing Private Storage)
 -- ═══════════════════════════════════════════════════════════
 
--- 1) Patient can read documents belonging to their record
+DROP POLICY IF EXISTS "documents_select_patient" ON documents;
 CREATE POLICY "documents_select_patient"
   ON documents FOR SELECT
   USING (patient_id = get_my_profile_id());
 
--- 2) Authorized providers can read documents for patients they treat
+DROP POLICY IF EXISTS "documents_select_authorized_providers" ON documents;
 CREATE POLICY "documents_select_authorized_providers"
   ON documents FOR SELECT
   USING (is_provider_authorized_for_patient(patient_id));
 
--- 3) Uploader can always read documents they uploaded
+DROP POLICY IF EXISTS "documents_select_uploader" ON documents;
 CREATE POLICY "documents_select_uploader"
   ON documents FOR SELECT
   USING (uploaded_by = get_my_profile_id());
 
--- 4) Authorized providers can insert document metadata ONLY for authorized patients
+DROP POLICY IF EXISTS "documents_insert_authorized_providers" ON documents;
+-- Documents can ONLY be attached by authorized providers treating the patient
 CREATE POLICY "documents_insert_authorized_providers"
   ON documents FOR INSERT
   WITH CHECK (
@@ -411,24 +522,61 @@ CREATE POLICY "documents_insert_authorized_providers"
     AND is_provider_authorized_for_patient(patient_id)
   );
 
--- 5) Uploader can delete document metadata they uploaded
+DROP POLICY IF EXISTS "documents_delete_uploader" ON documents;
 CREATE POLICY "documents_delete_uploader"
   ON documents FOR DELETE
   USING (uploaded_by = get_my_profile_id());
 
 
 -- ═══════════════════════════════════════════════════════════
--- 13. AUDIT LOGS (Strict Append-Only Protection)
+-- 15. AUDIT LOGS RLS (Strict Append-Only Protection)
 -- ═══════════════════════════════════════════════════════════
 
--- Users can inspect audit entries associated with their actions
+DROP POLICY IF EXISTS "audit_logs_select_own" ON audit_logs;
 CREATE POLICY "audit_logs_select_own"
   ON audit_logs FOR SELECT
   USING (actor_user_id = get_my_profile_id());
 
--- Authenticated users can insert audit records for their OWN actions ONLY (prevents actor spoofing)
+DROP POLICY IF EXISTS "audit_logs_insert_own" ON audit_logs;
+-- Append-only: Users can only record logs under their own authenticated profile
 CREATE POLICY "audit_logs_insert_own"
   ON audit_logs FOR INSERT
   WITH CHECK (actor_user_id = get_my_profile_id());
 
--- NO UPDATE OR DELETE POLICIES ON AUDIT LOGS (Immutable security logs).
+-- NO UPDATE OR DELETE POLICIES PERMITTED (Logs are strictly immutable).
+
+
+-- ═══════════════════════════════════════════════════════════
+-- 16. SANITIZED PUBLIC/PROVIDER DIRECTORY VIEWS
+-- ═══════════════════════════════════════════════════════════
+
+-- View for displaying verified doctors without exposing private license numbers or personal emails/phones
+CREATE OR REPLACE VIEW public.doctor_directory AS
+SELECT
+  d.id,
+  d.profile_id,
+  p.full_name,
+  p.avatar_url,
+  d.specialization,
+  d.qualification,
+  d.years_of_experience,
+  d.bio,
+  o.name AS organization_name
+FROM public.doctor_profiles d
+JOIN public.profiles p ON p.id = d.profile_id
+LEFT JOIN public.organizations o ON o.id = d.organization_id
+WHERE p.role = 'doctor';
+
+-- View for displaying verified organizations (Hospitals & Diagnostics)
+CREATE OR REPLACE VIEW public.organization_directory AS
+SELECT
+  o.id,
+  o.name,
+  o.type,
+  o.address,
+  o.phone,
+  o.email,
+  o.logo_url,
+  o.is_verified
+FROM public.organizations o
+WHERE o.is_verified = true;
