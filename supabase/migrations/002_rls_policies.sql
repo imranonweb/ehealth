@@ -2,8 +2,8 @@
 -- E-Health Platform — Migration 002: Row Level Security Policies
 -- ═══════════════════════════════════════════════════════════
 -- Description: Strict role-based access control, role escalation
--- prevention, patient confidentiality isolation, and relationship-gated
--- clinical data access.
+-- prevention, patient confidentiality isolation, relationship-gated
+-- clinical data access, and secure directory views.
 -- ═══════════════════════════════════════════════════════════
 
 -- ───────────────────────────────────────────────────────────
@@ -71,18 +71,18 @@ CREATE TRIGGER trg_ppr_immutable_fields
 
 
 -- ───────────────────────────────────────────────────────────
--- 3. SECURE PATIENT LOOKUP FUNCTION (NO BROAD DIRECTORY ACCESS)
+-- 3. SECURE PATIENT LOOKUP FUNCTION (MINIMAL DATA DISCLOSURE)
 -- ───────────────────────────────────────────────────────────
 
 -- Controlled lookup: Providers CANNOT browse all patients.
 -- They can only query a single patient by exact Patient Identifier (e.g. P-9824F1A2).
+-- Returns only the minimum necessary identity fields without date_of_birth.
 CREATE OR REPLACE FUNCTION public.lookup_patient_by_identifier(p_identifier TEXT)
 RETURNS TABLE (
   patient_profile_id UUID,
   full_name TEXT,
   patient_identifier TEXT,
-  gender gender_type,
-  date_of_birth DATE
+  gender gender_type
 ) AS $$
 BEGIN
   -- Only authenticated provider roles can perform lookup
@@ -95,8 +95,7 @@ BEGIN
     p.id AS patient_profile_id,
     p.full_name,
     pp.patient_identifier,
-    p.gender,
-    p.date_of_birth
+    p.gender
   FROM public.profiles p
   JOIN public.patient_profiles pp ON pp.profile_id = p.id
   WHERE pp.patient_identifier = upper(trim(p_identifier))
@@ -143,7 +142,7 @@ CREATE POLICY "profiles_select_authorized_providers"
   );
 
 DROP POLICY IF EXISTS "profiles_select_provider_identities" ON profiles;
--- Public directory access to doctor and organization profile names
+-- Directory access to doctor and organization profile names
 CREATE POLICY "profiles_select_provider_identities"
   ON profiles FOR SELECT
   USING (role IN ('doctor', 'hospital', 'diagnostics'));
@@ -547,11 +546,12 @@ CREATE POLICY "audit_logs_insert_own"
 
 
 -- ═══════════════════════════════════════════════════════════
--- 16. SANITIZED PUBLIC/PROVIDER DIRECTORY VIEWS
+-- 16. SANITIZED PUBLIC/PROVIDER DIRECTORY VIEWS (SECURITY INVOKER)
 -- ═══════════════════════════════════════════════════════════
 
--- View for displaying verified doctors without exposing private license numbers or personal emails/phones
-CREATE OR REPLACE VIEW public.doctor_directory AS
+-- Secure View: Public doctor directory (exposes ONLY professional/public attributes)
+CREATE OR REPLACE VIEW public.doctor_directory
+WITH (security_invoker = true) AS
 SELECT
   d.id,
   d.profile_id,
@@ -567,8 +567,9 @@ JOIN public.profiles p ON p.id = d.profile_id
 LEFT JOIN public.organizations o ON o.id = d.organization_id
 WHERE p.role = 'doctor';
 
--- View for displaying verified organizations (Hospitals & Diagnostics)
-CREATE OR REPLACE VIEW public.organization_directory AS
+-- Secure View: Public organization directory (exposes ONLY public business attributes)
+CREATE OR REPLACE VIEW public.organization_directory
+WITH (security_invoker = true) AS
 SELECT
   o.id,
   o.name,
