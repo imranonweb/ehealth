@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BedDouble, Calendar, Building2, ChevronRight, FileText, Search, User, Eye, Activity } from 'lucide-react';
+import { BedDouble, Calendar, Building2, ChevronRight, Search } from 'lucide-react';
 import { usePatientVisits } from '../../hooks/useMedicalRecords';
 import { formatDate } from '../../lib/utils';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -34,13 +34,13 @@ export function PatientHospitalRecords() {
   const getVisitTypeBadge = (type) => {
     switch (type) {
       case 'emergency':
-        return <span className="badge" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', fontWeight: 700 }}>EMERGENCY</span>;
+        return <span className="badge badge-danger">EMERGENCY</span>;
       case 'inpatient':
-        return <span className="badge" style={{ background: 'rgba(15,118,110,0.12)', color: 'var(--primary)', fontWeight: 700 }}>INPATIENT ADMISSION</span>;
+        return <span className="badge badge-primary">INPATIENT ADMISSION</span>;
       case 'outpatient':
-        return <span className="badge" style={{ background: 'rgba(59,130,246,0.12)', color: '#3B82F6', fontWeight: 700 }}>OUTPATIENT</span>;
+        return <span className="badge badge-blue">OUTPATIENT</span>;
       default:
-        return <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>{type?.replace('_', ' ').toUpperCase()}</span>;
+        return <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-secondary)' }}>{type?.replace('_', ' ').toUpperCase()}</span>;
     }
   };
 
@@ -59,7 +59,7 @@ export function PatientHospitalRecords() {
       {/* Search Input */}
       <div className="card" style={{ padding: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
         <div style={{ position: 'relative', width: '100%' }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
+          <Search size={16} className="input-icon" />
           <input
             type="text"
             className="input has-icon"
@@ -95,17 +95,17 @@ export function PatientHospitalRecords() {
               {/* Top Meta */}
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(15,118,110,0.12)', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <BedDouble size={22} />
+                  <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--color-teal-bg)', color: 'var(--color-teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <BedDouble size={20} />
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0, color: 'var(--text-1)' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                         {v.department || 'Clinical Encounter'}
                       </h3>
                       {getVisitTypeBadge(v.visit_type)}
                     </div>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Calendar size={13} />
                       <span>Admission: <strong>{formatDate(v.admission_date)}</strong></span>
                       {v.discharge_date && <span>· Discharge: {formatDate(v.discharge_date)}</span>}
@@ -114,11 +114,11 @@ export function PatientHospitalRecords() {
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                  <div style={{ fontSize: '0.84375rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {v.hospital?.name || 'Hospital Facility'}
                   </div>
                   {v.doctor?.full_name && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       Attending: {v.doctor.full_name}
                     </div>
                   )}
@@ -126,12 +126,12 @@ export function PatientHospitalRecords() {
               </div>
 
               {/* Reason / Diagnosis */}
-              <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-1)' }}>
+              <div style={{ background: 'var(--bg-surface-muted)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                <div style={{ fontSize: '0.84375rem', color: 'var(--text-primary)' }}>
                   <strong>Chief Complaint / Reason:</strong> {v.reason}
                 </div>
                 {v.diagnosis_summary && (
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-2)', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     <strong>Clinical Diagnosis / Outcome:</strong> {v.diagnosis_summary}
                   </div>
                 )}
@@ -139,17 +139,17 @@ export function PatientHospitalRecords() {
 
               {/* Treatment Notes Snippet */}
               {v.notes && (
-                <div style={{ marginTop: 10, fontSize: '0.8125rem', color: 'var(--text-3)', fontStyle: 'italic' }}>
+                <div style={{ marginTop: 10, fontSize: '0.8125rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
                   "{v.notes}"
                 </div>
               )}
 
               {/* Action Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-default)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   Verified hospital record
                 </span>
-                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   Full Encounter Details <ChevronRight size={14} />
                 </span>
               </div>

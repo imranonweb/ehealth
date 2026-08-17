@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlaskConical, Calendar, Building2, ChevronRight, FileText, Search, Eye, Download } from 'lucide-react';
+import { FlaskConical, Calendar, ChevronRight, Search, Eye } from 'lucide-react';
 import { usePatientReports } from '../../hooks/useMedicalRecords';
 import { formatDate } from '../../lib/utils';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -56,7 +56,7 @@ export function PatientDiagnosticReports() {
       {/* Search Input */}
       <div className="card" style={{ padding: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
         <div style={{ position: 'relative', width: '100%' }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
+          <Search size={16} className="input-icon" />
           <input
             type="text"
             className="input has-icon"
@@ -91,28 +91,28 @@ export function PatientDiagnosticReports() {
             >
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FlaskConical size={22} />
+                  <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--color-purple-bg)', color: 'var(--color-purple)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FlaskConical size={20} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0, color: 'var(--text-1)' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                       {r.test_name}
                     </h3>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <Calendar size={13} /> {formatDate(r.report_date)}
                       {r.test_category && (
-                        <span>· Category: <strong style={{ color: 'var(--text-2)' }}>{r.test_category}</strong></span>
+                        <span>· Category: <strong style={{ color: 'var(--text-secondary)' }}>{r.test_category}</strong></span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                  <div style={{ fontSize: '0.84375rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {r.diagnostics_org?.name || 'Diagnostic Center'}
                   </div>
                   {r.doctor?.full_name && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       Ref: {r.doctor.full_name}
                     </div>
                   )}
@@ -121,8 +121,8 @@ export function PatientDiagnosticReports() {
 
               {/* Findings Summary */}
               {r.summary && (
-                <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', fontSize: '0.875rem', color: 'var(--text-1)', lineHeight: 1.6, marginTop: 8 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', display: 'block', marginBottom: 4, letterSpacing: '0.04em' }}>
+                <div style={{ background: 'var(--bg-surface-muted)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', fontSize: '0.84375rem', color: 'var(--text-primary)', lineHeight: 1.6, marginTop: 8 }}>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4, letterSpacing: '0.05em' }}>
                     Results & Clinical Findings
                   </span>
                   {r.summary}
@@ -131,31 +131,31 @@ export function PatientDiagnosticReports() {
 
               {/* Consultant Notes */}
               {r.doctor_notes && (
-                <div style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-2)' }}>
+                <div style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                   <strong>Consultant Remarks:</strong> {r.doctor_notes}
                 </div>
               )}
 
               {/* Footer action bar */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)', gap: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-default)', gap: 10 }}>
                 <div>
                   {r.document_path ? (
                     <button
                       type="button"
-                      className="btn btn-outline btn-sm"
+                      className="btn btn-secondary btn-sm"
                       onClick={(e) => handleViewDoc(e, r)}
                       style={{ fontSize: '0.75rem', padding: '4px 10px' }}
                     >
-                      <Eye size={13} /> View Attached Lab Report
+                      <Eye size={13} /> View Attached Lab Report Scan
                     </button>
                   ) : (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       Structured digital results
                     </span>
                   )}
                 </div>
 
-                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   View Full Report <ChevronRight size={14} />
                 </span>
               </div>

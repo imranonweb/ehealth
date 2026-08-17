@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pill, Calendar, User, Building2, ChevronRight, FileText, Search, Eye, Download } from 'lucide-react';
+import { Pill, Calendar, User, Building2, ChevronRight, Search, Eye, Sparkles } from 'lucide-react';
 import { usePatientPrescriptions } from '../../hooks/useMedicalRecords';
 import { formatDate, parseMedications } from '../../lib/utils';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -48,7 +48,7 @@ export function PatientPrescriptions() {
         <div>
           <h1 className="page-title">Prescriptions</h1>
           <p className="page-sub">
-            Medications, clinical dosages, and treatment schedules issued by your doctors.
+            Medications, clinical dosages, and treatment schedules issued by your authorized doctors.
           </p>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function PatientPrescriptions() {
       {/* Search Filter */}
       <div className="card" style={{ padding: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
         <div style={{ position: 'relative', width: '100%' }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
+          <Search size={16} className="input-icon" />
           <input
             type="text"
             className="input has-icon"
@@ -94,25 +94,25 @@ export function PatientPrescriptions() {
                 {/* Header row */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(59,130,246,0.12)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Pill size={22} />
+                    <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--color-blue-bg)', color: 'var(--color-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Pill size={20} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0, color: 'var(--text-1)' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                         {p.diagnosis || 'Clinical Prescription'}
                       </h3>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                         <Calendar size={13} /> {formatDate(p.prescription_date)}
                       </div>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-1)' }}>
-                      {p.doctor?.full_name || 'Authorized Practitioner'}
+                    <div style={{ fontSize: '0.84375rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {p.doctor?.full_name || 'Authorized Doctor'}
                     </div>
                     {p.hospital?.name && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {p.hospital.name}
                       </div>
                     )}
@@ -121,18 +121,18 @@ export function PatientPrescriptions() {
 
                 {/* Medication Breakdown Chips */}
                 {meds.length > 0 && (
-                  <div style={{ background: 'var(--surface-2)', padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', marginTop: 8 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em' }}>
+                  <div style={{ background: 'var(--bg-surface-muted)', padding: '12px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)', marginTop: 8 }}>
+                    <div style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.05em' }}>
                       Prescribed Medications ({meds.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {meds.map((m, idx) => (
-                        <div key={idx} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--surface)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)' }}>
+                        <div key={idx} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
                           <div>
-                            <strong style={{ fontSize: '0.875rem', color: 'var(--text-1)' }}>{m.name}</strong>
-                            <span style={{ fontSize: '0.8125rem', color: 'var(--primary)', marginLeft: 8, fontWeight: 600 }}>{m.dosage}</span>
+                            <strong style={{ fontSize: '0.84375rem', color: 'var(--text-primary)' }}>{m.name}</strong>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--accent)', marginLeft: 8, fontWeight: 600 }}>{m.dosage}</span>
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                             {m.frequency} · {m.duration}
                             {m.instructions ? ` · (${m.instructions})` : ''}
                           </div>
@@ -144,31 +144,31 @@ export function PatientPrescriptions() {
 
                 {/* Instructions snippet */}
                 {p.instructions && (
-                  <div style={{ marginTop: 10, fontSize: '0.8125rem', color: 'var(--text-2)', lineHeight: 1.5 }}>
+                  <div style={{ marginTop: 10, fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     <strong>Doctor's Advice:</strong> {p.instructions}
                   </div>
                 )}
 
                 {/* Footer action bar */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)', gap: 10 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-default)', gap: 10 }}>
                   <div>
                     {p.document_path ? (
                       <button
                         type="button"
-                        className="btn btn-outline btn-sm"
+                        className="btn btn-secondary btn-sm"
                         onClick={(e) => handleViewDoc(e, p)}
                         style={{ fontSize: '0.75rem', padding: '4px 10px' }}
                       >
                         <Eye size={13} /> View Attached Prescription Scan
                       </button>
                     ) : (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         Structured digital record
                       </span>
                     )}
                   </div>
 
-                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     Full Details <ChevronRight size={14} />
                   </span>
                 </div>

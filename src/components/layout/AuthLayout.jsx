@@ -1,56 +1,76 @@
 import { Outlet } from 'react-router-dom';
-import { Activity, ShieldCheck, Clock, Users, Lock, HeartPulse } from 'lucide-react';
+import { Activity, ShieldCheck, HeartPulse, Lock } from 'lucide-react';
+import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 import './AuthLayout.css';
 
 export function AuthLayout() {
   return (
     <div className="auth-layout">
-      {/* Left panel */}
+      {/* Left Medical SaaS Brand Panel */}
       <div className="auth-panel">
         <div className="auth-panel-inner">
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-            <div style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <Activity size={20} color="#fff" />
+          {/* Logo Header */}
+          <div className="auth-panel-brand">
+            <div className="auth-logo-icon">
+              <Activity size={22} color="#FFFFFF" />
             </div>
-            <span style={{ fontWeight: 800, fontSize: '1.125rem', color: '#fff', letterSpacing: '-0.02em' }}>E-Health</span>
+            <span className="auth-logo-text">E-Health</span>
           </div>
 
+          {/* Core Value Proposition */}
           <div className="auth-panel-headline">
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', marginBottom: 16 }}>
-              One patient.<br />One medical history.<br />One trusted record.
+            <h2>
+              One Patient.<br />
+              One Medical History.<br />
+              One Connected Record.
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              Centralized digital health platform connecting patients, doctors, diagnostic centers, and hospitals seamlessly.
+            <p>
+              A unified digital healthcare infrastructure connecting patients, doctors, diagnostic centers, and hospitals under strict privacy governance.
             </p>
           </div>
 
-          {/* Highlights */}
+          {/* Healthcare Platform Safeguards */}
           <div className="auth-highlights">
-            {[
-              { icon: ShieldCheck, title: 'Role-Based Access Control', desc: 'Patients, doctors, and hospitals access only authorized clinical records' },
-              { icon: HeartPulse,  title: 'Unified Medical Timeline', desc: 'Prescriptions, lab reports, and admissions in one chronological view' },
-              { icon: Lock,        title: 'Privacy-First Architecture', desc: 'Secure database row-level security and signed document access' },
-            ].map((h, i) => {
-              const Icon = h.icon;
-              return (
-                <div key={i} className="auth-highlight-item">
-                  <div style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.12)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon size={18} color="rgba(255,255,255,0.9)" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{h.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{h.desc}</div>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="auth-highlight-item">
+              <div className="auth-highlight-icon">
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <div className="auth-highlight-title">Strict Role Isolation (RLS)</div>
+                <div className="auth-highlight-sub">Providers only access authorized patient charts via active relationships.</div>
+              </div>
+            </div>
+
+            <div className="auth-highlight-item">
+              <div className="auth-highlight-icon">
+                <HeartPulse size={18} />
+              </div>
+              <div>
+                <div className="auth-highlight-title">Unified Medical Timeline</div>
+                <div className="auth-highlight-sub">Prescriptions, diagnostic findings, and hospitalizations in a single record.</div>
+              </div>
+            </div>
+
+            <div className="auth-highlight-item">
+              <div className="auth-highlight-icon">
+                <Lock size={18} />
+              </div>
+              <div>
+                <div className="auth-highlight-title">Encrypted Storage Architecture</div>
+                <div className="auth-highlight-sub">Private bucket objects accessible strictly via short-lived signed URLs.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right panel */}
+      {/* Right Form Panel */}
       <div className="auth-right">
+        {/* Top Header Theme Toggle */}
+        <div className="auth-top-actions">
+          <ThemeSwitcher size="sm" />
+        </div>
+
         <div className="auth-form-wrap">
           <Outlet />
         </div>

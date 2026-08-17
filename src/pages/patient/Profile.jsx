@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Calendar, Heart, ShieldCheck, AlertCircle, Save, CheckCircle2, Loader2 } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Calendar, Heart, ShieldCheck, Save, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { patientService } from '../../services/patientService';
 import { formatPatientId, getInitials } from '../../lib/utils';
+import { ThemeSwitcher } from '../../components/ui/ThemeSwitcher';
 
 export function PatientProfile() {
   const { profile, refreshProfile } = useAuth();
@@ -81,19 +82,26 @@ export function PatientProfile() {
 
       {/* Profile Overview Card */}
       <div className="card" style={{ padding: 'var(--sp-6)', marginBottom: 'var(--sp-6)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 20 }}>
-          <div className="avatar avatar-xl avatar-teal" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-            {getInitials(profile?.full_name)}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <div className="avatar avatar-xl avatar-teal">
+              {getInitials(profile?.full_name)}
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>{profile?.full_name || 'Patient'}</h2>
+              <div style={{ fontSize: '0.84375rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                Unique Health ID: <strong style={{ color: 'var(--accent)', letterSpacing: '0.04em' }}>{formatPatientId(patientId)}</strong>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <span className="badge badge-success">Verified Patient</span>
+                <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-secondary)' }}>Role: Patient</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{profile?.full_name || 'Patient'}</h2>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-3)', marginTop: 4 }}>
-              Unique Health ID: <strong style={{ color: 'var(--primary)', letterSpacing: '0.04em' }}>{formatPatientId(patientId)}</strong>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <span className="badge badge-success">Verified Patient</span>
-              <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>Role: Patient</span>
-            </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+            <span className="caption">Theme Preference</span>
+            <ThemeSwitcher size="sm" showLabels />
           </div>
         </div>
       </div>
@@ -101,7 +109,7 @@ export function PatientProfile() {
       {/* Edit Form */}
       <div className="card" style={{ padding: 'var(--sp-6)' }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, borderBottom: '1px solid var(--border)', paddingBottom: 10, margin: 0 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, borderBottom: '1px solid var(--border-default)', paddingBottom: 10, margin: 0 }}>
             Basic & Contact Details
           </h3>
 
@@ -136,7 +144,6 @@ export function PatientProfile() {
                 type="email"
                 value={profile?.email || ''}
                 disabled
-                style={{ background: 'var(--surface-2)', cursor: 'not-allowed' }}
               />
             </div>
 
@@ -171,7 +178,7 @@ export function PatientProfile() {
             />
           </div>
 
-          <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, borderBottom: '1px solid var(--border)', paddingBottom: 10, margin: '12px 0 0' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, borderBottom: '1px solid var(--border-default)', paddingBottom: 10, margin: '12px 0 0' }}>
             Emergency & Clinical Information
           </h3>
 
@@ -192,7 +199,7 @@ export function PatientProfile() {
               <input
                 className="input"
                 type="text"
-                placeholder="e.g. Penicillin, Sulfa, Peanuts (or None)"
+                placeholder="e.g. Penicillin, Sulfa, Peanuts (or None recorded)"
                 value={form.allergies}
                 onChange={(e) => setForm({ ...form, allergies: e.target.value })}
               />
