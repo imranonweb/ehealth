@@ -1,64 +1,87 @@
 -- ═══════════════════════════════════════════════════════════
--- E-Health Platform — Storage Setup
--- Run AFTER 002_rls_policies.sql
+-- E-Health Platform — Migration 003: Storage Security Policies
+-- ═══════════════════════════════════════════════════════════
+-- Description: Private storage bucket configuration and strict
+-- object-level authorization policies for medical files.
 -- ═══════════════════════════════════════════════════════════
 
--- Create a PRIVATE storage bucket for medical documents
+-- ───────────────────────────────────────────────────────────
+-- 1. CREATE PRIVATE BUCKET
+-- ───────────────────────────────────────────────────────────
+
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'medical-records',
   'medical-records',
-  false,
-  10485760,  -- 10 MB
+  false,                          -- Strictly private: requires authenticated signed URL
+  10485760,                       -- 10 MB maximum file size
   ARRAY['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  public = false,
+  file_size_limit = 10485760,
+  allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+
 
 -- ───────────────────────────────────────────────────────────
--- STORAGE POLICIES
+-- 2. STORAGE OBJECT ACCESS POLICIES
 -- ───────────────────────────────────────────────────────────
 
--- Providers can upload documents to patient folders
-CREATE POLICY "Providers can upload medical documents"
+-- 1) Patient can read their own medical document files
+-- (Path pattern: patients/<patient_id>/<category>/<filename>)
+CREATE POLICY "storage_select_patient_own_files"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'medical-records'
+    AND auth.uid() IS NOT NULL
+    AND public.extract_patient_id_from_storage_path(name) = public.get_my_profile_id()
+  );
+
+-- 2) Providers can read medical documents ONLY for authorized patients
+CREATE POLICY "storage_select_authorized_providers"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'medical-records'
+    AND auth.uid() IS NOT NULL
+    AND public.is_provider_authorized_for_patient(public.extract_patient_id_from_storage_path(name))
+  );
+
+-- 3) Uploader can always access files they uploaded
+CREATE POLICY "storage_select_uploader"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'medical-records'
+    AND auth.uid() IS NOT NULL
+    AND owner = auth.uid()
+  );
+
+-- 4) Providers can upload files ONLY for patients they are authorized to treat
+CREATE POLICY "storage_insert_authorized_providers_only"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'medical-records'
     AND auth.uid() IS NOT NULL
-    AND (
-      SELECT role FROM profiles WHERE auth_user_id = auth.uid()
-    ) IN ('doctor', 'diagnostics', 'hospital')
+    AND public.get_my_role() IN ('doctor', 'diagnostics', 'hospital')
+    AND public.is_provider_authorized_for_patient(public.extract_patient_id_from_storage_path(name))
   );
 
--- Patients can read their own documents
-CREATE POLICY "Patients can read own medical documents"
-  ON storage.objects FOR SELECT
+-- 5) Uploader can update their own uploaded files
+CREATE POLICY "storage_update_uploader"
+  ON storage.objects FOR UPDATE
   USING (
     bucket_id = 'medical-records'
     AND auth.uid() IS NOT NULL
-    AND (storage.foldername(name))[2] = (
-      SELECT id::text FROM profiles WHERE auth_user_id = auth.uid()
-    )
-  );
-
--- Providers can read documents for patients they treat
-CREATE POLICY "Providers can read related patient documents"
-  ON storage.objects FOR SELECT
-  USING (
+    AND owner = auth.uid()
+  )
+  WITH CHECK (
     bucket_id = 'medical-records'
     AND auth.uid() IS NOT NULL
-    AND EXISTS (
-      SELECT 1 FROM patient_provider_relationships ppr
-      WHERE ppr.patient_profile_id::text = (storage.foldername(name))[2]
-        AND ppr.provider_profile_id = (
-          SELECT id FROM profiles WHERE auth_user_id = auth.uid()
-        )
-        AND ppr.status = 'active'
-    )
+    AND owner = auth.uid()
   );
 
--- Uploaders can read documents they uploaded
-CREATE POLICY "Uploaders can read own uploads"
-  ON storage.objects FOR SELECT
+-- 6) Uploader can delete files they uploaded
+CREATE POLICY "storage_delete_uploader"
+  ON storage.objects FOR DELETE
   USING (
     bucket_id = 'medical-records'
     AND auth.uid() IS NOT NULL
