@@ -1,0 +1,58 @@
+/* Doctor Patients Page Styles */
+
+.filter-pill-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-pill {
+  padding: 6px 12px;
+  background-color: var(--bg-surface-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-pill:hover {
+  background-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.filter-pill.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.mobile-patient-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-patient-card {
+  padding: var(--sp-4);
+  background-color: var(--bg-surface-elevated);
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  .show-on-mobile {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-on-mobile {
+    display: none !important;
+  }
+}
