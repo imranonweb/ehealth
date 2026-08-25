@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-25T03:27:39Z",
+  "title": "Design System: E-Health",
+  "extensions": {
+    "colorMeta": {
+      "verified-teal": {
+        "role": "primary",
+        "displayName": "Verified Teal",
+        "canonical": "#0D9488",
+        "darkCounterpart": "#14B8A6",
+        "purpose": "Action, active state, and authorization. Never body text, never a section background.",
+        "tonalRamp": ["#042F2C", "#0A4B46", "#0F766E", "#0D9488", "#14B8A6", "#5EEAD4", "#99F6E4", "#CCFBF1"]
+      },
+      "record-blue": {
+        "role": "secondary",
+        "displayName": "Record Blue",
+        "canonical": "#2563EB",
+        "darkCounterpart": "#60A5FA",
+        "purpose": "Prescriptions. Fixed record-type hue — never reassigned.",
+        "tonalRamp": ["#0B1F52", "#12307E", "#1D4ED8", "#2563EB", "#3B82F6", "#60A5FA", "#93C5FD", "#DBEAFE"]
+      },
+      "assay-purple": {
+        "role": "secondary",
+        "displayName": "Assay Purple",
+        "canonical": "#7C3AED",
+        "darkCounterpart": "#A78BFA",
+        "purpose": "Diagnostic reports and lab findings. Fixed record-type hue.",
+        "tonalRamp": ["#2A1065", "#3F1D93", "#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD", "#EDE9FE"]
+      },
+      "confirm-green": {
+        "role": "tertiary",
+        "displayName": "Confirm Green",
+        "canonical": "#16A34A",
+        "darkCounterpart": "#4ADE80",
+        "purpose": "Completed, normal findings, active relationship.",
+        "tonalRamp": ["#052E16", "#0A5227", "#15803D", "#16A34A", "#22C55E", "#4ADE80", "#86EFAC", "#DCFCE7"]
+      },
+      "caution-amber": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "#D97706",
+        "darkCounterpart": "#FBBF24",
+        "purpose": "Warnings. Canonical use is the AI safety disclaimer. Never used to promote a feature.",
+        "tonalRamp": ["#40200A", "#6B3A0B", "#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FEF3C7"]
+      },
+      "alert-red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#DC2626",
+        "darkCounterpart": "#F87171",
+        "purpose": "Destructive actions, errors, revoked access.",
+        "tonalRamp": ["#3F0D0D", "#7F1D1D", "#B91C1C", "#DC2626", "#EF4444", "#F87171", "#FCA5A5", "#FEE2E2"]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#0F172A",
+        "darkCounterpart": "#F8FAFC",
+        "purpose": "All primary text and headings. Also the basis of every shadow and scrim.",
+        "tonalRamp": ["#020617", "#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1"]
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "#64748B",
+        "darkCounterpart": "#64748B",
+        "purpose": "Captions, timestamps, placeholders, uppercase micro-labels. Identical in both themes.",
+        "tonalRamp": ["#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F1F5F9"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#FFFFFF",
+        "darkCounterpart": "#111827",
+        "purpose": "Card and surface fill. A white card on an off-white page is the fundamental tonal step.",
+        "tonalRamp": ["#0B1120", "#111827", "#172033", "#1A2438", "#E2E8F0", "#F1F5F9", "#F8FAFC", "#FFFFFF"]
+      },
+      "paper-app": {
+        "role": "neutral",
+        "displayName": "Paper App",
+        "canonical": "#F8FAFC",
+        "darkCounterpart": "#0B1120",
+        "purpose": "Page background. Never used as a card fill.",
+        "tonalRamp": ["#0B1120", "#111827", "#1E293B", "#475569", "#94A3B8", "#E2E8F0", "#F1F5F9", "#F8FAFC"]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#E2E8F0",
+        "darkCounterpart": "#253044",
+        "purpose": "The default 1px structural border. The primary form-giver in this system.",
+        "tonalRamp": ["#1E293B", "#253044", "#334155", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F1F5F9"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero headline only. Once per page at most." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles across all four portals." },
+      "title": { "displayName": "Title", "purpose": "Section headings." },
+      "subtitle": { "displayName": "Subtitle", "purpose": "Card, panel, drawer and modal headings." },
+      "body": { "displayName": "Body", "purpose": "Default reading size, set on body. 15px." },
+      "body-small": { "displayName": "Body Small", "purpose": "The workhorse of the app shell — sidebar links, tables, page subtitles, toasts. 13.5px." },
+      "caption": { "displayName": "Caption", "purpose": "Timestamps, badge text, helper text. 12px." },
+      "label": { "displayName": "Label", "purpose": "The only uppercase style in the system. Micro-labels and group headers." }
+    },
+    "shadows": [
+      { "name": "shadow-xs", "value": "0 1px 2px rgba(15, 23, 42, 0.04)", "purpose": "Primary buttons, timeline dots, brand tile. A single pixel of separation." },
+      { "name": "shadow-sm", "value": "0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)", "purpose": "Resting state of every card. Softens the edge; does not lift." },
+      { "name": "shadow-md", "value": "0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04)", "purpose": "Card hover and .card-elevated. The only step that responds to the user." },
+      { "name": "shadow-lg", "value": "0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03)", "purpose": "Toasts — content arriving over the page unbidden." },
+      { "name": "shadow-xl", "value": "0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04)", "purpose": "Drawer, modal, open mobile sidebar. Always paired with a scrim." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(13, 148, 136, 0.08)", "purpose": "Additive to the input border on focus, never a replacement for it." },
+      { "name": "scrim-drawer", "value": "rgba(15, 23, 42, 0.7) + blur(4px)", "purpose": "Drawer backdrop. The scrim, not the shadow, communicates modality." },
+      { "name": "scrim-modal", "value": "rgba(15, 23, 42, 0.7) + blur(6px)", "purpose": "Modal backdrop." },
+      { "name": "scrim-sidebar", "value": "rgba(15, 23, 42, 0.6) + blur(4px)", "purpose": "Mobile off-canvas sidebar backdrop." }
+    ],
+    "motion": [
+      { "name": "transition-fast", "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "State changes on controls — hover, focus, border and background shifts." },
+      { "name": "transition-normal", "value": "250ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Theme switching and shell layout transitions." },
+      { "name": "ease-entrance", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Decelerating curve for arrivals: fadeIn on containers, modals, toasts." },
+      { "name": "fade-in", "value": "250ms — opacity 0→1 with translateY(4px)→0", "purpose": "Page container, modal and toast entrance. A 4px rise, not more." },
+      { "name": "drawer-slide", "value": "300ms translateX(100%)→0 on cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Record detail drawer." },
+      { "name": "shimmer", "value": "1.5s infinite linear, 200% background-position sweep", "purpose": "Skeleton loading state." },
+      { "name": "hover-lift", "value": "translateY(-1px)", "purpose": "Card hover. Exactly one pixel — felt more than seen." },
+      { "name": "reduced-motion", "value": "all animation and transition clamped to 0.01ms", "purpose": "prefers-reduced-motion block. Must survive any CSS refactor." }
+    ],
+    "breakpoints": [
+      { "name": "landing-nav", "value": "960px" },
+      { "name": "shell", "value": "1024px" },
+      { "name": "mobile", "value": "640px" }
+    ],
+    "geometry": [
+      { "name": "sidebar-width", "value": "260px" },
+      { "name": "sidebar-collapsed-width", "value": "72px" },
+      { "name": "navbar-height", "value": "64px" },
+      { "name": "container-app", "value": "1280px" },
+      { "name": "container-public", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most important action on a screen. Verified Teal fill, precise and unshowy.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Issue Prescription</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; padding: 10px 16px; border-radius: var(--radius-md, 8px); border: 1px solid transparent; cursor: pointer; white-space: nowrap; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary { background-color: var(--accent, #0D9488); color: #FFFFFF; border-color: var(--accent, #0D9488); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); } .ds-btn-primary:hover { background-color: var(--accent-hover, #0F766E); border-color: var(--accent-hover, #0F766E); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #0D9488); outline-offset: 2px; } .ds-btn-primary:active { background-color: var(--accent-hover, #0F766E); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Everything that is not the one primary action. Recessed fill with a visible rule.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Inter', -apple-system, sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; padding: 10px 16px; border-radius: var(--radius-md, 8px); border: 1px solid transparent; cursor: pointer; white-space: nowrap; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary { background-color: var(--bg-surface-muted, #F1F5F9); color: var(--text-primary, #0F172A); border-color: var(--border-default, #E2E8F0); } .ds-btn-secondary:hover { background-color: var(--bg-surface-hover, #F8FAFC); border-color: var(--border-strong, #CBD5E1); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #0D9488); outline-offset: 2px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "1.5px border — inputs read stronger than surfaces because they are interactive. Focus adds a teal ring on top of the border, never instead of it.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-hid\">Patient Health ID</label><input class=\"ds-input\" id=\"ds-hid\" type=\"text\" placeholder=\"P-9824F1A2\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 320px; font-family: 'Inter', -apple-system, sans-serif; } .ds-field-label { font-size: 0.8125rem; font-weight: 600; color: var(--text-primary, #0F172A); } .ds-input { width: 100%; font-family: inherit; font-size: 0.875rem; color: var(--text-primary, #0F172A); background-color: var(--bg-surface, #FFFFFF); border: 1.5px solid var(--border-default, #E2E8F0); border-radius: var(--radius-md, 8px); padding: 9px 14px; outline: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: var(--text-muted, #64748B); opacity: 0.8; } .ds-input:focus { border-color: var(--accent, #0D9488); box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Border and shadow together. Either alone is incomplete. Hover lifts exactly one pixel.",
+      "html": "<div class=\"ds-card ds-card-hover\"><div class=\"ds-card-header\"><span class=\"ds-card-title\">Recent Records</span><span class=\"ds-badge ds-badge-primary\">4 active</span></div><div class=\"ds-card-body\">Complete Blood Count &middot; Lipid Profile</div></div>",
+      "css": ".ds-card { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-surface, #FFFFFF); border: 1px solid var(--border-default, #E2E8F0); border-radius: var(--radius-lg, 12px); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04); overflow: hidden; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1); max-width: 360px; } .ds-card-hover:hover { border-color: var(--border-strong, #CBD5E1); box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04); transform: translateY(-1px); } .ds-card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-default, #E2E8F0); display: flex; align-items: center; justify-content: space-between; gap: 12px; } .ds-card-title { font-size: 1rem; font-weight: 700; color: var(--text-primary, #0F172A); } .ds-card-body { padding: 24px; font-size: 0.9375rem; line-height: 1.5; color: var(--text-secondary, #475569); } .ds-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; line-height: 1; padding: 4px 9px; border-radius: 9999px; border: 1px solid transparent; white-space: nowrap; } .ds-badge-primary { background-color: rgba(13, 148, 136, 0.08); color: var(--accent-text, #0F766E); border-color: rgba(13, 148, 136, 0.2); }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Read-only status pills built from three layers of one hue: 8% wash fill, hue as text, 20% border. Pill shape means state, not action.",
+      "html": "<div class=\"ds-badge-row\"><span class=\"ds-badge ds-badge-primary\">Active</span><span class=\"ds-badge ds-badge-blue\">Prescription</span><span class=\"ds-badge ds-badge-purple\">Lab Report</span><span class=\"ds-badge ds-badge-warning\">Pending</span><span class=\"ds-badge ds-badge-danger\">Revoked</span></div>",
+      "css": ".ds-badge-row { display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Inter', -apple-system, sans-serif; } .ds-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; line-height: 1; padding: 4px 9px; border-radius: 9999px; border: 1px solid transparent; white-space: nowrap; } .ds-badge-primary { background-color: rgba(13, 148, 136, 0.08); color: #0F766E; border-color: rgba(13, 148, 136, 0.2); } .ds-badge-blue { background-color: rgba(37, 99, 235, 0.08); color: #2563EB; border-color: rgba(37, 99, 235, 0.2); } .ds-badge-purple { background-color: rgba(124, 58, 237, 0.08); color: #7C3AED; border-color: rgba(124, 58, 237, 0.2); } .ds-badge-warning { background-color: rgba(217, 119, 6, 0.08); color: #D97706; border-color: rgba(217, 119, 6, 0.2); } .ds-badge-danger { background-color: rgba(220, 38, 38, 0.08); color: #DC2626; border-color: rgba(220, 38, 38, 0.2); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "sidebar-link",
+      "description": "Active state fills with teal wash, switches text and icon to Verified Teal, goes 600 weight, and takes a 15%-alpha border. Group headers are the system's uppercase micro-label.",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-group-label\">Records</div><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 8V4H8\"/><rect width=\"16\" height=\"12\" x=\"4\" y=\"8\" rx=\"2\"/><path d=\"M2 14h2M20 14h2M15 13v2M9 13v2\"/></svg><span>Medical Timeline</span></a><a class=\"ds-nav-link\" href=\"#\"><svg class=\"ds-nav-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6M9 15h6M9 11h6\"/></svg><span>Prescriptions</span><span class=\"ds-nav-badge\">3</span></a></nav>",
+      "css": ".ds-nav { font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; gap: 2px; width: 236px; padding: 8px; background: var(--bg-surface, #FFFFFF); } .ds-nav-group-label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted, #64748B); padding: 0 12px 4px; } .ds-nav-link { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: var(--radius-md, 8px); color: var(--text-secondary, #475569); text-decoration: none; font-size: 0.84375rem; font-weight: 500; border: 1px solid transparent; transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-link span:first-of-type { flex: 1; } .ds-nav-link:hover { background-color: var(--bg-surface-muted, #F1F5F9); color: var(--text-primary, #0F172A); } .ds-nav-link:focus-visible { outline: 2px solid var(--accent, #0D9488); outline-offset: 2px; } .ds-nav-link-active { background-color: rgba(13, 148, 136, 0.08); color: var(--accent, #0D9488); font-weight: 600; border-color: rgba(13, 148, 136, 0.15); } .ds-nav-icon { flex-shrink: 0; } .ds-nav-badge { font-size: 0.6875rem; padding: 2px 6px; border-radius: 9999px; background-color: var(--bg-surface-muted, #F1F5F9); color: var(--text-muted, #64748B); }"
+    },
+    {
+      "name": "Medical Timeline Entry",
+      "kind": "custom",
+      "refersTo": "timeline-dot",
+      "description": "The signature component. A 40px rounded-square dot in the record-type hue on a 2px spine, beside a content card whose field order is fixed: when, what kind, what, who, then detail. The provider line is never optional.",
+      "html": "<div class=\"ds-timeline\"><div class=\"ds-tl-item\"><div class=\"ds-tl-connector\"><div class=\"ds-tl-dot ds-tl-dot-blue\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6M9 15h6M9 11h6\"/></svg></div><div class=\"ds-tl-line\"></div></div><div class=\"ds-tl-content\"><div class=\"ds-tl-meta\"><span class=\"ds-tl-date\">12 Aug 2026</span><span class=\"ds-tl-type ds-tl-type-blue\">Prescription</span></div><div class=\"ds-tl-title\">Hypertension &amp; Dyslipidemia</div><div class=\"ds-tl-provider\">Issuing clinician &middot; Institution name</div><div class=\"ds-tl-summary\">Two-line clamped summary of the record contents, truncating with an ellipsis once it exceeds the available width across both lines.</div><button class=\"ds-tl-action\">View record &rarr;</button></div></div></div>",
+      "css": ".ds-timeline { font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; max-width: 480px; } .ds-tl-item { display: flex; gap: 16px; cursor: pointer; } .ds-tl-connector { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 40px; } .ds-tl-dot { width: 40px; height: 40px; border-radius: var(--radius-md, 8px); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border-default, #E2E8F0); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-tl-dot-blue { background-color: rgba(37, 99, 235, 0.08); color: #2563EB; } .ds-tl-item:hover .ds-tl-dot { transform: scale(1.05); } .ds-tl-line { width: 2px; flex: 1; min-height: 24px; background-color: var(--border-default, #E2E8F0); margin: 4px 0; } .ds-tl-content { flex: 1; padding: 16px 20px; border: 1px solid var(--border-default, #E2E8F0); border-radius: var(--radius-lg, 12px); background-color: var(--bg-surface, #FFFFFF); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-tl-item:hover .ds-tl-content { border-color: var(--accent, #0D9488); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04); } .ds-tl-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; } .ds-tl-date { font-size: 0.75rem; font-weight: 600; color: var(--text-muted, #64748B); } .ds-tl-type { font-size: 0.6875rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px; } .ds-tl-type-blue { background-color: rgba(37, 99, 235, 0.08); color: #2563EB; } .ds-tl-title { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary, #0F172A); margin-bottom: 4px; letter-spacing: -0.01em; } .ds-tl-provider { font-size: 0.8125rem; color: var(--text-secondary, #475569); margin-bottom: 6px; } .ds-tl-summary { font-size: 0.8125rem; color: var(--text-muted, #64748B); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } .ds-tl-action { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 0.75rem; font-weight: 600; color: var(--accent, #0D9488); background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; } .ds-tl-action:focus-visible { outline: 2px solid var(--accent, #0D9488); outline-offset: 2px; border-radius: 2px; }"
+    },
+    {
+      "name": "AI Safety Disclaimer",
+      "kind": "custom",
+      "description": "The canonical use of Caution Amber, and the visual expression of the product principle that AI explains but never advises. Appears above every AI-generated explanation.",
+      "html": "<div class=\"ds-ai-disclaimer\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3\"/><path d=\"M12 9v4M12 17h.01\"/></svg><span>Educational explanation only. Not a diagnosis, and never a reason to change a dose. Consult your clinician.</span></div>",
+      "css": ".ds-ai-disclaimer { display: flex; align-items: flex-start; gap: 8px; font-family: 'Inter', -apple-system, sans-serif; padding: 8px 12px; background-color: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.3); border-radius: var(--radius-sm, 6px); font-size: 0.75rem; color: var(--color-warning, #D97706); line-height: 1.4; max-width: 420px; } .ds-ai-disclaimer svg { flex-shrink: 0; margin-top: 1px; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "description": "A 1.5px dashed frame with a 56px rounded-square icon tile. The dashed border is the system's only dashed line and marks absence rather than structure.",
+      "html": "<div class=\"ds-empty\"><div class=\"ds-empty-icon\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/></svg></div><p class=\"ds-empty-title\">No records yet</p><p class=\"ds-empty-desc\">Records appear here as soon as an authorized provider issues one. Nothing is hidden from you.</p></div>",
+      "css": ".ds-empty { font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 48px 24px; background-color: var(--bg-surface, #FFFFFF); border: 1.5px dashed var(--border-default, #E2E8F0); border-radius: var(--radius-lg, 12px); max-width: 420px; } .ds-empty-icon { width: 56px; height: 56px; border-radius: var(--radius-lg, 12px); background-color: var(--bg-surface-muted, #F1F5F9); color: var(--text-muted, #64748B); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; } .ds-empty-title { font-size: 1rem; font-weight: 700; color: var(--text-primary, #0F172A); margin: 0 0 6px; } .ds-empty-desc { font-size: 0.84375rem; color: var(--text-muted, #64748B); max-width: 420px; line-height: 1.5; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Trusted Record",
+    "overview": "One patient. One medical history. One trusted record. Every surface in E-Health answers the same two questions, and answers them without being asked: can I believe this, and who is allowed to see it. Provenance is never implied — author, institution and timestamp travel with every record, on every surface it appears. Authorization is shown rather than assumed: a provider always sees the scope they hold over the patient in front of them, and a patient always sees who holds scope over them.\n\nThe register is calm, clinical, precise, and institutional. This reads as infrastructure that will still be standing in ten years, not as a product launched this quarter. It is deliberately dense — information-rich, fast to scan, built for someone doing this all day rather than someone admiring it. Body text sits at 15px, secondary text at 13.5px, and controls are compact. That density is a professional courtesy, not an accident, and it is the reason the system leans on hairline rules rather than generous padding to separate things.\n\nStructure comes from 1px rules and tonal steps in a slate neutral field; a single teal accent carries action and authorization; and three fixed hues label the three kinds of clinical record so a prescription is never mistaken for a lab result. Depth is nearly absent by design. The one confirmed anti-reference is the consumer wellness app — no rounded-everything pastel gradients, no mascots, no streaks, no gamified encouragement. This is a medical record.",
+    "keyCharacteristics": [
+      "Slate neutral field with exactly one accent hue and three fixed record-type hues",
+      "Hairline-first: a 1px rule does the structural work; shadows sit at 4–8% alpha",
+      "Dense and compact — 15px body, 13.5px secondary, 12px uppercase micro-labels",
+      "Tight negative tracking on display type (−0.035em), positive tracking only on uppercase labels (+0.05em)",
+      "Square, softly-rounded icon tiles; circles reserved for avatars and status pills",
+      "Fully specified dark theme, not an inverted afterthought",
+      "Motion is short and functional: 150ms and 250ms, one easing curve, prefers-reduced-motion honored"
+    ],
+    "rules": [
+      { "name": "The Provenance Palette Rule", "body": "Blue is a prescription, purple is a diagnostic report, teal is a hospital visit. A record type never changes hue between the landing page, a dashboard, a timeline and a drawer. Introducing a fourth record hue means introducing a fourth record type in the database — nowhere else.", "section": "colors" },
+      { "name": "The Scarce Signal Rule", "body": "Verified Teal appears only where the interface is signalling action, active state, or authorization. It is never a background wash for a whole section, never body text, and never used to make something merely look important.", "section": "colors" },
+      { "name": "The Reserved Alarm Rule", "body": "Amber and red are clinical and system vocabulary. Amber means \"read this before you rely on it\" (its canonical use is the AI disclaimer). Red means destructive or failed. Neither is ever used to draw attention to a feature.", "section": "colors" },
+      { "name": "The Wash-Needs-Deep-Text Rule", "body": "On any 8–12% wash fill, text uses the deep variant of that hue (#0F766E on teal wash), not the base. The base hue on its own wash does not hold contrast at 12px.", "section": "colors" },
+      { "name": "The Tracking Ladder Rule", "body": "Negative tracking scales with size and nothing else: −0.035em at display, −0.03em at headline, −0.02em at title and brand text, and exactly normal from 1.125rem down. The single positive value in the system is +0.05em, and it applies only to uppercase labels. Never letter-space lowercase body text.", "section": "typography" },
+      { "name": "The One Uppercase Rule", "body": "Uppercase is a structural signal for micro-labels only — group headers, section eyebrows, field labels. Buttons, badges, nav items, titles and body copy are always sentence case. A patient's record is never shouted.", "section": "typography" },
+      { "name": "The Bangla Gap Rule", "body": "Inter does not cover Bengali script, and the fallback stack resolves Bangla inconsistently or not at all across platforms. Any surface that will carry Bangla needs an explicit Bangla-capable family added to the stack, and layouts must tolerate Bangla's text expansion — which the current tight display tracking and 13.5px dense sizes will not absorb without adjustment. This is an open gap, not a solved problem.", "section": "typography" },
+      { "name": "The Two-Stop Collapse Rule", "body": "The application collapses at exactly two breakpoints: 1024px (sidebar off-canvas, 4-up grids to 2-up, container padding to 16px 20px) and 640px (single column, page-header stacks, form-row unstacks, padding to 16px). The public landing page adds one earlier stop at 960px where the horizontal nav becomes a dropdown. Do not invent intermediate breakpoints.", "section": "layout" },
+      { "name": "The Grid-Not-Flex Rule", "body": "Multi-column content uses .grid-2 / .grid-3 / .grid-4 with minmax(0, 1fr) tracks — the minmax(0, …) is deliberate and prevents long clinical strings from blowing out a column. Flex is for toolbars, rows and headers, not for content columns.", "section": "layout" },
+      { "name": "The Hairline-First Rule", "body": "A 1px rule and a tonal step carry structure. A shadow never substitutes for a border — every card has both, and if you remove the border the card stops reading as a card no matter what you do to the shadow.", "section": "elevation" },
+      { "name": "The Whisper Ramp Rule", "body": "Resting elevation never exceeds 8% alpha. shadow-md is reserved for hover, and lg/xl for layers that float over a scrim. A card that arrives already at shadow-lg has nowhere to go on hover and reads as a mistake.", "section": "elevation" },
+      { "name": "The One-Millimetre Lift Rule", "body": "Card hover moves exactly translateY(-1px) and steps the border to rule-strong. Not 2px, not a scale. The gesture should be felt more than seen.", "section": "elevation" },
+      { "name": "The Square-Tile Rule", "body": "Icon containers are rounded squares — 40px at md for timeline dots, 36px at md for showcase dots, 34px at sm for mock rows, 56px at lg for empty states. Circles are reserved for exactly two things: avatars and pill-shaped status badges. An icon in a circle reads as consumer software; an icon in a rounded square reads as a record.", "section": "shapes" },
+      { "name": "The Pill-Means-Status Rule", "body": "radius-full means \"this is a state, not an action\" — badges, role pills, the sidebar count badge, the navbar search field. A pill-shaped primary button would misfile itself as a status chip.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use the canonical token names — --text-primary, --bg-surface-muted, --border-default, --accent. They are the system's real vocabulary.",
+      "Do give every card both a 1px --border-default rule and --shadow-sm. Either alone is incomplete.",
+      "Do keep record-type hue assignments fixed: blue = prescription, purple = diagnostic report, teal = hospital visit.",
+      "Do put icons in rounded squares (--radius-md/--radius-sm) and reserve --radius-full for avatars and status pills.",
+      "Do use the deep hue variant for text on any wash fill (--accent-text on --accent-subtle).",
+      "Do collapse at 1024px and 640px only, using the existing .grid-* and .form-row behavior.",
+      "Do state provenance — author, institution, timestamp — on every surface where a clinical record appears.",
+      "Do keep the 2px teal :focus-visible outline at 2px offset on every interactive element.",
+      "Do preserve the prefers-reduced-motion block when refactoring CSS.",
+      "Do place the \"Connecting Nation's Health\" lockup line beneath the logo wherever the brand mark appears (binding brand commitment from PRODUCT.md)."
+    ],
+    "donts": [
+      "Don't use the legacy alias tokens in new code — --text-1, --text-2, --text-3, --surface, --surface-2, --surface-3, --border, --primary, --r-*, --t-*. They exist only for backwards compatibility and are frozen: no new aliases, no new references.",
+      "Don't add a thick colored border to one side of a card. The 4px border-left on .toast-* is the system's single instance and its worst tell; do not propagate the pattern to cards, panels or list rows.",
+      "Don't introduce a second Latin font family. Hierarchy comes from weight (400/500/600/700/800) and the tracking ladder, not from a new face.",
+      "Don't letter-space lowercase text, or set uppercase on anything larger than 0.75rem.",
+      "Don't exceed 8% shadow alpha at rest, or start a card at --shadow-lg.",
+      "Don't add a gradient beyond the two established ones — the 135deg accent brand tile, and the 135deg surface-to-muted panel on the AI and CTA blocks. No gradient text, ever.",
+      "Don't animate width, margin or padding for anything new. Sidebar.css transitions width and MainLayout.css transitions margin-left; both are pre-existing layout-thrash and should not be used as precedent.",
+      "Don't use Verified Teal as body text, as a full-section background, or anywhere it isn't marking action, active state, or authorization.",
+      "Don't use amber or red to draw attention to a feature. They are clinical and system vocabulary only.",
+      "Don't drift toward the consumer wellness register — no pastel gradients, mascots, streaks, celebratory confetti, or gamified encouragement (confirmed anti-reference).",
+      "Don't claim WCAG or any other conformance level anywhere in the product; the governing rubric has not been supplied (see PRODUCT.md).",
+      "Don't add Bangla copy to a surface without also resolving its font stack and text-expansion tolerance. Inter does not cover Bengali script."
+    ]
+  }
+}
