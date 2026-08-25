@@ -112,20 +112,20 @@ export function Register() {
                 gap: 6,
                 padding: '12px 14px',
                 textAlign: 'left',
-                border: `2px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
-                borderRadius: 'var(--r-lg)',
-                background: active ? 'var(--primary-light)' : 'var(--surface)',
+                border: `2px solid ${active ? 'var(--accent)' : 'var(--border-default)'}`,
+                borderRadius: 'var(--radius-lg)',
+                background: active ? 'var(--accent-subtle)' : 'var(--bg-surface)',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
             >
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: active ? 'var(--primary)' : 'var(--surface-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={16} color={active ? '#fff' : 'var(--text-2)'} />
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: active ? 'var(--accent)' : 'var(--bg-surface-sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={16} color={active ? '#fff' : 'var(--text-secondary)'} />
               </div>
-              <div style={{ fontSize: '0.875rem', fontWeight: active ? 700 : 600, color: active ? 'var(--primary)' : 'var(--text-1)' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: active ? 700 : 600, color: active ? 'var(--accent)' : 'var(--text-primary)' }}>
                 {opt.label}
               </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.2 }}>
                 {opt.desc}
               </div>
             </button>
@@ -139,9 +139,9 @@ export function Register() {
           alignItems: 'center',
           gap: 10,
           padding: '12px 14px',
-          background: 'var(--danger-bg)',
-          color: 'var(--danger)',
-          borderRadius: 'var(--r-md)',
+          background: 'var(--color-danger-bg)',
+          color: 'var(--color-danger)',
+          borderRadius: 'var(--radius-md)',
           fontSize: '0.875rem',
           marginBottom: 20
         }}>
@@ -336,7 +336,7 @@ export function Register() {
               type="button"
               onClick={() => setShowPw(!showPw)}
               tabIndex={-1}
-              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -361,9 +361,9 @@ export function Register() {
         </button>
       </form>
 
-      <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.875rem', color: 'var(--text-2)' }}>
+      <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
         Already have an account?{' '}
-        <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign in</Link>
+        <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>Sign in</Link>
       </p>
     </div>
   );

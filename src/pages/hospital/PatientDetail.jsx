@@ -80,7 +80,7 @@ export function HospitalPatientDetail() {
 
   return (
     <div className="dashboard-container">
-      <Link to="/hospital/patients" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-3)', textDecoration: 'none', marginBottom: 16 }}>
+      <Link to="/hospital/patients" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', marginBottom: 16 }}>
         <ChevronLeft size={16} /> Back to Patients
       </Link>
 
@@ -95,8 +95,8 @@ export function HospitalPatientDetail() {
               <h1 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
                 {patient.full_name}
               </h1>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 4 }}>
-                Health ID: <strong style={{ color: 'var(--primary)' }}>{formatPatientId(patientId)}</strong> · Gender: {patient.gender || '—'} · DOB: {formatDate(patient.date_of_birth)}
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                Health ID: <strong style={{ color: 'var(--accent)' }}>{formatPatientId(patientId)}</strong> · Gender: {patient.gender || '—'} · DOB: {formatDate(patient.date_of_birth)}
               </div>
             </div>
           </div>
@@ -109,18 +109,18 @@ export function HospitalPatientDetail() {
         </div>
 
         {/* Clinical Flags */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-default)' }}>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', textTransform: 'uppercase', fontWeight: 600 }}>Blood Group</div>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--danger)', marginTop: 2 }}>{bloodGroup}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Blood Group</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-danger)', marginTop: 2 }}>{bloodGroup}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', textTransform: 'uppercase', fontWeight: 600 }}>Known Allergies</div>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--warning)', marginTop: 2 }}>{allergies}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Known Allergies</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-warning)', marginTop: 2 }}>{allergies}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', textTransform: 'uppercase', fontWeight: 600 }}>Emergency Contact</div>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-1)', marginTop: 2 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Emergency Contact</div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
               {patient.patient_profiles?.[0]?.emergency_contact || 'None listed'}
             </div>
           </div>
@@ -129,12 +129,12 @@ export function HospitalPatientDetail() {
 
       {/* Patient Medical Timeline */}
       <div className="card" style={{ padding: 'var(--sp-6)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-6)', borderBottom: '1px solid var(--border)', paddingBottom: 'var(--sp-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-6)', borderBottom: '1px solid var(--border-default)', paddingBottom: 'var(--sp-4)' }}>
           <div>
             <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
               Complete Clinical Timeline
             </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
               Historical diagnoses, prescriptions, lab results, and hospital visits.
             </p>
           </div>

@@ -84,18 +84,18 @@ export function DoctorReports() {
                   <tr key={r.id} className="table-row">
                     <td className="table-cell">{formatDate(r.report_date)}</td>
                     <td className="table-cell">
-                      <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {r.patient?.full_name || 'Patient'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ID: {formatPatientId(r.patient_id)}
                       </div>
                     </td>
                     <td className="table-cell">
-                      <strong style={{ color: 'var(--text-1)' }}>{r.test_name}</strong>
+                      <strong style={{ color: 'var(--text-primary)' }}>{r.test_name}</strong>
                     </td>
                     <td className="table-cell">
-                      <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
+                      <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>
                         {r.test_category || 'General'}
                       </span>
                     </td>

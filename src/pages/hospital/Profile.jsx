@@ -90,12 +90,12 @@ export function HospitalProfile() {
           </div>
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{form.name || 'Hospital Center'}</h2>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-3)', marginTop: 4 }}>
-              License: <strong style={{ color: 'var(--text-1)' }}>{form.licenseNumber || 'Registered'}</strong> · Hospital & Inpatient Facility
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              License: <strong style={{ color: 'var(--text-primary)' }}>{form.licenseNumber || 'Registered'}</strong> · Hospital & Inpatient Facility
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <span className="badge badge-success">Accredited Center</span>
-              <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>Role: Hospital</span>
+              <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>Role: Hospital</span>
             </div>
           </div>
         </div>

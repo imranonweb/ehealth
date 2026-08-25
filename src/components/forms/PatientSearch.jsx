@@ -29,19 +29,19 @@ export function PatientSearch({ onSelectPatient, selectedPatient, onClear }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '12px 16px',
-        background: 'var(--primary-light)',
-        border: '1.5px solid var(--primary)',
-        borderRadius: 'var(--r-lg)',
+        background: 'var(--accent-subtle)',
+        border: '1.5px solid var(--accent)',
+        borderRadius: 'var(--radius-lg)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="avatar avatar-sm avatar-teal">
             <Check size={16} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-1)' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
               {selectedPatient.full_name}
             </div>
-            <div style={{ fontSize: '0.8125rem', color: 'var(--text-2)' }}>
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
               ID: <strong>{formatPatientId(selectedPatient.patient_identifier || selectedPatient.id)}</strong> · {selectedPatient.email || selectedPatient.phone}
             </div>
           </div>
@@ -51,7 +51,7 @@ export function PatientSearch({ onSelectPatient, selectedPatient, onClear }) {
           type="button"
           onClick={handleReset}
           className="btn btn-ghost btn-sm"
-          style={{ color: 'var(--text-3)' }}
+          style={{ color: 'var(--text-muted)' }}
           aria-label="Change patient"
         >
           <X size={16} /> Change
@@ -74,7 +74,7 @@ export function PatientSearch({ onSelectPatient, selectedPatient, onClear }) {
       </div>
 
       {loading && (
-        <div style={{ padding: '8px 12px', fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+        <div style={{ padding: '8px 12px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
           Searching patients…
         </div>
       )}
@@ -91,10 +91,10 @@ export function PatientSearch({ onSelectPatient, selectedPatient, onClear }) {
                 <User size={15} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-1)' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                   {p.full_name}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                   {formatPatientId(p.patient_identifier || p.id)} · {p.email} · {p.phone || 'No phone'}
                 </div>
               </div>

@@ -50,16 +50,16 @@ export function ForgotPassword() {
       {submitted ? (
         <div style={{
           padding: '24px',
-          background: 'var(--success-bg)',
-          border: '1.5px solid var(--success)',
-          borderRadius: 'var(--r-lg)',
+          background: 'var(--color-success-bg)',
+          border: '1.5px solid var(--color-success)',
+          borderRadius: 'var(--radius-lg)',
           textAlign: 'center',
         }}>
-          <CheckCircle2 size={36} color="var(--success)" style={{ margin: '0 auto 12px' }} />
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-1)', marginBottom: 6 }}>
+          <CheckCircle2 size={36} color="var(--color-success)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
             Check your inbox
           </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 16 }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 16 }}>
             We've sent a secure password recovery link to <strong>{email}</strong>.
           </p>
           <Link to="/login" className="btn btn-outline btn-md w-full">
@@ -74,9 +74,9 @@ export function ForgotPassword() {
               alignItems: 'center',
               gap: 10,
               padding: '12px 14px',
-              background: 'var(--danger-bg)',
-              color: 'var(--danger)',
-              borderRadius: 'var(--r-md)',
+              background: 'var(--color-danger-bg)',
+              color: 'var(--color-danger)',
+              borderRadius: 'var(--radius-md)',
               fontSize: '0.875rem',
             }}>
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -117,9 +117,9 @@ export function ForgotPassword() {
             )}
           </button>
 
-          <p style={{ textAlign: 'center', marginTop: 12, fontSize: '0.875rem', color: 'var(--text-2)' }}>
+          <p style={{ textAlign: 'center', marginTop: 12, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             Remembered your password?{' '}
-            <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>Back to login</Link>
+            <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>Back to login</Link>
           </p>
         </form>
       )}

@@ -83,12 +83,12 @@ export function DoctorProfile() {
           </div>
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{profile?.full_name || 'Doctor'}</h2>
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-3)', marginTop: 4 }}>
-              License / BMDC: <strong style={{ color: 'var(--text-1)' }}>{form.licenseNumber || 'Verified'}</strong> · {form.specialization || 'Clinical Specialist'}
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              License / BMDC: <strong style={{ color: 'var(--text-primary)' }}>{form.licenseNumber || 'Verified'}</strong> · {form.specialization || 'Clinical Specialist'}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <span className="badge badge-success">Registered Practitioner</span>
-              <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>Role: Doctor</span>
+              <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>Role: Doctor</span>
             </div>
           </div>
         </div>

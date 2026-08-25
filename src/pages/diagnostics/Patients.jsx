@@ -24,7 +24,7 @@ export function DiagnosticsPatients() {
           Find Patient
         </label>
         <div style={{ position: 'relative' }}>
-          <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
+          <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             type="text"
             className="input has-icon"
@@ -37,7 +37,7 @@ export function DiagnosticsPatients() {
       </div>
 
       <div className="card" style={{ padding: 'var(--sp-6)' }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', marginBottom: 'var(--sp-4)', letterSpacing: '0.04em' }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 'var(--sp-4)', letterSpacing: '0.04em' }}>
           {loading ? 'Searching Registry…' : results.length > 0 ? `Matched Patients (${results.length})` : 'Search Results'}
         </div>
 
@@ -68,17 +68,17 @@ export function DiagnosticsPatients() {
                         <div className="avatar avatar-sm avatar-purple">
                           {getInitials(p.full_name)}
                         </div>
-                        <span style={{ fontWeight: 600, color: 'var(--text-1)' }}>{p.full_name}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.full_name}</span>
                       </div>
                     </td>
                     <td className="table-cell">
-                      <strong style={{ color: 'var(--primary)', letterSpacing: '0.04em' }}>
+                      <strong style={{ color: 'var(--accent)', letterSpacing: '0.04em' }}>
                         {formatPatientId(p.patient_identifier || p.id)}
                       </strong>
                     </td>
                     <td className="table-cell">
                       <div>{p.email}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{p.phone || 'No phone'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.phone || 'No phone'}</div>
                     </td>
                     <td className="table-cell" style={{ textAlign: 'right' }}>
                       <Link to="/diagnostics/reports/new" className="btn btn-outline btn-sm">

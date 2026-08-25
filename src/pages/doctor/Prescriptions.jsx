@@ -77,40 +77,40 @@ export function DoctorPrescriptions() {
                       <Pill size={20} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-1)' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
                         {p.diagnosis || 'Prescription'}
                       </h3>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                         <Calendar size={13} /> {formatDate(p.prescription_date)}
                       </div>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                    <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {p.patient?.full_name || 'Patient'}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       ID: {formatPatientId(p.patient_id)}
                     </div>
                   </div>
                 </div>
 
                 {meds.length > 0 && (
-                  <div style={{ background: 'var(--surface-2)', padding: '8px 12px', borderRadius: 'var(--r-md)', display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                  <div style={{ background: 'var(--bg-surface-muted)', padding: '8px 12px', borderRadius: 'var(--radius-md)', display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                     {meds.map((m, idx) => (
-                      <span key={idx} className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <span key={idx} className="badge" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
                         {m.name} ({m.dosage})
                       </span>
                     ))}
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-default)' }}>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
                     {p.hospital?.name || 'Private Chamber'}
                   </span>
-                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     View Full Prescription <ChevronRight size={14} />
                   </span>
                 </div>

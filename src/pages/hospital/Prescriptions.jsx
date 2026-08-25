@@ -77,15 +77,15 @@ export function HospitalPrescriptions() {
                   <tr key={p.id} className="table-row">
                     <td className="table-cell">{formatDate(p.prescription_date)}</td>
                     <td className="table-cell">
-                      <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {p.patient?.full_name || 'Patient'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ID: {formatPatientId(p.patient_id)}
                       </div>
                     </td>
                     <td className="table-cell">
-                      <strong style={{ color: 'var(--text-1)' }}>{p.diagnosis || 'General'}</strong>
+                      <strong style={{ color: 'var(--text-primary)' }}>{p.diagnosis || 'General'}</strong>
                     </td>
                     <td className="table-cell">{p.doctor?.full_name || 'Hospital Practitioner'}</td>
                     <td className="table-cell" style={{ textAlign: 'right' }}>

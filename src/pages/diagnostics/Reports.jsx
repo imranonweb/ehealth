@@ -78,10 +78,10 @@ export function DiagnosticsReports() {
                   <tr key={r.id} className="table-row">
                     <td className="table-cell">{formatDate(r.report_date)}</td>
                     <td className="table-cell">
-                      <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {r.patient?.full_name || 'Patient'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ID: {formatPatientId(r.patient_id)}
                       </div>
                     </td>
@@ -89,7 +89,7 @@ export function DiagnosticsReports() {
                       <strong>{r.test_name}</strong>
                     </td>
                     <td className="table-cell">
-                      <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
+                      <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>
                         {r.test_category || 'General'}
                       </span>
                     </td>
@@ -97,7 +97,7 @@ export function DiagnosticsReports() {
                       {r.document_path ? (
                         <span className="badge badge-success">PDF Attached</span>
                       ) : (
-                        <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-3)' }}>Structured Only</span>
+                        <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-muted)' }}>Structured Only</span>
                       )}
                     </td>
                     <td className="table-cell" style={{ textAlign: 'right' }}>

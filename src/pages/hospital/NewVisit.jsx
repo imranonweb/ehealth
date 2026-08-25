@@ -7,7 +7,7 @@ export function HospitalNewVisit() {
     <div className="dashboard-container" style={{ maxWidth: 840 }}>
       <Link
         to="/hospital/visits"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-3)', textDecoration: 'none', marginBottom: 16 }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', marginBottom: 16 }}
       >
         <ChevronLeft size={16} /> Back to Visits
       </Link>

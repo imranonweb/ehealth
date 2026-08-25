@@ -63,16 +63,16 @@ export function ResetPassword() {
       {successState ? (
         <div style={{
           padding: '24px',
-          background: 'var(--success-bg)',
-          border: '1.5px solid var(--success)',
-          borderRadius: 'var(--r-lg)',
+          background: 'var(--color-success-bg)',
+          border: '1.5px solid var(--color-success)',
+          borderRadius: 'var(--radius-lg)',
           textAlign: 'center',
         }}>
-          <CheckCircle2 size={36} color="var(--success)" style={{ margin: '0 auto 12px' }} />
-          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-1)', marginBottom: 6 }}>
+          <CheckCircle2 size={36} color="var(--color-success)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
             Password updated!
           </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 16 }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 16 }}>
             Redirecting you to the sign-in page…
           </p>
           <Link to="/login" className="btn btn-primary btn-md w-full">
@@ -87,9 +87,9 @@ export function ResetPassword() {
               alignItems: 'center',
               gap: 10,
               padding: '12px 14px',
-              background: 'var(--danger-bg)',
-              color: 'var(--danger)',
-              borderRadius: 'var(--r-md)',
+              background: 'var(--color-danger-bg)',
+              color: 'var(--color-danger)',
+              borderRadius: 'var(--radius-md)',
               fontSize: '0.875rem',
             }}>
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -115,7 +115,7 @@ export function ResetPassword() {
                 type="button"
                 onClick={() => setShowPw(!showPw)}
                 tabIndex={-1}
-                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>

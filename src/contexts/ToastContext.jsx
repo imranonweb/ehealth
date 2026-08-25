@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 const ToastContext = createContext(null);
 
@@ -54,7 +55,7 @@ function ToastContainer({ toasts, onDismiss }) {
             onClick={() => onDismiss(t.id)}
             aria-label="Dismiss notification"
           >
-            ×
+            <X size={14} strokeWidth={2.25} />
           </button>
         </div>
       ))}
@@ -63,11 +64,15 @@ function ToastContainer({ toasts, onDismiss }) {
 }
 
 function ToastIcon({ type }) {
-  const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
-  };
-  return <span className={`toast-icon toast-icon-${type}`}>{icons[type]}</span>;
+  const Icon = {
+    success: CheckCircle2,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info,
+  }[type] || Info;
+  return (
+    <span className={`toast-icon toast-icon-${type}`}>
+      <Icon size={15} strokeWidth={2.25} />
+    </span>
+  );
 }

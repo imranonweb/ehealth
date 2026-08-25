@@ -69,9 +69,9 @@ export function Login() {
           alignItems: 'center',
           gap: 10,
           padding: '12px 14px',
-          background: 'var(--danger-bg)',
-          color: 'var(--danger)',
-          borderRadius: 'var(--r-md)',
+          background: 'var(--color-danger-bg)',
+          color: 'var(--color-danger)',
+          borderRadius: 'var(--radius-md)',
           fontSize: '0.875rem',
           marginBottom: 20
         }}>
@@ -101,7 +101,7 @@ export function Login() {
         <div className="field">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label className="field-label">Password</label>
-            <Link to="/forgot-password" style={{ fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 500 }}>
+            <Link to="/forgot-password" style={{ fontSize: '0.8125rem', color: 'var(--accent)', fontWeight: 500 }}>
               Forgot password?
             </Link>
           </div>
@@ -121,7 +121,7 @@ export function Login() {
               type="button"
               onClick={() => setShowPw(!showPw)}
               tabIndex={-1}
-              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -147,8 +147,8 @@ export function Login() {
       </form>
 
       {/* Demo helper quick fills */}
-      <div style={{ marginTop: 24, padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div style={{ marginTop: 24, padding: '12px 14px', background: 'var(--bg-surface-muted)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Quick Demo Accounts (Password: 1234)
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -160,9 +160,9 @@ export function Login() {
         </div>
       </div>
 
-      <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.875rem', color: 'var(--text-2)' }}>
+      <p style={{ textAlign: 'center', marginTop: 24, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
         Don't have an account?{' '}
-        <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>Create an account</Link>
+        <Link to="/register" style={{ color: 'var(--accent)', fontWeight: 600 }}>Create an account</Link>
       </p>
     </div>
   );

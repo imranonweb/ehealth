@@ -59,8 +59,8 @@ export function DiagnosticsDashboard() {
               <FlaskConical size={22} />
             </div>
             <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', fontWeight: 500 }}>Total Reports Issued</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-1)' }}>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Total Reports Issued</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {loading ? '…' : stats.totalReports}
               </div>
             </div>
@@ -73,8 +73,8 @@ export function DiagnosticsDashboard() {
               <Clock size={22} />
             </div>
             <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', fontWeight: 500 }}>Uploaded This Month</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-1)' }}>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Uploaded This Month</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 {loading ? '…' : stats.thisMonth}
               </div>
             </div>
@@ -88,8 +88,8 @@ export function DiagnosticsDashboard() {
                 <Users size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', fontWeight: 500 }}>Patient Index</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', marginTop: 4 }}>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Patient Index</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent)', marginTop: 4 }}>
                   Find Patient by ID →
                 </div>
               </div>
@@ -100,12 +100,12 @@ export function DiagnosticsDashboard() {
 
       {/* Recent Diagnostic Reports */}
       <div className="card" style={{ padding: 'var(--sp-6)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)', borderBottom: '1px solid var(--border)', paddingBottom: 'var(--sp-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)', borderBottom: '1px solid var(--border-default)', paddingBottom: 'var(--sp-4)' }}>
           <div>
             <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
               Recent Lab Reports
             </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
               Reports recently uploaded to the centralized health timeline.
             </p>
           </div>
@@ -141,10 +141,10 @@ export function DiagnosticsDashboard() {
                   <tr key={r.id} className="table-row">
                     <td className="table-cell">{formatDate(r.report_date)}</td>
                     <td className="table-cell">
-                      <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {r.patient?.full_name || 'Patient'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ID: {formatPatientId(r.patient_id)}
                       </div>
                     </td>
@@ -152,7 +152,7 @@ export function DiagnosticsDashboard() {
                       <strong>{r.test_name}</strong>
                     </td>
                     <td className="table-cell">
-                      <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
+                      <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>
                         {r.test_category || 'General'}
                       </span>
                     </td>

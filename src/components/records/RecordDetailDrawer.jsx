@@ -70,12 +70,12 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
         ) : detail ? (
           <div className="record-detail">
             {/* Header info */}
-            <div className="record-detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+            <div className="record-detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-default)', paddingBottom: 12 }}>
               <div className="record-detail-date">
-                <Calendar size={15} color="var(--primary)" />
+                <Calendar size={15} color="var(--accent)" />
                 <span>Recorded on {formatDate(detail.prescription_date || detail.report_date || detail.admission_date)}</span>
               </div>
-              <span className="badge" style={{ background: 'var(--surface-3)', color: 'var(--text-2)' }}>
+              <span className="badge" style={{ background: 'var(--bg-surface-sunken)', color: 'var(--text-secondary)' }}>
                 Immutable Record
               </span>
             </div>
@@ -84,11 +84,11 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             {record.record_type === 'prescription' && (
               <>
                 <DetailSection title="Clinical Diagnosis" icon={Stethoscope}>
-                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {detail.diagnosis || 'Clinical Diagnosis'}
                   </p>
                   {detail.clinical_notes && (
-                    <p style={{ marginTop: 6, color: 'var(--text-2)', fontSize: '0.875rem' }}>
+                    <p style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                       {detail.clinical_notes}
                     </p>
                   )}
@@ -101,7 +101,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                         <div key={i} className="medication-item-detail">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div className="med-name">{med.name}</div>
-                            <span className="badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)', fontWeight: 600 }}>
+                            <span className="badge" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontWeight: 600 }}>
                               {med.dosage}
                             </span>
                           </div>
@@ -126,11 +126,11 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                 )}
 
                 <DetailSection title="Authoring Healthcare Provider" icon={User}>
-                  <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                     {detail.doctor?.full_name || 'Practitioner'}
                   </div>
                   {detail.hospital?.name && (
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
                       Affiliated Hospital: {detail.hospital.name}
                     </div>
                   )}
@@ -142,7 +142,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                     <div className="ai-disclaimer">
                       ⚠️ AI-generated summary for educational preview only. Verify against original prescription.
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-2)' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                       {detail.ai_extraction[0].summary}
                     </p>
                   </DetailSection>
@@ -154,7 +154,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             {record.record_type === 'diagnostic_report' && (
               <>
                 <DetailSection title="Investigation / Test Name" icon={FlaskConical}>
-                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {detail.test_name}
                   </p>
                   {detail.test_category && (
@@ -179,7 +179,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                 <DetailSection title="Diagnostic Laboratory" icon={Building2}>
                   <p style={{ fontWeight: 600 }}>{detail.diagnostics_org?.name || 'Diagnostic Center'}</p>
                   {detail.doctor && (
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
                       Referring Doctor: {detail.doctor.full_name}
                     </p>
                   )}
@@ -226,7 +226,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                 <DetailSection title="Hospital Facility" icon={Building2}>
                   <p style={{ fontWeight: 600 }}>{detail.hospital?.name || 'Hospital'}</p>
                   {detail.doctor && (
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: 2 }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
                       Attending Physician: {detail.doctor.full_name}
                     </p>
                   )}
@@ -235,7 +235,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             )}
 
             {/* Document attachment button or empty document notice */}
-            <div className="record-detail-document" style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--border)' }}>
+            <div className="record-detail-document" style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--border-default)' }}>
               {detail.document_path ? (
                 <button
                   type="button"
@@ -247,11 +247,11 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
               ) : (
                 <div style={{
                   padding: '12px 14px',
-                  background: 'var(--surface-2)',
-                  border: '1px dashed var(--border)',
-                  borderRadius: 'var(--r-md)',
+                  background: 'var(--bg-surface-muted)',
+                  border: '1px dashed var(--border-default)',
+                  borderRadius: 'var(--radius-md)',
                   fontSize: '0.8125rem',
-                  color: 'var(--text-3)',
+                  color: 'var(--text-muted)',
                   textAlign: 'center',
                 }}>
                   📄 Structured digital record. (No scanned physical paper was attached)
@@ -283,7 +283,7 @@ function DetailSection({ title, icon: Icon, children }) {
   return (
     <div className="detail-section">
       <div className="detail-section-header">
-        <Icon size={14} color="var(--primary)" />
+        <Icon size={14} color="var(--accent)" />
         <span>{title}</span>
       </div>
       <div className="detail-section-body">{children}</div>

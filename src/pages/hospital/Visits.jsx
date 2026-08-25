@@ -80,17 +80,17 @@ export function HospitalVisits() {
                     <td className="table-cell">{formatDate(v.admission_date)}</td>
                     <td className="table-cell">{formatDate(v.discharge_date)}</td>
                     <td className="table-cell">
-                      <div style={{ fontWeight: 600, color: 'var(--text-1)' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {v.patient?.full_name || 'Patient'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         ID: {formatPatientId(v.patient_id)}
                       </div>
                     </td>
                     <td className="table-cell">
                       <span className="badge" style={{
-                        background: v.visit_type === 'emergency' ? 'var(--danger-bg)' : 'var(--surface-3)',
-                        color: v.visit_type === 'emergency' ? 'var(--danger)' : 'var(--text-1)',
+                        background: v.visit_type === 'emergency' ? 'var(--color-danger-bg)' : 'var(--bg-surface-sunken)',
+                        color: v.visit_type === 'emergency' ? 'var(--color-danger)' : 'var(--text-primary)',
                         textTransform: 'capitalize'
                       }}>
                         {v.visit_type?.replace('_', ' ')}
