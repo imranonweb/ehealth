@@ -7,11 +7,8 @@ export function PublicFooter() {
     <footer className="public-footer">
       <div className="container footer-container">
         <div className="footer-brand">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="public-logo-icon" style={{ width: 32, height: 32 }}>
-              <Activity size={18} color="#FFFFFF" />
-            </div>
-            <span style={{ fontWeight: 800, fontSize: '1.0625rem', color: 'var(--text-primary)' }}>E-Health</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
           </div>
           <p className="caption" style={{ marginTop: 12, lineHeight: 1.6 }}>
             Centralized digital healthcare platform connecting patients, doctors, diagnostic centers, and hospitals under strict privacy governance.

@@ -6,12 +6,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { doctorService } from '../../services/doctorService';
-import { formatDate, getInitials, formatPatientId } from '../../lib/utils';
+import { formatDate, getInitials, formatPatientId, stringToColor } from '../../lib/utils';
 import { SkeletonCard, SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
 import { StatCard } from '../../components/ui/StatCard';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { QuickActionCard } from '../../components/ui/QuickActionCard';
 import './DoctorDashboard.css';
 
 export function DoctorDashboard() {
@@ -70,17 +71,25 @@ export function DoctorDashboard() {
       <PageHeader
         title={`${getGreeting()}, Dr. ${doctorName}`}
         subtitle="Manage your patients and access their healthcare records securely."
-        actions={
-          <>
-            <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
-              <Plus size={16} /> New Prescription
-            </Link>
-            <Link to="/doctor/patients" className="btn btn-secondary btn-md">
-              <Users size={16} /> Patient Directory
-            </Link>
-          </>
-        }
       />
+
+      {/* Quick Actions */}
+      <div className="grid-4" style={{ marginBottom: 'var(--sp-6)' }}>
+        <QuickActionCard
+          to="/doctor/prescriptions/new"
+          icon={Plus}
+          label="New Prescription"
+          description="Write a new e-prescription"
+          color="var(--color-blue)"
+        />
+        <QuickActionCard
+          to="/doctor/patients"
+          icon={Search}
+          label="Find Patient"
+          description="Search patient directory"
+          color="var(--color-teal)"
+        />
+      </div>
 
       {/* Error state */}
       {error && (
@@ -135,20 +144,20 @@ export function DoctorDashboard() {
       </div>
 
       {/* Recent Patient Activity */}
-      <div className="card" style={{ padding: 'var(--sp-6)' }}>
+      <div className="card" style={{ overflow: 'hidden' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 'var(--sp-4)',
+          padding: '20px 24px',
           borderBottom: '1px solid var(--border-default)',
-          paddingBottom: 'var(--sp-4)',
+          backgroundColor: 'var(--bg-surface)',
         }}>
           <div>
-            <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+            <h2 className="card-title" style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
               Recent Patient Activity
             </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
               Recent clinical records from patients you are authorized to access.
             </p>
           </div>
@@ -158,26 +167,30 @@ export function DoctorDashboard() {
         </div>
 
         {loading ? (
-          <SkeletonTable rows={4} cols={5} />
+          <div style={{ padding: 'var(--sp-6)' }}>
+            <SkeletonTable rows={4} cols={5} />
+          </div>
         ) : data.recentActivity.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No Recent Patient Activity"
-            description="Clinical events from authorized patients will appear here."
-            actionLabel="View Patients"
-            action={() => navigate('/doctor/patients')}
-          />
+          <div style={{ padding: 'var(--sp-8) var(--sp-6)' }}>
+            <EmptyState
+              icon={FileText}
+              title="No Recent Patient Activity"
+              description="Clinical events from authorized patients will appear here."
+              actionLabel="View Patients"
+              action={() => navigate('/doctor/patients')}
+            />
+          </div>
         ) : (
-          <div className="table-container">
-            <table className="table">
+          <div className="table-container card-table-wrap">
+            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead className="table-header">
                 <tr>
-                  <th className="table-head">Date</th>
-                  <th className="table-head">Patient Name</th>
-                  <th className="table-head">Record Type</th>
-                  <th className="table-head">Record Title / Summary</th>
-                  <th className="table-head">Context / Provider</th>
-                  <th className="table-head" style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="table-head" style={{ padding: '14px 24px' }}>Patient</th>
+                  <th className="table-head" style={{ padding: '14px 20px' }}>Record Type</th>
+                  <th className="table-head" style={{ padding: '14px 20px' }}>Record Summary</th>
+                  <th className="table-head" style={{ padding: '14px 20px' }}>Context / Facility</th>
+                  <th className="table-head" style={{ padding: '14px 20px' }}>Date</th>
+                  <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -188,55 +201,105 @@ export function DoctorDashboard() {
 
                   const badgeClass = isPresc ? 'badge-blue' : isDiag ? 'badge-purple' : 'badge-primary';
                   const typeLabel = isPresc ? 'Prescription' : isDiag ? 'Diagnostic Report' : 'Hospital Visit';
+                  const TypeIcon = isPresc ? Pill : isDiag ? FlaskConical : Building2;
                   const providerContext = rec.metadata?.hospital_name || rec.metadata?.doctor_name || rec.metadata?.diagnostics_name || specialization;
+                  const patientName = rec.patient?.full_name || 'Authorized Patient';
+                  const initials = getInitials(patientName);
 
                   return (
-                    <tr key={rec.id} className="table-row">
-                      <td className="table-cell" style={{ whiteSpace: 'nowrap' }}>
-                        {formatDate(rec.record_date)}
-                      </td>
-                      <td className="table-cell">
-                        <Link
-                          to={`/doctor/patients/${rec.patient_id}`}
-                          style={{ fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none' }}
-                        >
-                          {rec.patient?.full_name || 'Authorized Patient'}
-                        </Link>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {rec.patient?.email}
+                    <tr key={rec.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
+                      {/* Patient Column */}
+                      <td className="table-cell" style={{ padding: '18px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: stringToColor(patientName),
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.8125rem',
+                            flexShrink: 0,
+                          }}>
+                            {initials}
+                          </div>
+                          <div>
+                            <Link
+                              to={`/doctor/patients/${rec.patient_id}`}
+                              style={{
+                                fontWeight: 700,
+                                color: 'var(--text-primary)',
+                                textDecoration: 'none',
+                                display: 'block',
+                                fontSize: '0.9375rem',
+                              }}
+                            >
+                              {patientName}
+                            </Link>
+                            <span style={{
+                              fontSize: '0.6875rem',
+                              color: 'var(--text-muted)',
+                              fontFamily: 'monospace',
+                              backgroundColor: 'var(--bg-surface-muted)',
+                              padding: '1px 6px',
+                              borderRadius: 'var(--radius-xs)',
+                              display: 'inline-block',
+                              marginTop: 2,
+                            }}>
+                              {formatPatientId(rec.patient_id)}
+                            </span>
+                          </div>
                         </div>
                       </td>
-                      <td className="table-cell">
-                        <span className={`badge ${badgeClass}`}>
+
+                      {/* Type Badge */}
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <span className={`badge ${badgeClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <TypeIcon size={12} />
                           {typeLabel}
                         </span>
                       </td>
-                      <td className="table-cell">
-                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+
+                      {/* Title & Description */}
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
                           {rec.title}
                         </div>
                         {rec.description && (
                           <div style={{
                             fontSize: '0.75rem',
                             color: 'var(--text-muted)',
-                            maxWidth: 260,
+                            maxWidth: 300,
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
+                            marginTop: 2,
                           }}>
                             {rec.description}
                           </div>
                         )}
                       </td>
-                      <td className="table-cell" style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>
+
+                      {/* Context */}
+                      <td className="table-cell" style={{ padding: '18px 20px', color: 'var(--text-secondary)' }}>
                         {providerContext}
                       </td>
-                      <td className="table-cell" style={{ textAlign: 'right' }}>
+
+                      {/* Date */}
+                      <td className="table-cell" style={{ padding: '18px 20px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                        {formatDate(rec.record_date)}
+                      </td>
+
+                      {/* Action */}
+                      <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => handleOpenDetail(rec)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleViewDetail(rec)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                         >
                           <Eye size={14} /> View
                         </button>

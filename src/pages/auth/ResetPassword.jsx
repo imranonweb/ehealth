@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Activity, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { Button } from '../../components/ui/Button';
 
 export function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -48,11 +49,8 @@ export function ResetPassword() {
   return (
     <div style={{ width: '100%', maxWidth: 440 }}>
       {/* Brand Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Activity size={18} color="#fff" />
-        </div>
-        <span style={{ fontWeight: 800, fontSize: '1.125rem', letterSpacing: '-0.02em' }}>E-Health</span>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
+        <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Set New Password</h1>
@@ -138,22 +136,17 @@ export function ResetPassword() {
             </div>
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary btn-full btn-lg"
-            disabled={loading}
+            variant="primary"
+            size="lg"
+            fullWidth
+            isLoading={loading}
+            loadingLabel="Updating Password…"
             style={{ marginTop: 8 }}
           >
-            {loading ? (
-              <>
-                <Loader2 size={16} className="spin" /> Updating Password…
-              </>
-            ) : (
-              <>
-                Update Password <ArrowRight size={16} />
-              </>
-            )}
-          </button>
+            Update Password <ArrowRight size={16} />
+          </Button>
         </form>
       )}
     </div>

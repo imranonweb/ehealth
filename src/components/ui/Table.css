@@ -4,6 +4,17 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
   background-color: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* When table is embedded directly inside a card */
+.card .table-container,
+.card-table-wrap {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
 }
 
 .table {
@@ -19,7 +30,7 @@
 }
 
 .table-head {
-  padding: var(--sp-3) var(--sp-4);
+  padding: 12px 20px;
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
@@ -42,8 +53,9 @@
 }
 
 .table-cell {
-  padding: var(--sp-4);
+  padding: 16px 20px;
   font-size: 0.875rem;
   color: var(--text-primary);
   vertical-align: middle;
 }
+

@@ -12,13 +12,9 @@ export function AuthProvider({ children }) {
   /* ── Fetch profile from profiles table ──────────────── */
   const fetchProfile = useCallback(async (userId) => {
     try {
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
-        // Join doctor_profiles so Doctor pages can read specialization/license/bio
-        // without a second query. PostgREST returns doctor_profiles as an array;
-        // we normalise it to the singular `doctor_profile` key below so all
-        // existing consumers continue to work without modification.
-        .select('*, doctor_profiles(*)')
+        .select('*')
         .eq('auth_user_id', userId)
         .single();
 
@@ -27,9 +23,26 @@ export function AuthProvider({ children }) {
         return null;
       }
 
-      // Normalise: flatten the one-to-one doctor_profiles array → singular object
-      const doctor_profile = data.doctor_profiles?.[0] ?? null;
-      return { ...data, doctor_profile };
+      let doctor_profile = null;
+      let patient_profile = null;
+
+      if (profileData.role === 'doctor') {
+        const { data: docData } = await supabase
+          .from('doctor_profiles')
+          .select('*')
+          .eq('profile_id', profileData.id)
+          .single();
+        doctor_profile = docData || null;
+      } else if (profileData.role === 'patient') {
+        const { data: patData } = await supabase
+          .from('patient_profiles')
+          .select('*')
+          .eq('profile_id', profileData.id)
+          .single();
+        patient_profile = patData || null;
+      }
+
+      return { ...profileData, doctor_profile, patient_profile };
     } catch (err) {
       console.error('Profile fetch failed:', err);
       return null;
@@ -162,7 +175,7 @@ export function AuthProvider({ children }) {
       await supabase.from('doctor_profiles').insert([{
         profile_id: profile.id,
         specialization: metadata.specialization || null,
-        license_number: metadata.license_number || null,
+        license_number: metadata.license_number || metadata.licenseNumber || null,
         qualification: metadata.qualification || null,
       }]);
     } else if (r === 'patient') {
@@ -171,12 +184,13 @@ export function AuthProvider({ children }) {
       }]);
     } else if (r === 'diagnostics' || r === 'hospital') {
       await supabase.from('organizations').insert([{
-        name: metadata.org_name || metadata.full_name || '',
+        profile_id: profile.id,
+        name: metadata.org_name || metadata.orgName || metadata.full_name || '',
         type: r,
         address: metadata.address || null,
         phone: metadata.phone || null,
         email: profile.email,
-        license_number: metadata.license_number || null,
+        license_number: metadata.license_number || metadata.licenseNumber || null,
       }]);
     }
   }
@@ -201,6 +215,15 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   }, []);
 
+  /* ── Resend Confirmation Email ─────────────────────── */
+  const resendConfirmation = useCallback(async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+    });
+    if (error) throw error;
+  }, []);
+
   const value = {
     user,
     profile,
@@ -211,6 +234,7 @@ export function AuthProvider({ children }) {
     signOut,
     resetPassword,
     updatePassword,
+    resendConfirmation,
     refreshProfile: async () => {
       if (user) {
         const p = await fetchProfile(user.id);

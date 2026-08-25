@@ -11,10 +11,7 @@ export function AuthLayout() {
         <div className="auth-panel-inner">
           {/* Logo Header */}
           <div className="auth-panel-brand">
-            <div className="auth-logo-icon">
-              <Activity size={22} color="#FFFFFF" />
-            </div>
-            <span className="auth-logo-text">E-Health</span>
+            <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
           </div>
 
           {/* Core Value Proposition */}

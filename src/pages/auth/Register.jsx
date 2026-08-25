@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Mail, Lock, User, Eye, EyeOff, ArrowRight, Stethoscope, Building2, FlaskConical, AlertCircle, Loader2 } from 'lucide-react';
+import { Activity, Mail, Lock, User, Eye, EyeOff, ArrowRight, Stethoscope, Building2, FlaskConical, AlertCircle, Loader2, MailCheck, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { ROLES } from '../../lib/permissions';
+import { Button } from '../../components/ui/Button';
 
 // ── SECURITY NOTE ─────────────────────────────────────────────────────────
 // Only the PATIENT role is exposed on the public self-registration form.
@@ -22,12 +23,14 @@ import { ROLES } from '../../lib/permissions';
 //   2. Add a Supabase RLS policy on `profiles` that only allows INSERT when
 //      role = 'patient' OR an unused invitation row matches the email.
 //   3. Expose a Supabase Edge Function that creates the invitation token and
-//      emails the provider, callable by an admin only.
-//   4. On this registration page, accept an invite_token query param,
-//      validate it against `invitations`, then show the appropriate role fields.
-// Until that migration is applied, provider registration is disabled here.
+//      sends the email invite link.
+// ──────────────────────────────────────────────────────────────────────────
+
 const roleOptions = [
-  { id: ROLES.PATIENT, label: 'Patient', icon: User, desc: 'Access your health records & prescriptions' },
+  { id: ROLES.PATIENT, label: 'Patient', icon: User, desc: 'Access health records & prescriptions' },
+  { id: ROLES.DOCTOR, label: 'Doctor', icon: Stethoscope, desc: 'Issue prescriptions & manage patients' },
+  { id: ROLES.DIAGNOSTICS, label: 'Diagnostics', icon: FlaskConical, desc: 'Upload lab reports & test findings' },
+  { id: ROLES.HOSPITAL, label: 'Hospital', icon: Building2, desc: 'Manage admissions & encounters' },
 ];
 
 export function Register() {
@@ -37,29 +40,44 @@ export function Register() {
     email: '',
     password: '',
     phone: '',
-    // Doctor specific
     specialization: '',
     licenseNumber: '',
     qualification: '',
-    // Hospital / Diagnostics specific
     orgName: '',
     address: '',
-    // Patient specific
-    gender: 'male',
+    gender: '',
     dateOfBirth: '',
   });
 
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState(null);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
-  const { signUp } = useAuth();
+  const { signUp, resendConfirmation } = useAuth();
   const { success, error: toastError } = useToast();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleResend = async () => {
+    if (!unconfirmedEmail) return;
+    setResending(true);
+    setResendSuccess(false);
+    try {
+      await resendConfirmation(unconfirmedEmail);
+      setResendSuccess(true);
+      success('Verification email resent successfully!');
+    } catch (err) {
+      toastError(err?.message || 'Failed to resend confirmation email.');
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,17 +97,23 @@ export function Register() {
         full_name: role === ROLES.HOSPITAL || role === ROLES.DIAGNOSTICS ? (formData.orgName || formData.fullName) : formData.fullName,
         phone: formData.phone,
         specialization: formData.specialization,
-        license_number: formData.licenseNumber,
+        licenseNumber: formData.licenseNumber,
         qualification: formData.qualification,
-        org_name: formData.orgName,
+        orgName: formData.orgName,
         address: formData.address,
         gender: formData.gender,
         date_of_birth: formData.dateOfBirth,
       };
 
-      await signUp(formData.email.trim(), formData.password, metadata);
-      success('Account registered successfully!');
-      navigate(`/${role}`);
+      const result = await signUp(formData.email.trim(), formData.password, metadata);
+      
+      // If email confirmation is enabled in Supabase, session is null
+      if (result?.session) {
+        success('Account registered successfully!');
+        navigate(`/${role}`);
+      } else {
+        setUnconfirmedEmail(formData.email.trim());
+      }
     } catch (err) {
       console.error('Registration failed:', err);
       const msg = err?.message || 'Failed to create account. Please try again.';
@@ -100,14 +124,77 @@ export function Register() {
     }
   };
 
+  if (unconfirmedEmail) {
+    return (
+      <div style={{ width: '100%', maxWidth: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
+          <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+        </div>
+
+        <div className="card" style={{ padding: '36px 32px', textAlign: 'center', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-default)' }}>
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            backgroundColor: 'var(--color-teal-bg)',
+            color: 'var(--accent)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+          }}>
+            <MailCheck size={32} />
+          </div>
+
+          <h2 className="h2" style={{ fontSize: '1.375rem', marginBottom: 8 }}>
+            Check Your Email
+          </h2>
+          <p className="body-md text-muted" style={{ lineHeight: 1.6, marginBottom: 20 }}>
+            We have sent a verification link to <strong style={{ color: 'var(--text-primary)' }}>{unconfirmedEmail}</strong>. Please click the link in your email to confirm your address and activate your account.
+          </p>
+
+          {resendSuccess && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              backgroundColor: 'var(--color-success-bg)',
+              color: 'var(--color-success)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              marginBottom: 20,
+            }}>
+              <CheckCircle2 size={16} /> A fresh confirmation link was sent!
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Link to="/login" className="btn btn-primary btn-lg w-full">
+              Proceed to Sign In <ArrowRight size={16} />
+            </Link>
+
+            <button
+              type="button"
+              className="btn btn-ghost btn-md w-full"
+              onClick={handleResend}
+              disabled={resending}
+            >
+              {resending ? 'Resending email…' : 'Did not receive it? Resend confirmation'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: 520 }}>
       {/* Brand Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
-        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Activity size={18} color="#fff" />
-        </div>
-        <span style={{ fontWeight: 800, fontSize: '1.125rem', letterSpacing: '-0.02em' }}>E-Health</span>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
+        <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Create an Account</h1>
@@ -361,22 +448,17 @@ export function Register() {
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary btn-full btn-lg"
-          disabled={loading}
+          variant="primary"
+          size="lg"
+          fullWidth
+          isLoading={loading}
+          loadingLabel="Registering…"
           style={{ marginTop: 8 }}
         >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="spin" /> Registering…
-            </>
-          ) : (
-            <>
-              Create Account <ArrowRight size={16} />
-            </>
-          )}
-        </button>
+          Create Account <ArrowRight size={16} />
+        </Button>
       </form>
 
       <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>

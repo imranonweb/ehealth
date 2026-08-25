@@ -36,11 +36,8 @@ export function Sidebar({ role, profile, isOpen, onClose }) {
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         {/* Brand Header */}
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">
-            <Activity size={20} color="#FFFFFF" />
-          </div>
-          <div className="sidebar-brand-text">
-            <div className="sidebar-brand-name">E-Health</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
             <div className="sidebar-brand-role">{config.label}</div>
           </div>
           <button

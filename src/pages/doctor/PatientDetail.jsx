@@ -415,54 +415,64 @@ export function DoctorPatientDetail() {
 
       {/* Tab Content: Diagnostic Reports */}
       {activeTab === 'reports' && (
-        <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
           <div style={{
-            marginBottom: 'var(--sp-4)',
+            padding: '20px 24px',
             borderBottom: '1px solid var(--border-default)',
-            paddingBottom: 'var(--sp-4)',
+            backgroundColor: 'var(--bg-surface)',
           }}>
-            <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              Diagnostic Reports & Lab Findings
+            <h2 className="card-title" style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
+              Diagnostic Reports & Lab Tests
             </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
-              Lab investigations and pathology reports linked to this patient.
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
+              Laboratory investigations, pathology reports, and imaging tests on file.
             </p>
           </div>
 
           {data.reports.length === 0 ? (
-            <EmptyState
-              icon={FlaskConical}
-              title="No Diagnostic Reports on File"
-              description="No diagnostic reports or lab investigations recorded for this patient."
-            />
+            <div style={{ padding: 'var(--sp-10) var(--sp-6)' }}>
+              <EmptyState
+                icon={FlaskConical}
+                title="No Diagnostic Reports on File"
+                description="No diagnostic reports or lab investigations recorded for this patient."
+              />
+            </div>
           ) : (
-            <div className="table-container">
-              <table className="table">
+            <div className="table-container card-table-wrap">
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead className="table-header">
                   <tr>
-                    <th className="table-head">Date</th>
-                    <th className="table-head">Investigation</th>
-                    <th className="table-head">Category</th>
-                    <th className="table-head">Facility</th>
-                    <th className="table-head" style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="table-head" style={{ padding: '14px 24px' }}>Date</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Investigation</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Category</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Facility</th>
+                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
                   {data.reports.map((r) => (
-                    <tr key={r.id} className="table-row">
-                      <td className="table-cell">{formatDate(r.report_date)}</td>
-                      <td className="table-cell">
-                        <strong>{r.test_name}</strong>
+                    <tr key={r.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
+                      <td className="table-cell" style={{ padding: '18px 24px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                        {formatDate(r.report_date)}
                       </td>
-                      <td className="table-cell">
-                        <span className="badge badge-purple">{r.test_category || 'Lab'}</span>
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.9375rem' }}>{r.test_name}</strong>
                       </td>
-                      <td className="table-cell">{r.diagnostics_org?.name || 'Diagnostic Lab'}</td>
-                      <td className="table-cell" style={{ textAlign: 'right' }}>
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <span className="badge badge-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <FlaskConical size={12} />
+                          {r.test_category || 'Lab'}
+                        </span>
+                      </td>
+                      <td className="table-cell" style={{ padding: '18px 20px', color: 'var(--text-secondary)' }}>
+                        {r.diagnostics_org?.name || 'Diagnostic Lab'}
+                      </td>
+                      <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => handleViewDetail({ record_type: 'diagnostic_report', record_reference_id: r.id })}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                         >
                           <Eye size={14} /> View
                         </button>
@@ -478,60 +488,65 @@ export function DoctorPatientDetail() {
 
       {/* Tab Content: Hospital Records */}
       {activeTab === 'visits' && (
-        <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
           <div style={{
-            marginBottom: 'var(--sp-4)',
+            padding: '20px 24px',
             borderBottom: '1px solid var(--border-default)',
-            paddingBottom: 'var(--sp-4)',
+            backgroundColor: 'var(--bg-surface)',
           }}>
-            <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+            <h2 className="card-title" style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
               Hospital Encounters & Admissions
             </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
               Hospitalization admissions, discharge summaries, and emergency visits.
             </p>
           </div>
 
           {data.visits.length === 0 ? (
-            <EmptyState
-              icon={Building2}
-              title="No Hospital Encounters on File"
-              description="No hospital visits or inpatient admissions recorded for this patient."
-            />
+            <div style={{ padding: 'var(--sp-10) var(--sp-6)' }}>
+              <EmptyState
+                icon={Building2}
+                title="No Hospital Encounters on File"
+                description="No hospital visits or inpatient admissions recorded for this patient."
+              />
+            </div>
           ) : (
-            <div className="table-container">
-              <table className="table">
+            <div className="table-container card-table-wrap">
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead className="table-header">
                   <tr>
-                    <th className="table-head">Date</th>
-                    <th className="table-head">Type</th>
-                    <th className="table-head">Department</th>
-                    <th className="table-head">Hospital</th>
-                    <th className="table-head">Summary / Diagnosis</th>
-                    <th className="table-head" style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="table-head" style={{ padding: '14px 24px' }}>Date</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Type</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Department</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Hospital</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Summary / Diagnosis</th>
+                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
                   {data.visits.map((v) => (
-                    <tr key={v.id} className="table-row">
-                      <td className="table-cell">{formatDate(v.admission_date)}</td>
-                      <td className="table-cell">
+                    <tr key={v.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
+                      <td className="table-cell" style={{ padding: '18px 24px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                        {formatDate(v.admission_date)}
+                      </td>
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
                         <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>
                           {v.visit_type?.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="table-cell">{v.department || 'General'}</td>
-                      <td className="table-cell">{v.hospital?.name || 'Hospital'}</td>
-                      <td className="table-cell">
-                        <div style={{ maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td className="table-cell" style={{ padding: '18px 20px', color: 'var(--text-secondary)' }}>{v.department || 'General'}</td>
+                      <td className="table-cell" style={{ padding: '18px 20px', fontWeight: 500 }}>{v.hospital?.name || 'Hospital'}</td>
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <div style={{ maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-primary)', fontWeight: 500 }}>
                           {v.diagnosis_summary || v.reason || '—'}
                         </div>
                       </td>
-                      <td className="table-cell" style={{ textAlign: 'right' }}>
+                      <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => handleViewDetail({ record_type: 'hospital_visit', record_reference_id: v.id })}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                         >
                           <Eye size={14} /> View
                         </button>

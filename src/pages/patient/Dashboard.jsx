@@ -201,6 +201,64 @@ export function PatientDashboard() {
         </Link>
       </div>
 
+      {/* New Account Onboarding Guide (Shown when records are empty) */}
+      {!loading && (!dashboardData?.stats?.prescriptions && !dashboardData?.stats?.reports && !dashboardData?.stats?.visits) && (
+        <div className="card" style={{ padding: '24px', marginBottom: 'var(--sp-8)', border: '1.5px solid var(--accent)', background: 'linear-gradient(135deg, var(--accent-subtle), var(--bg-surface))' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--accent)',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Sparkles size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: 4 }}>
+                Welcome to your E-Health Medical Vault!
+              </h2>
+              <p className="body-sm text-secondary" style={{ marginBottom: 16, lineHeight: 1.6 }}>
+                Your personal digital health vault is active and secure. Here is how your medical history gets organized:
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                <div style={{ background: 'var(--bg-surface)', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--accent)', marginBottom: 4 }}>
+                    1. Share Health ID
+                  </div>
+                  <p className="caption text-muted">
+                    Give your Health ID (<strong style={{ color: 'var(--text-primary)' }}>{formatPatientId(patientId)}</strong>) to your doctor or diagnostic center.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-surface)', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--accent)', marginBottom: 4 }}>
+                    2. Automatic Syncing
+                  </div>
+                  <p className="caption text-muted">
+                    When doctors prescribe medications or labs upload reports, they automatically sync into your timeline.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--bg-surface)', padding: '14px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--accent)', marginBottom: 4 }}>
+                    3. AI Medical Explainer
+                  </div>
+                  <p className="caption text-muted">
+                    Use the <Link to="/patient/ai-assistant" style={{ color: 'var(--accent)', fontWeight: 600 }}>AI Assistant</Link> to get plain-language summaries of tests and medications.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 4. Latest Clinical Highlights Grid */}
       <div style={{ marginBottom: 'var(--sp-8)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)' }}>

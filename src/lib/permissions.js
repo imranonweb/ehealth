@@ -61,7 +61,7 @@ export const roleConfig = {
       '/doctor', '/doctor/patients', '/doctor/prescriptions',
       '/doctor/prescriptions/new', '/doctor/reports', '/doctor/profile',
     ],
-    fab: { label: 'New Prescription', path: '/doctor/prescriptions/new', icon: Plus },
+    fab: null,
   },
 
   /* ── Diagnostics ─────────────────────────────────────── */
@@ -78,7 +78,7 @@ export const roleConfig = {
       '/diagnostics', '/diagnostics/patients', '/diagnostics/reports',
       '/diagnostics/reports/new', '/diagnostics/profile',
     ],
-    fab: { label: 'Upload Report', path: '/diagnostics/reports/new', icon: Upload },
+    fab: null,
   },
 
   /* ── Hospital ────────────────────────────────────────── */
@@ -97,7 +97,7 @@ export const roleConfig = {
       '/hospital/visits/new', '/hospital/prescriptions',
       '/hospital/prescriptions/new', '/hospital/profile',
     ],
-    fab: { label: 'New Patient Visit', path: '/hospital/visits/new', icon: Plus },
+    fab: null,
   },
 
   /* ── Admin (minimal) ────────────────────────────────── */

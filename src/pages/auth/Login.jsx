@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Activity, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, MailCheck, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { getDefaultRoute } from '../../lib/permissions';
+import { Button } from '../../components/ui/Button';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -11,24 +12,43 @@ export function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isUnconfirmed, setIsUnconfirmed] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
-  const { signIn, profile } = useAuth();
+  const { signIn, resendConfirmation } = useAuth();
   const { success, error: toastError } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const handleResend = async () => {
+    if (!email.trim()) {
+      toastError('Please enter your email address first.');
+      return;
+    }
+    setResending(true);
+    setResendSuccess(false);
+    try {
+      await resendConfirmation(email.trim());
+      setResendSuccess(true);
+      success('Verification email resent! Check your inbox.');
+    } catch (err) {
+      toastError(err?.message || 'Failed to resend verification email.');
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
+    setIsUnconfirmed(false);
+    setResendSuccess(false);
     setLoading(true);
 
     try {
       const data = await signIn(email.trim(), password);
       success('Logged in successfully!');
-      // data.role is the app-level profile role (populated by the updated
-      // AuthContext.signIn which eagerly fetches the profile before returning).
-      // This avoids the flash redirect where non-patient users briefly land
-      // on /patient before being corrected by ProtectedRoute.
       
       // Determine redirection based on authenticated profile role
       const destination = location.state?.from?.pathname;
@@ -42,6 +62,11 @@ export function Login() {
       console.error('Sign in failed:', err);
       const msg = err?.message || 'Invalid email or password. Please try again.';
       setErrorMsg(msg);
+      
+      if (msg.toLowerCase().includes('email not confirmed') || msg.toLowerCase().includes('not confirmed')) {
+        setIsUnconfirmed(true);
+      }
+      
       toastError(msg);
     } finally {
       setLoading(false);
@@ -52,16 +77,15 @@ export function Login() {
   const fillDemo = (demoEmail, demoPw = '1234') => {
     setEmail(demoEmail);
     setPassword(demoPw);
+    setErrorMsg(null);
+    setIsUnconfirmed(false);
   };
 
   return (
     <div style={{ width: '100%', maxWidth: 460 }}>
       {/* Brand Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #0F766E, #14B8A6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Activity size={18} color="#fff" />
-        </div>
-        <span style={{ fontWeight: 800, fontSize: '1.125rem', letterSpacing: '-0.02em' }}>E-Health</span>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
+        <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Welcome back</h1>
@@ -69,18 +93,41 @@ export function Login() {
 
       {errorMsg && (
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '12px 14px',
-          background: 'var(--color-danger-bg)',
-          color: 'var(--color-danger)',
+          padding: '14px 16px',
+          background: isUnconfirmed ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
+          color: isUnconfirmed ? 'var(--color-warning)' : 'var(--color-danger)',
           borderRadius: 'var(--radius-md)',
           fontSize: '0.875rem',
-          marginBottom: 20
+          marginBottom: 20,
+          border: `1px solid ${isUnconfirmed ? 'var(--color-warning)' : 'transparent'}`,
         }}>
-          <AlertCircle size={18} style={{ flexShrink: 0 }} />
-          <span>{errorMsg}</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            {isUnconfirmed ? <MailCheck size={18} style={{ flexShrink: 0, marginTop: 2 }} /> : <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600 }}>{errorMsg}</div>
+              {isUnconfirmed && (
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: '0.8125rem', marginBottom: 8, color: 'var(--text-secondary)' }}>
+                    Your email has not been activated yet. Please click the link sent to your inbox, or request a new confirmation link:
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleResend}
+                    disabled={resending}
+                    style={{ fontWeight: 600 }}
+                  >
+                    {resending ? 'Sending link…' : 'Resend Confirmation Email'}
+                  </button>
+                  {resendSuccess && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginLeft: 10, fontWeight: 600 }}>
+                      ✓ Email sent!
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -132,22 +179,17 @@ export function Login() {
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary btn-full btn-lg"
-          disabled={loading}
+          variant="primary"
+          size="lg"
+          fullWidth
+          isLoading={loading}
+          loadingLabel="Signing In…"
           style={{ marginTop: 8 }}
         >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="spin" /> Signing In…
-            </>
-          ) : (
-            <>
-              Sign In <ArrowRight size={16} />
-            </>
-          )}
-        </button>
+          Sign In <ArrowRight size={16} />
+        </Button>
       </form>
 
       {/* Demo helper quick fills */}

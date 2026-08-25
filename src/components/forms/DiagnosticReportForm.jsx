@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, Loader2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { FileUpload } from '../ui/FileUpload';
+import { Button } from '../ui/Button';
 import { diagnosticsService } from '../../services/diagnosticsService';
 import { storageService } from '../../services/storageService';
 import { useToast } from '../../contexts/ToastContext';
@@ -177,29 +178,25 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost btn-md"
+          variant="ghost"
+          size="md"
           onClick={() => navigate(-1)}
           disabled={loading}
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="btn btn-primary btn-lg"
+          variant="primary"
+          size="lg"
           disabled={loading || !selectedPatient}
+          isLoading={loading}
+          loadingLabel="Uploading Report…"
         >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="spin" /> Uploading Report…
-            </>
-          ) : (
-            <>
-              <Save size={16} /> Save & Upload Report
-            </>
-          )}
-        </button>
+          <Save size={16} /> Save & Upload Report
+        </Button>
       </div>
     </form>
   );

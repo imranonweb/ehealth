@@ -3,6 +3,9 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-app);
+  padding-left: var(--sidebar-width);
+  transition: padding-left var(--transition-normal);
+  width: 100%;
 }
 
 .main-body {
@@ -10,15 +13,13 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  margin-left: var(--sidebar-width);
   background-color: var(--bg-app);
   min-height: 100vh;
-  transition: margin-left var(--transition-normal);
 }
 
 @media (max-width: 1024px) {
-  .main-body {
-    margin-left: 0;
+  .main-layout {
+    padding-left: 0;
   }
 }
 

@@ -26,11 +26,8 @@ export function PublicNavbar() {
     <>
       <header className={`public-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="container public-nav">
-          <Link to="/" className="public-logo">
-            <div className="public-logo-icon">
-              <Activity size={20} color="#FFFFFF" />
-            </div>
-            <span className="public-logo-text">E-Health</span>
+          <Link to="/" className="public-logo" aria-label="E-Health Home">
+            <img src="/Ehealthlogo.png" alt="E-Health" className="public-logo-image" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
           </Link>
 
           <nav className="public-nav-links">

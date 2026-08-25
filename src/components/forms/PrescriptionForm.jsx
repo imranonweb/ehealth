@@ -4,6 +4,7 @@ import { Pill, Save, Loader2, FileText, Calendar, Building2, Upload } from 'luci
 import { PatientSearch } from './PatientSearch';
 import { MedicationRows } from './MedicationRows';
 import { FileUpload } from '../ui/FileUpload';
+import { Button } from '../ui/Button';
 import { prescriptionService } from '../../services/prescriptionService';
 import { storageService } from '../../services/storageService';
 import { useToast } from '../../contexts/ToastContext';
@@ -176,29 +177,25 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-        <button
+        <Button
           type="button"
-          className="btn btn-ghost btn-md"
+          variant="ghost"
+          size="md"
           onClick={() => navigate(-1)}
           disabled={loading}
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="btn btn-primary btn-lg"
+          variant="primary"
+          size="lg"
           disabled={loading || !selectedPatient}
+          isLoading={loading}
+          loadingLabel="Issuing Prescription…"
         >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="spin" /> Issuing Prescription…
-            </>
-          ) : (
-            <>
-              <Save size={16} /> Save & Issue Prescription
-            </>
-          )}
-        </button>
+          <Save size={16} /> Save & Issue Prescription
+        </Button>
       </div>
     </form>
   );

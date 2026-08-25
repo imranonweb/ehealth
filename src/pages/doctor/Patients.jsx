@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { doctorService } from '../../services/doctorService';
-import { formatPatientId, getInitials, formatDate } from '../../lib/utils';
+import { formatPatientId, getInitials, formatDate, stringToColor } from '../../lib/utils';
 import { SkeletonTable, SkeletonCard } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import './DoctorPatients.css';
@@ -201,15 +201,15 @@ export function DoctorPatients() {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="table-container hide-on-mobile">
-              <table className="table">
+            <div className="table-container card-table-wrap hide-on-mobile">
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead className="table-header">
                   <tr>
-                    <th className="table-head">Patient</th>
-                    <th className="table-head">Last Record</th>
-                    <th className="table-head">Accessible Records</th>
-                    <th className="table-head">Relationship Status</th>
-                    <th className="table-head" style={{ textAlign: 'right' }}>Action</th>
+                    <th className="table-head" style={{ padding: '14px 24px' }}>Patient</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Last Clinical Record</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Accessible Records</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Relationship Status</th>
+                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
@@ -222,37 +222,69 @@ export function DoctorPatients() {
                       ? 'Hospital Visit'
                       : null;
 
+                    const initials = getInitials(p.full_name);
+
                     return (
-                      <tr key={p.id} className="table-row">
+                      <tr key={p.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
                         {/* Patient Column */}
-                        <td className="table-cell">
+                        <td className="table-cell" style={{ padding: '18px 24px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div className="avatar avatar-sm avatar-teal">
-                              {getInitials(p.full_name)}
+                            <div style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: stringToColor(p.full_name),
+                              color: '#FFFFFF',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '0.8125rem',
+                              flexShrink: 0,
+                            }}>
+                              {initials}
                             </div>
                             <div>
-                              <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                              <Link
+                                to={`/doctor/patients/${p.id}`}
+                                style={{
+                                  fontWeight: 700,
+                                  color: 'var(--text-primary)',
+                                  textDecoration: 'none',
+                                  display: 'block',
+                                  fontSize: '0.9375rem',
+                                }}
+                              >
                                 {p.full_name}
-                              </div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                {p.patient_identifier ? (
-                                  <>ID: <strong style={{ color: 'var(--accent)' }}>{formatPatientId(p.patient_identifier)}</strong> · </>
-                                ) : null}
-                                {p.gender ? <span style={{ textTransform: 'capitalize' }}>{p.gender} · </span> : null}
-                                {p.email}
+                              </Link>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                {p.patient_identifier && (
+                                  <span style={{
+                                    fontFamily: 'monospace',
+                                    backgroundColor: 'var(--bg-surface-muted)',
+                                    padding: '1px 6px',
+                                    borderRadius: 'var(--radius-xs)',
+                                    color: 'var(--accent)',
+                                    fontWeight: 600,
+                                  }}>
+                                    {formatPatientId(p.patient_identifier)}
+                                  </span>
+                                )}
+                                {p.gender && <span style={{ textTransform: 'capitalize' }}>· {p.gender}</span>}
+                                <span>· {p.email}</span>
                               </div>
                             </div>
                           </div>
                         </td>
 
                         {/* Last Record Column */}
-                        <td className="table-cell">
+                        <td className="table-cell" style={{ padding: '18px 20px' }}>
                           {p.last_record ? (
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--text-primary)' }}>
+                              <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                                 {formatDate(p.last_record.date)}
                               </div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
                                 {lastRecType}
                               </div>
                             </div>
@@ -264,22 +296,22 @@ export function DoctorPatients() {
                         </td>
 
                         {/* Records Count Column */}
-                        <td className="table-cell">
-                          <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-primary)', fontWeight: 600 }}>
+                        <td className="table-cell" style={{ padding: '18px 20px' }}>
+                          <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-primary)', fontWeight: 600, border: '1px solid var(--border-default)' }}>
                             {p.record_count} {p.record_count === 1 ? 'record' : 'records'}
                           </span>
                         </td>
 
                         {/* Status Column */}
-                        <td className="table-cell">
-                          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <td className="table-cell" style={{ padding: '18px 20px' }}>
+                          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                             <CheckCircle2 size={12} /> Active Relationship
                           </span>
                         </td>
 
                         {/* Action Column */}
-                        <td className="table-cell" style={{ textAlign: 'right' }}>
-                          <Link to={`/doctor/patients/${p.id}`} className="btn btn-primary btn-sm">
+                        <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
+                          <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
                             View Patient <ChevronRight size={14} />
                           </Link>
                         </td>
