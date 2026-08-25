@@ -74,7 +74,26 @@ export function AboutUs() {
             <div className="grid-3" style={{ gap: 24 }}>
               {/* Profile: Imran */}
               <div className="card card-hover" style={{ padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="avatar avatar-xl avatar-teal" style={{ width: 64, height: 64, fontSize: '1.25rem', marginBottom: 18 }}>AE</div>
+                <div style={{ position: 'relative', marginBottom: 18 }}>
+                  <img
+                    src="/Al-Imran-Emon.png"
+                    alt="Md. Al Imran Emon"
+                    style={{
+                      width: 88,
+                      height: 88,
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      objectPosition: 'center top',
+                      border: '3px solid var(--accent)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="avatar avatar-xl avatar-teal" style={{ display: 'none', width: 88, height: 88, fontSize: '1.5rem' }}>AE</div>
+                </div>
                 <h3 style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Md. Al Imran Emon</h3>
                 <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Lead Developer & Systems Architect</div>
                 <p className="body-sm" style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
@@ -89,7 +108,26 @@ export function AboutUs() {
 
               {/* Profile: Mashuk */}
               <div className="card card-hover" style={{ padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="avatar avatar-xl avatar-blue" style={{ width: 64, height: 64, fontSize: '1.25rem', marginBottom: 18 }}>MR</div>
+                <div style={{ position: 'relative', marginBottom: 18 }}>
+                  <img
+                    src="/Mashuk.jpeg"
+                    alt="Mashuk Rahman"
+                    style={{
+                      width: 88,
+                      height: 88,
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      objectPosition: 'center top',
+                      border: '3px solid var(--accent)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="avatar avatar-xl avatar-blue" style={{ display: 'none', width: 88, height: 88, fontSize: '1.5rem' }}>MR</div>
+                </div>
                 <h3 style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Mashuk Rahman</h3>
                 <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Frontend Developer</div>
                 <p className="body-sm" style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
@@ -104,7 +142,36 @@ export function AboutUs() {
 
               {/* Profile: Sinthia */}
               <div className="card card-hover" style={{ padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="avatar avatar-xl avatar-purple" style={{ width: 64, height: 64, fontSize: '1.25rem', marginBottom: 18 }}>SA</div>
+                <div style={{
+                  position: 'relative',
+                  marginBottom: 18,
+                  width: 88,
+                  height: 88,
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '3px solid var(--accent)',
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <img
+                    src="/Sinthia.png"
+                    alt="Sinthia Akter"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center 8%',
+                      transform: 'scale(1.45) translateY(6%)',
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className="avatar avatar-xl avatar-purple" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem' }}>SA</div>
+                </div>
                 <h3 style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Sinthia Akter</h3>
                 <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>UI/UX Designer</div>
                 <p className="body-sm" style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>

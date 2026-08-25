@@ -237,8 +237,19 @@ export function Landing() {
               {/* Profile 1: Md. Al Imran Emon */}
               <div className="team-card card-hover">
                 <div className="team-avatar-wrap">
-                  <div className="avatar avatar-xl avatar-teal" style={{ width: 68, height: 68, fontSize: '1.25rem' }}>
-                    AE
+                  <div className="team-avatar-frame">
+                    <img
+                      src="/Al-Imran-Emon.png"
+                      alt="Md. Al Imran Emon"
+                      className="team-avatar-img"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="avatar avatar-xl avatar-teal" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
+                      AE
+                    </div>
                   </div>
                 </div>
                 <h3 className="team-name">Md. Al Imran Emon</h3>
@@ -257,8 +268,19 @@ export function Landing() {
               {/* Profile 2: Mashuk Rahman */}
               <div className="team-card card-hover">
                 <div className="team-avatar-wrap">
-                  <div className="avatar avatar-xl avatar-blue" style={{ width: 68, height: 68, fontSize: '1.25rem' }}>
-                    MR
+                  <div className="team-avatar-frame">
+                    <img
+                      src="/Mashuk.jpeg"
+                      alt="Mashuk Rahman"
+                      className="team-avatar-img"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="avatar avatar-xl avatar-blue" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
+                      MR
+                    </div>
                   </div>
                 </div>
                 <h3 className="team-name">Mashuk Rahman</h3>
@@ -277,8 +299,19 @@ export function Landing() {
               {/* Profile 3: Sinthia Akter */}
               <div className="team-card card-hover">
                 <div className="team-avatar-wrap">
-                  <div className="avatar avatar-xl avatar-purple" style={{ width: 68, height: 68, fontSize: '1.25rem' }}>
-                    SA
+                  <div className="team-avatar-frame">
+                    <img
+                      src="/Sinthia.png"
+                      alt="Sinthia Akter"
+                      className="team-avatar-img team-avatar-sinthia"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="avatar avatar-xl avatar-purple" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
+                      SA
+                    </div>
                   </div>
                 </div>
                 <h3 className="team-name">Sinthia Akter</h3>
