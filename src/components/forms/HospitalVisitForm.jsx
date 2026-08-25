@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BedDouble, Save, Loader2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { hospitalService } from '../../services/hospitalService';
+import { searchService } from '../../services/searchService';
 import { useToast } from '../../contexts/ToastContext';
 
 export function HospitalVisitForm({ onSuccess, redirectPath = '/hospital/visits' }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPatientId = searchParams.get('patientId');
   const { success, error: toastError } = useToast();
 
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
   const [visitType, setVisitType] = useState('outpatient');
   const [department, setDepartment] = useState('General Medicine');
   const [admissionDate, setAdmissionDate] = useState(new Date().toISOString().split('T')[0]);
@@ -18,6 +22,19 @@ export function HospitalVisitForm({ onSuccess, redirectPath = '/hospital/visits'
   const [diagnosisSummary, setDiagnosisSummary] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (urlPatientId && !selectedPatient) {
+      setLoadingPatient(true);
+      searchService.getPatientById(urlPatientId)
+        .then((p) => {
+          if (p) setSelectedPatient(p);
+        })
+        .finally(() => {
+          setLoadingPatient(false);
+        });
+    }
+  }, [urlPatientId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,11 +79,17 @@ export function HospitalVisitForm({ onSuccess, redirectPath = '/hospital/visits'
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
           1. Select Patient
         </h3>
-        <PatientSearch
-          selectedPatient={selectedPatient}
-          onSelectPatient={setSelectedPatient}
-          onClear={() => setSelectedPatient(null)}
-        />
+        {loadingPatient ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            <Loader2 size={16} className="spin" /> Loading patient details…
+          </div>
+        ) : (
+          <PatientSearch
+            selectedPatient={selectedPatient}
+            onSelectPatient={setSelectedPatient}
+            onClear={() => setSelectedPatient(null)}
+          />
+        )}
       </div>
 
       {/* 2. Visit Logistics */}

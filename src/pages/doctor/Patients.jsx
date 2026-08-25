@@ -1,13 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, Search, ChevronRight, User, AlertCircle, RefreshCw,
   Filter, FileText, Pill, FlaskConical, Building2, CheckCircle2,
-  Calendar, ShieldCheck
+  Calendar, ShieldCheck, Plus, UserPlus, Loader2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { doctorService } from '../../services/doctorService';
-import { formatPatientId, getInitials, formatDate, stringToColor } from '../../lib/utils';
+import { searchService } from '../../services/searchService';
+import { formatPatientId, getInitials, formatDate, stringToColor, debounce } from '../../lib/utils';
 import { SkeletonTable, SkeletonCard } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import './DoctorPatients.css';
@@ -19,6 +20,10 @@ export function DoctorPatients() {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+
+  // Live registry search state
+  const [registryResults, setRegistryResults] = useState([]);
+  const [searchingRegistry, setSearchingRegistry] = useState(false);
 
   const loadPatients = async () => {
     if (!profile?.id) return;
@@ -39,10 +44,36 @@ export function DoctorPatients() {
     loadPatients();
   }, [profile?.id]);
 
-  // Filter and search logic
-  const filteredPatients = useMemo(() => {
+  // Debounced registry search
+  const debouncedSearch = useRef(
+    debounce(async (query) => {
+      if (!query || query.trim().length < 2) {
+        setRegistryResults([]);
+        setSearchingRegistry(false);
+        return;
+      }
+      setSearchingRegistry(true);
+      try {
+        const results = await searchService.searchPatients(query);
+        setRegistryResults(results);
+      } catch (err) {
+        console.warn('Registry search failed:', err);
+        setRegistryResults([]);
+      } finally {
+        setSearchingRegistry(false);
+      }
+    }, 300)
+  ).current;
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    debouncedSearch(val);
+  };
+
+  // Filter local patients
+  const filteredLocalPatients = useMemo(() => {
     return patients.filter((p) => {
-      // 1. Search query matching
       const matchesSearch =
         !searchQuery.trim() ||
         p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,7 +83,6 @@ export function DoctorPatients() {
 
       if (!matchesSearch) return false;
 
-      // 2. Category filtering
       if (activeFilter === 'all') return true;
       if (activeFilter === 'prescriptions') {
         return p.records?.some((r) => r.record_type === 'prescription');
@@ -70,20 +100,38 @@ export function DoctorPatients() {
     });
   }, [patients, searchQuery, activeFilter]);
 
+  // Merge registry results not in local patients when searching
+  const combinedSearchResults = useMemo(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      return filteredLocalPatients;
+    }
+
+    const localIds = new Set(filteredLocalPatients.map((p) => p.id));
+    const extraRegistry = registryResults.filter((p) => !localIds.has(p.id)).map((p) => ({
+      ...p,
+      isRegistrySearch: true,
+      record_count: 0,
+      last_record: null,
+      relationship_status: 'registry',
+    }));
+
+    return [...filteredLocalPatients, ...extraRegistry];
+  }, [filteredLocalPatients, registryResults, searchQuery]);
+
   return (
     <div className="dashboard-container">
       {/* Header */}
       <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
         <div>
-          <h1 className="page-title">Authorized Patients</h1>
+          <h1 className="page-title">Patient Directory & Consultations</h1>
           <p className="page-sub">
-            Patients who have authorized access for clinical consultations and longitudinal medical history review.
+            Search patient records, review medical histories, and issue official e-prescriptions.
           </p>
         </div>
-        <div>
-          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <ShieldCheck size={14} /> RLS Authorized Patients Only
-          </span>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
+            <Plus size={16} /> New Prescription
+          </Link>
         </div>
       </div>
 
@@ -112,14 +160,19 @@ export function DoctorPatients() {
       <div className="card" style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-6)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Search Box */}
-          <div style={{ position: 'relative', flex: '1 1 300px', maxWidth: 460 }}>
-            <Search size={16} className="input-icon" />
+          <div style={{ position: 'relative', flex: '1 1 340px', maxWidth: 520 }}>
+            {searchingRegistry ? (
+              <Loader2 size={16} className="input-icon spin" style={{ color: 'var(--accent)' }} />
+            ) : (
+              <Search size={16} className="input-icon" />
+            )}
             <input
               type="text"
               className="input has-icon"
-              placeholder="Search authorized patients by name, health ID, or email..."
+              placeholder="Search patients by name, Health ID (e.g. P-9824F1A2), phone, or email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
+              style={{ height: 42, fontSize: '0.9375rem' }}
             />
           </div>
 
@@ -130,7 +183,7 @@ export function DoctorPatients() {
               className={`filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
               onClick={() => setActiveFilter('all')}
             >
-              All ({patients.length})
+              All Patients ({searchQuery.trim() ? combinedSearchResults.length : patients.length})
             </button>
             <button
               type="button"
@@ -175,29 +228,29 @@ export function DoctorPatients() {
           paddingBottom: 'var(--sp-4)',
         }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
-            Authorized Patient Records {loading ? '' : `(${filteredPatients.length})`}
+            {searchQuery.trim() ? `Search Results (${combinedSearchResults.length})` : `Active Consultations (${patients.length})`}
           </h2>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Access governed by patient consent & provider relationships
+            Centralized National Health Registry
           </span>
         </div>
 
         {loading ? (
           <SkeletonTable rows={4} cols={5} />
-        ) : patients.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title="No Authorized Patients Found"
-            description="No patients are currently associated with your account. When a patient grants you access, their record will appear here."
-          />
-        ) : filteredPatients.length === 0 ? (
-          <EmptyState
-            icon={Search}
-            title="No Matching Patients"
-            description={`No authorized patients matched "${searchQuery}".`}
-            actionLabel="Clear Search"
-            action={() => { setSearchQuery(''); setActiveFilter('all'); }}
-          />
+        ) : combinedSearchResults.length === 0 ? (
+          <div style={{ padding: 'var(--sp-8) 0' }}>
+            <EmptyState
+              icon={Users}
+              title={searchQuery ? "No Matching Patients Found" : "No Patients Yet"}
+              description={
+                searchQuery
+                  ? `No patient matched "${searchQuery}". Check the Health ID or name.`
+                  : "Search for a patient using their Health ID, name, or phone number above to review their history or write a prescription."
+              }
+              actionLabel="Write New Prescription"
+              action={() => window.location.href = '/doctor/prescriptions/new'}
+            />
+          </div>
         ) : (
           <>
             {/* Desktop Table View */}
@@ -206,14 +259,14 @@ export function DoctorPatients() {
                 <thead className="table-header">
                   <tr>
                     <th className="table-head" style={{ padding: '14px 24px' }}>Patient</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Health ID / Contact</th>
                     <th className="table-head" style={{ padding: '14px 20px' }}>Last Clinical Record</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Accessible Records</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Relationship Status</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Status</th>
                     <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
-                  {filteredPatients.map((p) => {
+                  {combinedSearchResults.map((p) => {
                     const lastRecType = p.last_record?.type === 'prescription'
                       ? 'Prescription'
                       : p.last_record?.type === 'diagnostic_report'
@@ -227,7 +280,7 @@ export function DoctorPatients() {
                     return (
                       <tr key={p.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
                         {/* Patient Column */}
-                        <td className="table-cell" style={{ padding: '18px 24px' }}>
+                        <td className="table-cell" style={{ padding: '16px 24px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <div style={{
                               width: 38,
@@ -257,31 +310,42 @@ export function DoctorPatients() {
                               >
                                 {p.full_name}
                               </Link>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                                {p.patient_identifier && (
-                                  <span style={{
-                                    fontFamily: 'monospace',
-                                    backgroundColor: 'var(--bg-surface-muted)',
-                                    padding: '1px 6px',
-                                    borderRadius: 'var(--radius-xs)',
-                                    color: 'var(--accent)',
-                                    fontWeight: 600,
-                                  }}>
-                                    {formatPatientId(p.patient_identifier)}
-                                  </span>
-                                )}
-                                {p.gender && <span style={{ textTransform: 'capitalize' }}>· {p.gender}</span>}
-                                <span>· {p.email}</span>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                {p.gender && <span style={{ textTransform: 'capitalize' }}>{p.gender} · </span>}
+                                {p.date_of_birth ? `DOB: ${formatDate(p.date_of_birth)}` : p.email}
                               </div>
                             </div>
                           </div>
                         </td>
 
+                        {/* Health ID Column */}
+                        <td className="table-cell" style={{ padding: '16px 20px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span style={{
+                              fontFamily: 'monospace',
+                              backgroundColor: 'var(--bg-surface-muted)',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-xs)',
+                              color: 'var(--accent)',
+                              fontWeight: 700,
+                              fontSize: '0.8125rem',
+                              border: '1px solid var(--border-default)',
+                              display: 'inline-block',
+                              width: 'fit-content',
+                            }}>
+                              {formatPatientId(p.patient_identifier || p.id)}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {p.phone || p.email || '—'}
+                            </span>
+                          </div>
+                        </td>
+
                         {/* Last Record Column */}
-                        <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <td className="table-cell" style={{ padding: '16px 20px' }}>
                           {p.last_record ? (
                             <div>
-                              <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                              <div style={{ fontWeight: 600, fontSize: '0.84375rem', color: 'var(--text-primary)' }}>
                                 {formatDate(p.last_record.date)}
                               </div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
@@ -290,30 +354,34 @@ export function DoctorPatients() {
                             </div>
                           ) : (
                             <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                              No records yet
+                              No records on file
                             </span>
                           )}
                         </td>
 
-                        {/* Records Count Column */}
-                        <td className="table-cell" style={{ padding: '18px 20px' }}>
-                          <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-primary)', fontWeight: 600, border: '1px solid var(--border-default)' }}>
-                            {p.record_count} {p.record_count === 1 ? 'record' : 'records'}
-                          </span>
-                        </td>
-
                         {/* Status Column */}
-                        <td className="table-cell" style={{ padding: '18px 20px' }}>
-                          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                            <CheckCircle2 size={12} /> Active Relationship
-                          </span>
+                        <td className="table-cell" style={{ padding: '16px 20px' }}>
+                          {p.isRegistrySearch ? (
+                            <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-secondary)' }}>
+                              Registry Profile
+                            </span>
+                          ) : (
+                            <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                              <CheckCircle2 size={12} /> Active
+                            </span>
+                          )}
                         </td>
 
                         {/* Action Column */}
-                        <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
-                          <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                            View Patient <ChevronRight size={14} />
-                          </Link>
+                        <td className="table-cell" style={{ textAlign: 'right', padding: '16px 24px' }}>
+                          <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                            <Link to={`/doctor/prescriptions/new?patientId=${p.id}`} className="btn btn-primary btn-sm" style={{ fontWeight: 600 }}>
+                              <Plus size={13} /> Prescribe
+                            </Link>
+                            <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                              View <ChevronRight size={13} />
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -324,7 +392,7 @@ export function DoctorPatients() {
 
             {/* Mobile Cards View */}
             <div className="mobile-patient-cards show-on-mobile">
-              {filteredPatients.map((p) => {
+              {combinedSearchResults.map((p) => {
                 const lastRecType = p.last_record?.type === 'prescription'
                   ? 'Prescription'
                   : p.last_record?.type === 'diagnostic_report'
@@ -351,13 +419,18 @@ export function DoctorPatients() {
                     </div>
 
                     <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 12 }}>
+                      <div>Phone: <strong>{p.phone || p.email || '—'}</strong></div>
                       <div>Last Activity: <strong>{p.last_record ? `${formatDate(p.last_record.date)} (${lastRecType})` : 'No records yet'}</strong></div>
-                      <div>Accessible Records: <strong>{p.record_count}</strong></div>
                     </div>
 
-                    <Link to={`/doctor/patients/${p.id}`} className="btn btn-primary btn-sm w-full">
-                      View Patient <ChevronRight size={14} />
-                    </Link>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <Link to={`/doctor/prescriptions/new?patientId=${p.id}`} className="btn btn-primary btn-sm" style={{ justifyContent: 'center' }}>
+                        <Plus size={14} /> Prescribe
+                      </Link>
+                      <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ justifyContent: 'center' }}>
+                        View File <ChevronRight size={14} />
+                      </Link>
+                    </div>
                   </div>
                 );
               })}

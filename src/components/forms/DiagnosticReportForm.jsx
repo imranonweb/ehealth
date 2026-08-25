@@ -1,18 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Save, Loader2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { FileUpload } from '../ui/FileUpload';
 import { Button } from '../ui/Button';
 import { diagnosticsService } from '../../services/diagnosticsService';
 import { storageService } from '../../services/storageService';
+import { searchService } from '../../services/searchService';
 import { useToast } from '../../contexts/ToastContext';
 
 export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/reports' }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPatientId = searchParams.get('patientId');
   const { success, error: toastError } = useToast();
 
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
   const [testName, setTestName] = useState('');
   const [testCategory, setTestCategory] = useState('Hematology');
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
@@ -21,6 +25,19 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (urlPatientId && !selectedPatient) {
+      setLoadingPatient(true);
+      searchService.getPatientById(urlPatientId)
+        .then((p) => {
+          if (p) setSelectedPatient(p);
+        })
+        .finally(() => {
+          setLoadingPatient(false);
+        });
+    }
+  }, [urlPatientId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

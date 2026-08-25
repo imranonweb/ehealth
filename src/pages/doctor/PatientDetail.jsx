@@ -104,10 +104,11 @@ export function DoctorPatientDetail() {
   }
 
   const patient = data.patient;
-  const patientId = patient.patient_profiles?.[0]?.patient_identifier || patient.id;
-  const allergies = patient.patient_profiles?.[0]?.allergies || 'None reported';
-  const bloodGroup = patient.blood_group || patient.patient_profiles?.[0]?.blood_group || 'Not specified';
-  const emergencyContact = patient.patient_profiles?.[0]?.emergency_contact || 'None listed';
+  const patProf = Array.isArray(patient.patient_profiles) ? patient.patient_profiles[0] : (patient.patient_profiles || patient);
+  const patientId = patProf?.patient_identifier || patient.patient_identifier || patient.id;
+  const allergies = patProf?.allergies || patient.allergies || 'None reported';
+  const bloodGroup = patient.blood_group || patProf?.blood_group || 'Not specified';
+  const emergencyContact = patProf?.emergency_contact || patient.emergency_contact || 'None listed';
 
   return (
     <div className="dashboard-container">

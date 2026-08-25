@@ -107,9 +107,10 @@ export function HospitalPatientDetail() {
     );
   }
 
-  const patientId = patient.patient_profiles?.[0]?.patient_identifier || patient.id;
-  const allergies = patient.patient_profiles?.[0]?.allergies || 'None reported';
-  const bloodGroup = patient.blood_group || patient.patient_profiles?.[0]?.blood_group || 'Not set';
+  const patProf = Array.isArray(patient.patient_profiles) ? patient.patient_profiles[0] : (patient.patient_profiles || patient);
+  const patientId = patProf?.patient_identifier || patient.patient_identifier || patient.id;
+  const allergies = patProf?.allergies || patient.allergies || 'None reported';
+  const bloodGroup = patient.blood_group || patProf?.blood_group || 'Not set';
 
   return (
     <div className="dashboard-container">
@@ -135,7 +136,7 @@ export function HospitalPatientDetail() {
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link to="/hospital/visits/new" className="btn btn-primary btn-md">
+            <Link to={`/hospital/visits/new?patientId=${patient.id}`} className="btn btn-primary btn-md">
               <BedDouble size={16} /> Record Admission
             </Link>
           </div>
