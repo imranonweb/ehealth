@@ -1,4 +1,4 @@
-import { Pill, FlaskConical, Building2, ChevronRight } from 'lucide-react';
+import { AlertCircle, Pill, FlaskConical, Building2, ChevronRight } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { EmptyState } from '../ui/EmptyState';
 import { SkeletonTimeline } from '../ui/Skeleton';
@@ -29,7 +29,7 @@ export function MedicalTimeline({ records, loading, error, onViewDetail, emptyMe
 
   if (error) return (
     <div className="card" style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
-      <p className="text-danger">{error}</p>
+      <p className="timeline-error" role="alert"><AlertCircle size={18} aria-hidden="true" />{error}</p>
     </div>
   );
 
@@ -50,7 +50,7 @@ export function MedicalTimeline({ records, loading, error, onViewDetail, emptyMe
         const Icon = config.icon;
 
         return (
-          <div key={record.id || index} className="timeline-item" onClick={() => onViewDetail?.(record)}>
+          <div key={record.id || index} className="timeline-item">
             {/* Timeline connector */}
             <div className="timeline-connector">
               <div className="timeline-dot" style={{ background: config.bg, color: config.color }}>
@@ -78,8 +78,13 @@ export function MedicalTimeline({ records, loading, error, onViewDetail, emptyMe
               {record.summary && (
                 <p className="timeline-summary">{record.summary}</p>
               )}
-              <button className="timeline-action" aria-label={`View ${config.label} details`}>
-                View details <ChevronRight size={14} />
+              <button
+                type="button"
+                className="timeline-action"
+                onClick={() => onViewDetail?.(record)}
+                aria-label={`View full ${config.label.toLowerCase()} details`}
+              >
+                View full details <ChevronRight size={14} aria-hidden="true" />
               </button>
             </div>
           </div>

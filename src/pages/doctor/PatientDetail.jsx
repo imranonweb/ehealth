@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  User, Activity, Pill, Plus, ChevronLeft, Calendar, FileText,
-  AlertCircle, ShieldCheck, Lock, Building2, FlaskConical, Eye,
-  RefreshCw, CheckCircle2
+  Activity, Pill, Plus, ChevronLeft, Calendar, ShieldCheck, Lock,
+  Building2, FlaskConical, Eye
 } from 'lucide-react';
 import { doctorService } from '../../services/doctorService';
 import { MedicalTimeline } from '../../components/records/MedicalTimeline';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
-import { SkeletonCard, SkeletonTimeline, SkeletonTable } from '../../components/ui/Skeleton';
+import { SkeletonCard, SkeletonTimeline } from '../../components/ui/Skeleton';
 import { formatPatientId, getInitials, formatDate, parseMedications } from '../../lib/utils';
 import { EmptyState } from '../../components/ui/EmptyState';
 
@@ -94,7 +93,7 @@ export function DoctorPatientDetail() {
             Patient Not Accessible
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto 20px', fontSize: '0.875rem' }}>
-            You do not have an active relationship authorization to access this patient's medical records under healthcare privacy governance.
+            {error || 'You do not have an active relationship authorization to access this patient’s medical records under healthcare privacy governance.'}
           </p>
           <Link to="/doctor/patients" className="btn btn-primary btn-md">
             Return to Authorized Patient Directory
@@ -130,7 +129,7 @@ export function DoctorPatientDetail() {
       </Link>
 
       {/* Patient Header Card */}
-      <div className="card" style={{ padding: 'var(--sp-6)', marginBottom: 'var(--sp-6)' }}>
+      <div className="card patient-context-ribbon" style={{ padding: 'var(--sp-6)', marginBottom: 'var(--sp-6)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div className="avatar avatar-lg avatar-teal">

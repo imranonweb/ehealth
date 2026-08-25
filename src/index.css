@@ -133,7 +133,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Noto Sans Bengali', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-primary);
   line-height: 1.5;
@@ -675,10 +675,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.8125rem;
   color: var(--text-muted);
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .timeline-action {
@@ -691,9 +688,56 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent);
   background: none;
   border: none;
-  padding: 0;
+  padding: 8px 0;
   cursor: pointer;
 }
+
+.timeline-action:hover { color: var(--accent-hover); text-decoration: underline; }
+.timeline-error { display: inline-flex; align-items: center; gap: 8px; color: var(--color-danger); font-size: 0.875rem; }
+
+/* ── Upload feedback ───────────────────────────────────────────────────── */
+.file-upload-zone {
+  display: flex;
+  min-height: 144px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--sp-5);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+.file-upload-zone:hover, .file-upload-zone.drag-over { border-color: var(--accent); background: var(--accent-subtle); }
+.file-upload-zone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.file-upload-icon { color: var(--accent-text); }
+.file-upload-text { font-size: 0.875rem; color: var(--text-primary); }
+.file-upload-hint, .file-upload-size, .file-upload-status { font-size: 0.75rem; color: var(--text-muted); }
+.file-upload-preview { padding: var(--sp-4); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface-muted); }
+.file-upload-preview.success { border-color: rgba(22, 163, 74, 0.35); }
+.file-upload-preview.error { border-color: rgba(220, 38, 38, 0.35); }
+.file-upload-info { display: flex; align-items: center; gap: var(--sp-3); }
+.file-upload-file-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--accent-text); }
+.file-upload-meta { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.file-upload-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.file-upload-remove { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); cursor: pointer; }
+.file-upload-remove:hover { background: var(--color-danger-bg); color: var(--color-danger); }
+.file-upload-progress { height: 6px; overflow: hidden; margin-top: var(--sp-3); border-radius: var(--radius-full); background: var(--border-default); }
+.file-upload-progress-bar { height: 100%; border-radius: inherit; background: var(--accent); transition: width var(--transition-fast); }
+.file-upload-progress-bar.indeterminate { width: 38%; animation: uploadProgress 1.2s ease-in-out infinite; }
+.file-upload-status { margin-top: 6px; }
+.file-upload-error, .file-upload-success { display: flex; align-items: center; gap: 6px; margin-top: var(--sp-2); font-size: 0.8125rem; }
+.file-upload-error { color: var(--color-danger); }
+.file-upload-success { color: var(--color-success); }
+@keyframes uploadProgress { from { transform: translateX(-110%); } to { transform: translateX(290%); } }
+
+/* The patient identity ribbon keeps safety-critical context in view during a consultation. */
+.patient-context-ribbon { position: sticky; top: calc(var(--navbar-height) + var(--sp-3)); z-index: 10; }
+.hospital-encounter-open { background-color: var(--color-warning-bg); }
+.hospital-encounter-complete { background-color: var(--bg-surface); }
 
 /* ── Record Detail Drawer ────────────────────────────────────────────────── */
 .record-detail {
@@ -1331,6 +1375,9 @@ a.stat-card:hover,
   .input, .select, .textarea { min-height: 44px; font-size: 1rem; }
   .drawer-close, .modal-close { width: 40px; height: 40px; }
   .toast-close { width: 36px; height: 36px; }
+  .timeline-action { min-height: 44px; padding: 10px 0; }
+  .patient-context-ribbon { position: static; }
+  .table-container { -webkit-overflow-scrolling: touch; }
 }
 
 /* Reduced motion support */
@@ -1341,5 +1388,5 @@ a.stat-card:hover,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .file-upload-progress-bar.indeterminate { animation: none; width: 100%; }
 }
-

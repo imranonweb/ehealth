@@ -62,10 +62,12 @@ export function PatientSearch({ onSelectPatient, selectedPatient, onClear }) {
 
   return (
     <div className="patient-search">
+      <label className="field-label" htmlFor="patient-search">Find patient</label>
       <div className="input-wrap">
         <Search size={16} className="input-icon" />
         <input
           type="text"
+          id="patient-search"
           className="input has-icon"
           placeholder="Search patient by name, ID, email or phone..."
           value={query}

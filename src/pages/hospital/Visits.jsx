@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BedDouble, Plus, Calendar, ChevronRight } from 'lucide-react';
+import { BedDouble, Plus, ChevronRight } from 'lucide-react';
 import { hospitalService } from '../../services/hospitalService';
 import { formatDate, formatPatientId } from '../../lib/utils';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -68,6 +68,7 @@ export function HospitalVisits() {
                 <tr>
                   <th className="table-head">Admission Date</th>
                   <th className="table-head">Discharge Date</th>
+                  <th className="table-head">Encounter status</th>
                   <th className="table-head">Patient Name</th>
                   <th className="table-head">Type</th>
                   <th className="table-head">Department</th>
@@ -76,10 +77,13 @@ export function HospitalVisits() {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {visits.map((v) => (
-                  <tr key={v.id} className="table-row">
+                {visits.map((v) => {
+                  const isOpen = !v.discharge_date;
+                  return (
+                  <tr key={v.id} className={`table-row hospital-encounter-row ${isOpen ? 'hospital-encounter-open' : 'hospital-encounter-complete'}`}>
                     <td className="table-cell">{formatDate(v.admission_date)}</td>
                     <td className="table-cell">{formatDate(v.discharge_date)}</td>
+                    <td className="table-cell"><span className={`badge ${isOpen ? 'badge-warning' : 'badge-success'}`}>{isOpen ? 'Open encounter' : 'Completed record'}</span></td>
                     <td className="table-cell">
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {v.patient?.full_name || 'Patient'}
@@ -113,7 +117,8 @@ export function HospitalVisits() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

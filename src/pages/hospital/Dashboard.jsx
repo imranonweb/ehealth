@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, BedDouble, Pill, Plus, Users, Eye } from 'lucide-react';
+import { BedDouble, Pill, Plus, Users, Eye } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hospitalService } from '../../services/hospitalService';
 import { formatDate, formatPatientId } from '../../lib/utils';
@@ -117,6 +117,7 @@ export function HospitalDashboard() {
               <thead className="table-header">
                 <tr>
                   <th className="table-head">Date</th>
+                  <th className="table-head">Status</th>
                   <th className="table-head">Patient Name</th>
                   <th className="table-head">Visit Type</th>
                   <th className="table-head">Department</th>
@@ -125,9 +126,12 @@ export function HospitalDashboard() {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {visits.map((v) => (
-                  <tr key={v.id} className="table-row">
+                {visits.map((v) => {
+                  const isOpen = !v.discharge_date;
+                  return (
+                  <tr key={v.id} className={`table-row hospital-encounter-row ${isOpen ? 'hospital-encounter-open' : 'hospital-encounter-complete'}`}>
                     <td className="table-cell">{formatDate(v.admission_date)}</td>
+                    <td className="table-cell"><span className={`badge ${isOpen ? 'badge-warning' : 'badge-success'}`}>{isOpen ? 'Open' : 'Completed'}</span></td>
                     <td className="table-cell">
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                         {v.patient?.full_name || 'Patient'}
@@ -162,7 +166,8 @@ export function HospitalDashboard() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

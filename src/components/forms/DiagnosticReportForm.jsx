@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FlaskConical, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { FileUpload } from '../ui/FileUpload';
 import { diagnosticsService } from '../../services/diagnosticsService';
@@ -92,9 +92,10 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
         
         <div className="form-row">
           <div className="field">
-            <label className="field-label">Test Name</label>
+            <label className="field-label" htmlFor="diagnostic-test-name">Test Name</label>
             <input
               className="input"
+              id="diagnostic-test-name"
               type="text"
               placeholder="e.g. Complete Blood Count, Lipid Profile, Chest X-Ray"
               value={testName}
@@ -104,9 +105,10 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
           </div>
 
           <div className="field">
-            <label className="field-label">Test Category</label>
+            <label className="field-label" htmlFor="diagnostic-test-category">Test Category</label>
             <select
               className="select"
+              id="diagnostic-test-category"
               value={testCategory}
               onChange={(e) => setTestCategory(e.target.value)}
             >
@@ -123,9 +125,10 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
         </div>
 
         <div className="field" style={{ marginTop: 12 }}>
-          <label className="field-label">Report Date</label>
+          <label className="field-label" htmlFor="diagnostic-report-date">Report Date</label>
           <input
             className="input"
+            id="diagnostic-report-date"
             type="date"
             value={reportDate}
             onChange={(e) => setReportDate(e.target.value)}
@@ -134,9 +137,10 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
         </div>
 
         <div className="field" style={{ marginTop: 12 }}>
-          <label className="field-label">Key Findings & Values Summary</label>
+          <label className="field-label" htmlFor="diagnostic-summary">Key Findings & Values Summary</label>
           <textarea
             className="textarea"
+            id="diagnostic-summary"
             placeholder="Summarize key parameter values, normal/abnormal flags..."
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
@@ -146,9 +150,10 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
         </div>
 
         <div className="field" style={{ marginTop: 12 }}>
-          <label className="field-label">Pathologist / Lab Consultant Remarks (Optional)</label>
+          <label className="field-label" htmlFor="diagnostic-notes">Pathologist / Lab Consultant Remarks (Optional)</label>
           <textarea
             className="textarea"
+            id="diagnostic-notes"
             placeholder="Clinical interpretations or remarks..."
             value={doctorNotes}
             onChange={(e) => setDoctorNotes(e.target.value)}
