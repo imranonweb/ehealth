@@ -69,4 +69,42 @@ export const searchService = {
     if (error || !data || data.length === 0) return null;
     return data[0];
   },
+
+  /**
+   * Get patient profile by ID (UUID).
+   */
+  async getPatientById(id) {
+    if (!id) return null;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id, full_name, email, phone, gender, date_of_birth,
+          patient_profiles (
+            patient_identifier,
+            blood_group,
+            allergies
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error || !data) return null;
+      return {
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender,
+        date_of_birth: data.date_of_birth,
+        patient_identifier: data.patient_profiles?.[0]?.patient_identifier || null,
+        blood_group: data.patient_profiles?.[0]?.blood_group || null,
+        allergies: data.patient_profiles?.[0]?.allergies || null,
+      };
+    } catch (err) {
+      console.error('getPatientById error:', err);
+      return null;
+    }
+  },
 };
+

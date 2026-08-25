@@ -5,15 +5,38 @@ export const prescriptionService = {
    * Create a new prescription.
    */
   async createPrescription(prescriptionData) {
-    const { data: profile } = await supabase
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) {
+      throw new Error('Authentication required. Please sign in to issue prescriptions.');
+    }
+
+    const { data: profile, error: profErr } = await supabase
       .from('profiles')
-      .select('id')
-      .eq('auth_user_id', (await supabase.auth.getUser()).data.user.id)
+      .select('id, full_name, role')
+      .eq('auth_user_id', authData.user.id)
       .single();
 
+    if (profErr || !profile) {
+      throw new Error('User profile not found. Please reload the page.');
+    }
+
+    const doctorId = prescriptionData.doctor_id || (profile.role === 'doctor' ? profile.id : null);
+    const hospitalId = prescriptionData.hospital_id || null;
+
+    if (!doctorId && !hospitalId) {
+      throw new Error('A prescription must be linked to an issuing doctor or hospital.');
+    }
+
     const payload = {
-      ...prescriptionData,
-      doctor_id: prescriptionData.doctor_id || profile.id,
+      patient_id: prescriptionData.patient_id,
+      doctor_id: doctorId,
+      hospital_id: hospitalId,
+      prescription_date: prescriptionData.prescription_date,
+      diagnosis: prescriptionData.diagnosis,
+      clinical_notes: prescriptionData.clinical_notes || null,
+      instructions: prescriptionData.instructions || null,
+      medications: prescriptionData.medications || [],
+      document_path: prescriptionData.document_path || null,
       created_by: profile.id,
     };
 
@@ -23,22 +46,38 @@ export const prescriptionService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '42501' || error.message?.toLowerCase().includes('row-level security') || error.message?.toLowerCase().includes('policy')) {
+        throw new Error(
+          'Authorization Required: You are not authorized to issue prescriptions for this patient. The patient must first grant access or share their Health ID with your clinic/hospital.'
+        );
+      }
+      throw error;
+    }
 
-    // Create unified timeline entry
-    await supabase.from('medical_records').insert([{
-      patient_id: data.patient_id,
-      record_type: 'prescription',
-      record_reference_id: data.id,
-      record_date: data.prescription_date,
-      title: `Prescription — ${data.diagnosis || 'General'}`,
-      summary: data.clinical_notes || data.instructions,
-      provider_name: profile.full_name || '',
-      organization_name: prescriptionData.hospital_name || '',
-    }]);
+    // Create unified timeline entry in medical_records
+    try {
+      await supabase.from('medical_records').insert([{
+        patient_id: data.patient_id,
+        record_type: 'prescription',
+        record_reference_id: data.id,
+        record_date: data.prescription_date,
+        title: `Prescription — ${data.diagnosis || 'General'}`,
+        summary: data.clinical_notes || data.instructions || '',
+        provider_name: profile.full_name || '',
+        organization_name: prescriptionData.hospital_name || '',
+        created_by: profile.id,
+      }]);
+    } catch (recErr) {
+      console.warn('Could not index prescription to timeline:', recErr);
+    }
 
-    // Ensure provider-patient relationship
-    await ensureRelationship(data.patient_id, profile.id, 'doctor', prescriptionData.hospital_id);
+    // Ensure provider-patient relationship (best-effort)
+    try {
+      await ensureRelationship(data.patient_id, profile.id, profile.role || 'doctor', hospitalId);
+    } catch (relErr) {
+      console.warn('Could not auto-link relationship:', relErr);
+    }
 
     return data;
   },

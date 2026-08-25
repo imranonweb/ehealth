@@ -81,7 +81,6 @@ export function MedicationRows({ medications, onChange }) {
                     placeholder="Medicine Name (e.g. Paracetamol)"
                     value={med.name}
                     onChange={(e) => updateRow(idx, 'name', e.target.value)}
-                    required
                   />
                 </div>
                 <div>
@@ -91,7 +90,6 @@ export function MedicationRows({ medications, onChange }) {
                     placeholder="Dosage (e.g. 500mg)"
                     value={med.dosage}
                     onChange={(e) => updateRow(idx, 'dosage', e.target.value)}
-                    required
                   />
                 </div>
                 <div>
@@ -114,7 +112,6 @@ export function MedicationRows({ medications, onChange }) {
                     placeholder="Duration (e.g. 7 days)"
                     value={med.duration}
                     onChange={(e) => updateRow(idx, 'duration', e.target.value)}
-                    required
                   />
                 </div>
               </div>

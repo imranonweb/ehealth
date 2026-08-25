@@ -151,7 +151,7 @@ export function DoctorPatientDetail() {
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
+            <Link to={`/doctor/prescriptions/new?patientId=${patient.id}`} className="btn btn-primary btn-md">
               <Plus size={16} /> Issue Prescription
             </Link>
           </div>
@@ -362,7 +362,7 @@ export function DoctorPatientDetail() {
                 Prescriptions issued across all healthcare providers.
               </p>
             </div>
-            <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-sm">
+            <Link to={`/doctor/prescriptions/new?patientId=${patient.id}`} className="btn btn-primary btn-sm">
               <Plus size={14} /> New Prescription
             </Link>
           </div>

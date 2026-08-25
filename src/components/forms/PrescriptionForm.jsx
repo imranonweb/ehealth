@@ -1,19 +1,23 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Pill, Save, Loader2, FileText, Calendar, Building2, Upload } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Pill, Save, Loader2, FileText, Calendar, Building2, Upload, AlertCircle } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { MedicationRows } from './MedicationRows';
 import { FileUpload } from '../ui/FileUpload';
 import { Button } from '../ui/Button';
 import { prescriptionService } from '../../services/prescriptionService';
 import { storageService } from '../../services/storageService';
+import { searchService } from '../../services/searchService';
 import { useToast } from '../../contexts/ToastContext';
 
-export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess, redirectPath = '/doctor/prescriptions' }) {
+export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, initialPatient, onSuccess, redirectPath = '/doctor/prescriptions' }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPatientId = searchParams.get('patientId');
   const { success, error: toastError } = useToast();
 
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(initialPatient || null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
   const [diagnosis, setDiagnosis] = useState('');
   const [prescriptionDate, setPrescriptionDate] = useState(new Date().toISOString().split('T')[0]);
   const [clinicalNotes, setClinicalNotes] = useState('');
@@ -25,10 +29,33 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Auto-fetch patient if passed in URL query param
+  useEffect(() => {
+    if (urlPatientId && !selectedPatient) {
+      setLoadingPatient(true);
+      searchService.getPatientById(urlPatientId)
+        .then((p) => {
+          if (p) setSelectedPatient(p);
+        })
+        .catch((err) => {
+          console.error('Failed to pre-populate patient:', err);
+        })
+        .finally(() => {
+          setLoadingPatient(false);
+        });
+    }
+  }, [urlPatientId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!selectedPatient) {
       toastError('Please select a patient before saving the prescription.');
+      return;
+    }
+
+    if (!diagnosis.trim()) {
+      toastError('Please enter the primary diagnosis or chief complaint.');
       return;
     }
 
@@ -65,7 +92,7 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
       };
 
       const result = await prescriptionService.createPrescription(payload);
-      success('Prescription created and added to patient timeline.');
+      success('Prescription issued successfully and added to patient record.');
 
       if (onSuccess) {
         onSuccess(result);
@@ -88,11 +115,17 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
           1. Select Patient
         </h3>
-        <PatientSearch
-          selectedPatient={selectedPatient}
-          onSelectPatient={setSelectedPatient}
-          onClear={() => setSelectedPatient(null)}
-        />
+        {loadingPatient ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            <Loader2 size={16} className="spin" /> Loading patient details…
+          </div>
+        ) : (
+          <PatientSearch
+            selectedPatient={selectedPatient}
+            onSelectPatient={setSelectedPatient}
+            onClear={() => setSelectedPatient(null)}
+          />
+        )}
       </div>
 
       {/* 2. Clinical Diagnosis & Date */}
@@ -102,7 +135,7 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
         </h3>
         <div className="form-row">
           <div className="field">
-            <label className="field-label">Primary Diagnosis / Chief Complaint</label>
+            <label className="field-label">Primary Diagnosis / Chief Complaint *</label>
             <input
               className="input"
               type="text"
@@ -113,7 +146,7 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
             />
           </div>
           <div className="field">
-            <label className="field-label">Prescription Date</label>
+            <label className="field-label">Prescription Date *</label>
             <input
               className="input"
               type="date"
@@ -176,27 +209,39 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, onSuccess
       </div>
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="md"
-          onClick={() => navigate(-1)}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={loading || !selectedPatient}
-          isLoading={loading}
-          loadingLabel="Issuing Prescription…"
-        >
-          <Save size={16} /> Save & Issue Prescription
-        </Button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          {!selectedPatient && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 500 }}>
+              <AlertCircle size={15} /> Please select a patient in Step 1 to issue prescription.
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            onClick={() => navigate(-1)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={loading || !selectedPatient}
+            isLoading={loading}
+            loadingLabel="Issuing Prescription…"
+            title={!selectedPatient ? 'Please select a patient first' : 'Save and issue prescription'}
+          >
+            <Save size={16} /> Save & Issue Prescription
+          </Button>
+        </div>
       </div>
     </form>
   );
 }
+
