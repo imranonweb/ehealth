@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Pill, Plus, Calendar, ChevronRight, User } from 'lucide-react';
 import { prescriptionService } from '../../services/prescriptionService';
 import { formatDate, parseMedications, formatPatientId } from '../../lib/utils';
@@ -12,6 +12,7 @@ export function DoctorPrescriptions() {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadPrescriptions() {
@@ -58,7 +59,7 @@ export function DoctorPrescriptions() {
           title="No Prescriptions Issued"
           description="Create digital e-prescriptions with structured dosages and instructions for your patients."
           actionLabel="Create Prescription"
-          action={() => window.location.href = '/doctor/prescriptions/new'}
+          action={() => navigate('/doctor/prescriptions/new')}
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>

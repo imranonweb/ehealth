@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Building2, BedDouble, Pill, Plus, Users, ArrowRight, Clock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Building2, BedDouble, Pill, Plus, Users, Eye } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hospitalService } from '../../services/hospitalService';
 import { formatDate, formatPatientId } from '../../lib/utils';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
+import { StatCard } from '../../components/ui/StatCard';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 export function HospitalDashboard() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [visits, setVisits] = useState([]);
   const [stats, setStats] = useState({ totalVisits: 0, totalPrescriptions: 0, thisMonth: 0 });
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -34,68 +40,49 @@ export function HospitalDashboard() {
 
   const hospitalName = profile?.full_name || 'Hospital Center';
 
+  const handleViewDetail = (v) => {
+    setSelectedRecord({
+      record_type: 'hospital_visit',
+      record_reference_id: v.id,
+    });
+    setDrawerOpen(true);
+  };
+
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
-        <div>
-          <h1 className="page-title">{hospitalName}</h1>
-          <p className="page-sub">
-            Hospital Operations & Clinical Encounters Dashboard
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+      <PageHeader
+        title={hospitalName}
+        subtitle="Hospital Operations &amp; Clinical Encounters Dashboard"
+        actions={
           <Link to="/hospital/visits/new" className="btn btn-primary btn-md">
             <Plus size={16} /> New Patient Visit
           </Link>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Stats Ribbon */}
+      {/* Stats Ribbon — canonical StatCard components */}
       <div className="grid-3" style={{ gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
-        <div className="card" style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(15,118,110,0.12)', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BedDouble size={22} />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Total Recorded Admissions</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {loading ? '…' : stats.totalVisits}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59,130,246,0.12)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Pill size={22} />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Hospital Prescriptions</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {loading ? '…' : stats.totalPrescriptions}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Link to="/hospital/patients" style={{ textDecoration: 'none' }}>
-          <div className="card card-hover" style={{ padding: 'var(--sp-5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(16,185,129,0.12)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Users size={22} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Patient Central Index</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#10B981', marginTop: 4 }}>
-                  Search Patient Records →
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
+        <StatCard
+          icon={BedDouble}
+          label="Total Recorded Admissions"
+          value={loading ? '…' : stats.totalVisits}
+          tone="teal"
+        />
+        <StatCard
+          icon={Pill}
+          label="Hospital Prescriptions"
+          value={loading ? '…' : stats.totalPrescriptions}
+          tone="blue"
+        />
+        <StatCard
+          icon={Users}
+          label="Patient Central Index"
+          hint="Search Patient Records →"
+          value=""
+          tone="green"
+          to="/hospital/patients"
+        />
       </div>
 
       {/* Recent Admissions & Encounters */}
@@ -103,14 +90,14 @@ export function HospitalDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--sp-4)', borderBottom: '1px solid var(--border-default)', paddingBottom: 'var(--sp-4)' }}>
           <div>
             <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              Recent Patient Encounters & Admissions
+              Recent Patient Encounters &amp; Admissions
             </h2>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
               Hospitalization records, emergency care, and outpatient consultations.
             </p>
           </div>
           <Link to="/hospital/visits" className="btn btn-ghost btn-sm">
-            View All <ArrowRight size={14} />
+            View All →
           </Link>
         </div>
 
@@ -122,7 +109,7 @@ export function HospitalDashboard() {
             title="No Patient Visits Recorded"
             description="Log inpatient admissions, emergency care, or discharge summaries for patients."
             actionLabel="Record Patient Visit"
-            action={() => window.location.href = '/hospital/visits/new'}
+            action={() => navigate('/hospital/visits/new')}
           />
         ) : (
           <div className="table-container">
@@ -134,7 +121,7 @@ export function HospitalDashboard() {
                   <th className="table-head">Visit Type</th>
                   <th className="table-head">Department</th>
                   <th className="table-head">Primary Reason / Diagnosis</th>
-                  <th className="table-head" style={{ textAlign: 'right' }}>Actions</th>
+                  <th className="table-head" style={{ textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -165,9 +152,14 @@ export function HospitalDashboard() {
                       </div>
                     </td>
                     <td className="table-cell" style={{ textAlign: 'right' }}>
-                      <Link to="/hospital/visits" className="btn btn-ghost btn-sm">
-                        Details <ArrowRight size={13} />
-                      </Link>
+                      {/* Open RecordDetailDrawer for this specific visit */}
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleViewDetail(v)}
+                      >
+                        <Eye size={13} /> View
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -176,6 +168,13 @@ export function HospitalDashboard() {
           </div>
         )}
       </div>
+
+      {/* Record Detail Drawer */}
+      <RecordDetailDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        record={selectedRecord}
+      />
     </div>
   );
 }

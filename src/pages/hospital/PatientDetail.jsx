@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { User, BedDouble, Pill, Plus, ChevronLeft } from 'lucide-react';
+import { User, BedDouble, Pill, Plus, ChevronLeft, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { MedicalTimeline } from '../../components/records/MedicalTimeline';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
@@ -9,9 +10,11 @@ import { formatPatientId, getInitials, formatDate } from '../../lib/utils';
 
 export function HospitalPatientDetail() {
   const { id } = useParams();
+  const { profile } = useAuth();
   const [patient, setPatient] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -25,6 +28,30 @@ export function HospitalPatientDetail() {
           .single();
 
         if (profErr) throw profErr;
+
+        // ── Application-level authorization check ─────────────────────────
+        // The Doctor portal does this via doctorService.getPatientDetail which
+        // relies on RLS-filtered patient_provider_relationships queries.
+        // We mirror that pattern here: confirm an active relationship exists
+        // between this hospital's profile and the patient before granting
+        // access to the full record. RLS still applies on top of this check.
+        if (profile?.id) {
+          const { data: rel } = await supabase
+            .from('patient_provider_relationships')
+            .select('id')
+            .eq('patient_profile_id', id)
+            .eq('provider_profile_id', profile.id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+          if (!rel) {
+            // No confirmed relationship — deny at the application layer
+            setLoading(false);
+            return;
+          }
+          setAuthorized(true);
+        }
+
         setPatient(prof);
 
         const { data: records, error: recErr } = await supabase
@@ -65,8 +92,14 @@ export function HospitalPatientDetail() {
     return (
       <div className="dashboard-container">
         <div className="card" style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
-          <h3>Patient Record Not Found</h3>
-          <Link to="/hospital/patients" className="btn btn-outline btn-md" style={{ marginTop: 12 }}>
+          <ShieldAlert size={40} style={{ color: 'var(--color-danger)', marginBottom: 12 }} />
+          <h3>Patient Record Not Accessible</h3>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 8, maxWidth: 400, margin: '8px auto' }}>
+            {authorized === false
+              ? 'This patient has not been seen at your facility or the authorization is no longer active.'
+              : 'No matching patient record was found.'}
+          </p>
+          <Link to="/hospital/patients" className="btn btn-outline btn-md" style={{ marginTop: 16 }}>
             <ChevronLeft size={16} /> Back to Directory
           </Link>
         </div>

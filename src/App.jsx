@@ -12,6 +12,7 @@ import { AuthLayout } from './components/layout/AuthLayout';
 // Public Pages
 import { Landing } from './pages/public/Landing';
 import { Contact } from './pages/public/Contact';
+import { AboutUs } from './pages/public/AboutUs';
 
 // Auth Pages
 import { Login } from './pages/auth/Login';
@@ -64,6 +65,7 @@ export default function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Landing />} />
+              <Route path="/about" element={<AboutUs />} />
               <Route path="/contact" element={<Contact />} />
 
               {/* Auth Routes */}

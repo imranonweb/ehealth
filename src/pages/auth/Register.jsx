@@ -5,11 +5,29 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { ROLES } from '../../lib/permissions';
 
+// ── SECURITY NOTE ─────────────────────────────────────────────────────────
+// Only the PATIENT role is exposed on the public self-registration form.
+// DOCTOR, DIAGNOSTICS, and HOSPITAL roles are privileged — they can read
+// cross-patient data after an active `patient_provider_relationships` record
+// is created. Exposing them here allows any member of the public to claim a
+// provider identity with no verification, which is a security gap.
+//
+// Provider accounts must be provisioned through a trusted admin channel.
+// The AuthContext.createRoleProfile code path is preserved so admin-side
+// tooling (or a future invite-link flow) can use it.
+//
+// To enable invite-based registration in Supabase, the following migration
+// would be required:
+//   1. Create an `invitations` table: (id, email, role, token, used_at).
+//   2. Add a Supabase RLS policy on `profiles` that only allows INSERT when
+//      role = 'patient' OR an unused invitation row matches the email.
+//   3. Expose a Supabase Edge Function that creates the invitation token and
+//      emails the provider, callable by an admin only.
+//   4. On this registration page, accept an invite_token query param,
+//      validate it against `invitations`, then show the appropriate role fields.
+// Until that migration is applied, provider registration is disabled here.
 const roleOptions = [
-  { id: ROLES.PATIENT,     label: 'Patient',      icon: User,         desc: 'Access your health records & prescriptions' },
-  { id: ROLES.DOCTOR,      label: 'Doctor',       icon: Stethoscope,  desc: 'Issue digital prescriptions & review tests' },
-  { id: ROLES.DIAGNOSTICS, label: 'Diagnostics',  icon: FlaskConical, desc: 'Upload lab & imaging test reports' },
-  { id: ROLES.HOSPITAL,    label: 'Hospital',     icon: Building2,    desc: 'Manage patient visits, admissions & records' },
+  { id: ROLES.PATIENT, label: 'Patient', icon: User, desc: 'Access your health records & prescriptions' },
 ];
 
 export function Register() {

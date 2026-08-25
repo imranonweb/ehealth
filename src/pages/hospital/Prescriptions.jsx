@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Pill, Plus, Calendar, ChevronRight } from 'lucide-react';
 import { hospitalService } from '../../services/hospitalService';
 import { formatDate, parseMedications, formatPatientId } from '../../lib/utils';
@@ -12,6 +12,7 @@ export function HospitalPrescriptions() {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadPrescriptions() {
@@ -58,7 +59,7 @@ export function HospitalPrescriptions() {
             title="No Prescriptions Issued"
             description="Create hospital discharge or outpatient medication orders."
             actionLabel="Create Prescription"
-            action={() => window.location.href = '/hospital/prescriptions/new'}
+            action={() => navigate('/hospital/prescriptions/new')}
           />
         ) : (
           <div className="table-container">

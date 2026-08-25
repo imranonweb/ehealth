@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, Pill, Plus, Search, FileText, ArrowRight, Stethoscope,
   CheckCircle2, Clock, AlertCircle, RefreshCw, Eye, Building2, FlaskConical
@@ -10,6 +10,8 @@ import { formatDate, getInitials, formatPatientId } from '../../lib/utils';
 import { SkeletonCard, SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
+import { StatCard } from '../../components/ui/StatCard';
+import { PageHeader } from '../../components/ui/PageHeader';
 import './DoctorDashboard.css';
 
 export function DoctorDashboard() {
@@ -25,6 +27,7 @@ export function DoctorDashboard() {
   const [error, setError] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   const loadDashboard = async () => {
     if (!profile?.id) return;
@@ -64,22 +67,20 @@ export function DoctorDashboard() {
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
-        <div>
-          <h1 className="page-title">{getGreeting()}, Dr. {doctorName}</h1>
-          <p className="page-sub">
-            Manage your patients and access their healthcare records securely.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
-            <Plus size={16} /> New Prescription
-          </Link>
-          <Link to="/doctor/patients" className="btn btn-secondary btn-md">
-            <Users size={16} /> Patient Directory
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={`${getGreeting()}, Dr. ${doctorName}`}
+        subtitle="Manage your patients and access their healthcare records securely."
+        actions={
+          <>
+            <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
+              <Plus size={16} /> New Prescription
+            </Link>
+            <Link to="/doctor/patients" className="btn btn-secondary btn-md">
+              <Users size={16} /> Patient Directory
+            </Link>
+          </>
+        }
+      />
 
       {/* Error state */}
       {error && (
@@ -102,121 +103,35 @@ export function DoctorDashboard() {
         </div>
       )}
 
-      {/* Overview Stat Cards */}
+      {/* Overview Stat Cards — using canonical StatCard component */}
       <div className="grid-4" style={{ gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
-        {/* 1. My Patients */}
-        <Link to="/doctor/patients" style={{ textDecoration: 'none' }}>
-          <div className="card card-hover" style={{ padding: 'var(--sp-5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--accent-subtle)',
-                color: 'var(--accent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Users size={22} />
-              </div>
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  My Patients
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
-                  {loading ? '…' : data.patientCount}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        {/* 2. Prescriptions */}
-        <Link to="/doctor/prescriptions" style={{ textDecoration: 'none' }}>
-          <div className="card card-hover" style={{ padding: 'var(--sp-5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-blue-bg)',
-                color: 'var(--color-blue)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Pill size={22} />
-              </div>
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Prescriptions
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
-                  {loading ? '…' : data.prescriptionCount}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        {/* 3. Diagnostic Reports */}
-        <Link to="/doctor/reports" style={{ textDecoration: 'none' }}>
-          <div className="card card-hover" style={{ padding: 'var(--sp-5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-purple-bg)',
-                color: 'var(--color-purple)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <FlaskConical size={22} />
-              </div>
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Diagnostic Reports
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
-                  {loading ? '…' : data.reportCount}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        {/* 4. Hospital Records */}
-        <div className="card" style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{
-              width: 44,
-              height: 44,
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--color-teal-bg)',
-              color: 'var(--color-teal)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Building2 size={22} />
-            </div>
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                Hospital Records
-              </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
-                {loading ? '…' : data.visitCount}
-              </div>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={Users}
+          label="My Patients"
+          value={loading ? '…' : data.patientCount}
+          tone="teal"
+          to="/doctor/patients"
+        />
+        <StatCard
+          icon={Pill}
+          label="Prescriptions"
+          value={loading ? '…' : data.prescriptionCount}
+          tone="blue"
+          to="/doctor/prescriptions"
+        />
+        <StatCard
+          icon={FlaskConical}
+          label="Diagnostic Reports"
+          value={loading ? '…' : data.reportCount}
+          tone="purple"
+          to="/doctor/reports"
+        />
+        <StatCard
+          icon={Building2}
+          label="Hospital Records"
+          value={loading ? '…' : data.visitCount}
+          tone="teal"
+        />
       </div>
 
       {/* Recent Patient Activity */}
@@ -250,7 +165,7 @@ export function DoctorDashboard() {
             title="No Recent Patient Activity"
             description="Clinical events from authorized patients will appear here."
             actionLabel="View Patients"
-            action={() => window.location.href = '/doctor/patients'}
+            action={() => navigate('/doctor/patients')}
           />
         ) : (
           <div className="table-container">

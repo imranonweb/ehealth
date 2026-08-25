@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FlaskConical, Upload, Users, FileText, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FlaskConical, Upload, Users, Eye } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { diagnosticsService } from '../../services/diagnosticsService';
 import { formatDate, formatPatientId } from '../../lib/utils';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
+import { StatCard } from '../../components/ui/StatCard';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 export function DiagnosticsDashboard() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState({ totalReports: 0, thisMonth: 0 });
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -34,68 +40,49 @@ export function DiagnosticsDashboard() {
 
   const orgName = profile?.full_name || 'Diagnostic Center';
 
+  const handleViewDetail = (r) => {
+    setSelectedRecord({
+      record_type: 'diagnostic_report',
+      record_reference_id: r.id,
+    });
+    setDrawerOpen(true);
+  };
+
   return (
     <div className="dashboard-container">
       {/* Header */}
-      <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
-        <div>
-          <h1 className="page-title">{orgName}</h1>
-          <p className="page-sub">
-            Diagnostics Center & Pathology Lab Portal
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+      <PageHeader
+        title={orgName}
+        subtitle="Diagnostics Center & Pathology Lab Portal"
+        actions={
           <Link to="/diagnostics/reports/new" className="btn btn-primary btn-md">
             <Upload size={16} /> Upload Test Report
           </Link>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Stats Ribbon */}
+      {/* Stats Ribbon — canonical StatCard components */}
       <div className="grid-3" style={{ gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
-        <div className="card" style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(139,92,246,0.12)', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FlaskConical size={22} />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Total Reports Issued</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {loading ? '…' : stats.totalReports}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(15,118,110,0.12)', color: '#0F766E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={22} />
-            </div>
-            <div>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Uploaded This Month</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {loading ? '…' : stats.thisMonth}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Link to="/diagnostics/patients" style={{ textDecoration: 'none' }}>
-          <div className="card card-hover" style={{ padding: 'var(--sp-5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(59,130,246,0.12)', color: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Users size={22} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>Patient Index</div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent)', marginTop: 4 }}>
-                  Find Patient by ID →
-                </div>
-              </div>
-            </div>
-          </div>
-        </Link>
+        <StatCard
+          icon={FlaskConical}
+          label="Total Reports Issued"
+          value={loading ? '…' : stats.totalReports}
+          tone="purple"
+        />
+        <StatCard
+          icon={FlaskConical}
+          label="Uploaded This Month"
+          value={loading ? '…' : stats.thisMonth}
+          tone="teal"
+        />
+        <StatCard
+          icon={Users}
+          label="Patient Index"
+          hint="Find Patient by ID →"
+          value=""
+          tone="blue"
+          to="/diagnostics/patients"
+        />
       </div>
 
       {/* Recent Diagnostic Reports */}
@@ -110,7 +97,7 @@ export function DiagnosticsDashboard() {
             </p>
           </div>
           <Link to="/diagnostics/reports" className="btn btn-ghost btn-sm">
-            View All <ArrowRight size={14} />
+            View All →
           </Link>
         </div>
 
@@ -122,7 +109,7 @@ export function DiagnosticsDashboard() {
             title="No Reports Uploaded Yet"
             description="Upload official laboratory reports and link them to patient medical IDs."
             actionLabel="Upload First Report"
-            action={() => window.location.href = '/diagnostics/reports/new'}
+            action={() => navigate('/diagnostics/reports/new')}
           />
         ) : (
           <div className="table-container">
@@ -157,9 +144,14 @@ export function DiagnosticsDashboard() {
                       </span>
                     </td>
                     <td className="table-cell" style={{ textAlign: 'right' }}>
-                      <Link to="/diagnostics/reports" className="btn btn-ghost btn-sm">
-                        Details <ArrowRight size={13} />
-                      </Link>
+                      {/* Open the RecordDetailDrawer for this specific report */}
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleViewDetail(r)}
+                      >
+                        <Eye size={13} /> View
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -168,6 +160,13 @@ export function DiagnosticsDashboard() {
           </div>
         )}
       </div>
+
+      {/* Record Detail Drawer */}
+      <RecordDetailDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        record={selectedRecord}
+      />
     </div>
   );
 }

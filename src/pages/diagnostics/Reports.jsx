@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FlaskConical, Upload, Calendar, ChevronRight } from 'lucide-react';
 import { diagnosticsService } from '../../services/diagnosticsService';
 import { formatDate, formatPatientId } from '../../lib/utils';
@@ -12,6 +12,7 @@ export function DiagnosticsReports() {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadReports() {
@@ -58,7 +59,7 @@ export function DiagnosticsReports() {
             title="No Reports Uploaded"
             description="Upload test results to synchronize with patient timelines."
             actionLabel="Upload Report"
-            action={() => window.location.href = '/diagnostics/reports/new'}
+            action={() => navigate('/diagnostics/reports/new')}
           />
         ) : (
           <div className="table-container">

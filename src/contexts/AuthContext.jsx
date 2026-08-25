@@ -14,7 +14,11 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        // Join doctor_profiles so Doctor pages can read specialization/license/bio
+        // without a second query. PostgREST returns doctor_profiles as an array;
+        // we normalise it to the singular `doctor_profile` key below so all
+        // existing consumers continue to work without modification.
+        .select('*, doctor_profiles(*)')
         .eq('auth_user_id', userId)
         .single();
 
@@ -22,7 +26,10 @@ export function AuthProvider({ children }) {
         console.error('Error fetching profile:', error.message);
         return null;
       }
-      return data;
+
+      // Normalise: flatten the one-to-one doctor_profiles array → singular object
+      const doctor_profile = data.doctor_profiles?.[0] ?? null;
+      return { ...data, doctor_profile };
     } catch (err) {
       console.error('Profile fetch failed:', err);
       return null;
@@ -91,8 +98,20 @@ export function AuthProvider({ children }) {
   const signIn = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    return data;
-  }, []);
+
+    // Eagerly fetch the app profile so Login.jsx can navigate to the correct
+    // role portal immediately, without waiting for the async onAuthStateChange
+    // listener. This prevents the redirect flash where non-patient users
+    // briefly land on /patient before being bounced to their real portal.
+    const p = await fetchProfile(data.user.id);
+    if (p) {
+      setProfile(p);
+      setRole(p.role);
+    }
+
+    // Return role alongside the Supabase session so Login.jsx has it synchronously
+    return { ...data, role: p?.role };
+  }, [fetchProfile]);
 
   /* ── Sign Up ───────────────────────────────────────── */
   const signUp = useCallback(async (email, password, metadata = {}) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BedDouble, Plus, Calendar, ChevronRight } from 'lucide-react';
 import { hospitalService } from '../../services/hospitalService';
 import { formatDate, formatPatientId } from '../../lib/utils';
@@ -12,6 +12,7 @@ export function HospitalVisits() {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadVisits() {
@@ -58,7 +59,7 @@ export function HospitalVisits() {
             title="No Patient Encounters Recorded"
             description="Record inpatient admissions, emergency care, or outpatient consults."
             actionLabel="Record Patient Visit"
-            action={() => window.location.href = '/hospital/visits/new'}
+            action={() => navigate('/hospital/visits/new')}
           />
         ) : (
           <div className="table-container">

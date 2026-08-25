@@ -25,6 +25,10 @@ export function Login() {
     try {
       const data = await signIn(email.trim(), password);
       success('Logged in successfully!');
+      // data.role is the app-level profile role (populated by the updated
+      // AuthContext.signIn which eagerly fetches the profile before returning).
+      // This avoids the flash redirect where non-patient users briefly land
+      // on /patient before being corrected by ProtectedRoute.
       
       // Determine redirection based on authenticated profile role
       const destination = location.state?.from?.pathname;
