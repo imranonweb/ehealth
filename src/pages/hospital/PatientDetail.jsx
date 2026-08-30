@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { User, BedDouble, Pill, Plus, ChevronLeft, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { searchService } from '../../services/searchService';
 import { MedicalTimeline } from '../../components/records/MedicalTimeline';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
 import { SkeletonCard, SkeletonTimeline } from '../../components/ui/Skeleton';
@@ -21,56 +22,75 @@ export function HospitalPatientDetail() {
   useEffect(() => {
     async function loadPatientData() {
       try {
+        setLoading(true);
+        if (!id) return;
+
+        // 1. Fetch the hospital's organization ID if logged in
+        let orgId = null;
+        if (profile?.id) {
+          const { data: orgRow } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('profile_id', profile.id)
+            .maybeSingle();
+          orgId = orgRow?.id || null;
+
+          // 2. Ensure the provider-patient relationship exists (best-effort RPC)
+          try {
+            await supabase.rpc('create_provider_relationship', {
+              p_patient_id: id,
+              p_org_id: orgId,
+            });
+            setAuthorized(true);
+          } catch (relErr) {
+            console.warn('[HospitalPatientDetail] create_provider_relationship warning:', relErr);
+          }
+        }
+
+        // 3. Fetch patient profile
+        let patientData = null;
         const { data: prof, error: profErr } = await supabase
           .from('profiles')
           .select('*, patient_profiles(*)')
           .eq('id', id)
-          .single();
+          .maybeSingle();
 
-        if (profErr) throw profErr;
-
-        // ── Application-level authorization check ─────────────────────────
-        // The Doctor portal does this via doctorService.getPatientDetail which
-        // relies on RLS-filtered patient_provider_relationships queries.
-        // We mirror that pattern here: confirm an active relationship exists
-        // between this hospital's profile and the patient before granting
-        // access to the full record. RLS still applies on top of this check.
-        if (profile?.id) {
-          const { data: rel } = await supabase
-            .from('patient_provider_relationships')
-            .select('id')
-            .eq('patient_profile_id', id)
-            .eq('provider_profile_id', profile.id)
-            .eq('status', 'active')
-            .maybeSingle();
-
-          if (!rel) {
-            // No confirmed relationship — deny at the application layer
-            setLoading(false);
-            return;
+        if (prof) {
+          patientData = prof;
+        } else {
+          // Fallback via searchService or patientIdentityService
+          const fallback = await searchService.getPatientById(id);
+          if (fallback) {
+            patientData = fallback;
           }
-          setAuthorized(true);
         }
 
-        setPatient(prof);
+        if (!patientData) {
+          setAuthorized(false);
+          return;
+        }
 
+        setPatient(patientData);
+        setAuthorized(true);
+
+        // 4. Fetch accessible medical records
         const { data: records, error: recErr } = await supabase
           .from('medical_records')
           .select('*')
           .eq('patient_id', id)
           .order('record_date', { ascending: false });
 
-        if (recErr) throw recErr;
+        if (recErr) console.warn('[HospitalPatientDetail] medical_records error:', recErr);
         setTimeline(records || []);
       } catch (err) {
-        console.error('Error fetching hospital patient record:', err);
+        console.error('[HospitalPatientDetail] Error fetching patient record:', err);
       } finally {
         setLoading(false);
       }
     }
 
     if (id) loadPatientData();
-  }, [id]);
+  }, [id, profile?.id]);
 
   const handleViewDetail = (record) => {
     setSelectedRecord(record);

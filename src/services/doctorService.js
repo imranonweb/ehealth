@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { searchService } from './searchService';
 
 export const doctorService = {
   /**
@@ -121,7 +122,12 @@ export const doctorService = {
       const patientMap = new Map();
       const patientIds = [];
 
-      // 1. Fetch active relationships
+      // 1. Fetch active relationships where this doctor is the individual provider.
+      // NOTE: The organization_id filter is intentionally NOT included here because
+      // doctors are individual providers (profiles), not organizations. The org_id
+      // in patient_provider_relationships refers to the hospital/diagnostics org UUID,
+      // which is never equal to a doctor's profile.id. Including it caused the OR
+      // condition to never match the org branch and created misleading empty results.
       const { data: relationships, error: relError } = await supabase
         .from('patient_provider_relationships')
         .select(`
@@ -143,7 +149,7 @@ export const doctorService = {
             )
           )
         `)
-        .or(`provider_profile_id.eq.${docId},organization_id.eq.${docId}`)
+        .eq('provider_profile_id', docId)
         .eq('status', 'active');
 
       if (!relError && relationships && Array.isArray(relationships)) {
@@ -279,7 +285,7 @@ export const doctorService = {
     try {
       let patient = null;
 
-      // 1. Try fetching profile
+      // 1. Try fetching profile (succeeds if relationship already exists)
       const { data: profile } = await supabase
         .from('profiles')
         .select(`
@@ -292,11 +298,25 @@ export const doctorService = {
       if (profile) {
         patient = profile;
       } else {
-        // Fallback using searchService
+        // Fallback: if profile is RLS-blocked (no relationship yet), try via
+        // searchService which uses the SECURITY DEFINER RPC.
         patient = await searchService.getPatientById(patientId);
       }
 
       if (!patient) return null;
+
+      // Ensure the provider-patient relationship exists now that we're loading
+      // their detail page. This handles the case where a doctor found the patient
+      // via search, selected them, and is now viewing their record for the first time.
+      // The relationship creation is best-effort and non-blocking.
+      try {
+        await supabase.rpc('create_provider_relationship', {
+          p_patient_id: patientId,
+          p_org_id: null,  // Doctors are individual providers, no org_id
+        });
+      } catch (relErr) {
+        console.warn('[doctorService] create_provider_relationship in getPatientDetail:', relErr);
+      }
 
       // 2. Fetch all accessible records for timeline and tabs
       const [recRes, prescRes, repRes, visRes] = await Promise.all([

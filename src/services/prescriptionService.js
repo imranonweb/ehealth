@@ -147,21 +147,20 @@ export const prescriptionService = {
   },
 };
 
-async function ensureRelationship(patientId, providerId, providerType, orgId = null) {
-  const { data: existing } = await supabase
-    .from('patient_provider_relationships')
-    .select('id')
-    .eq('patient_profile_id', patientId)
-    .eq('provider_profile_id', providerId)
-    .single();
+/**
+ * Ensures an active provider-patient relationship exists.
+ *
+ * Uses the create_provider_relationship SECURITY DEFINER RPC instead of a
+ * direct INSERT with status='active', which was rejected by RLS.
+ */
+async function ensureRelationship(patientId, _providerId, _providerType, orgId = null) {
+  const { error } = await supabase.rpc('create_provider_relationship', {
+    p_patient_id: patientId,
+    p_org_id: orgId || null,
+  });
 
-  if (!existing) {
-    await supabase.from('patient_provider_relationships').insert([{
-      patient_profile_id: patientId,
-      provider_profile_id: providerId,
-      provider_type: providerType,
-      organization_id: orgId,
-      status: 'active',
-    }]);
+  if (error) {
+    // Non-fatal: log but don't throw. The prescription was already saved.
+    console.warn('[prescriptionService] create_provider_relationship error:', error.message);
   }
 }

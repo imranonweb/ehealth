@@ -1,21 +1,34 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Users, Search, ChevronRight, Upload } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Users, Search, ChevronRight, Upload, UserPlus } from 'lucide-react';
 import { usePatientSearch } from '../../hooks/usePatientSearch';
+import { CreatePatientForm } from '../../components/forms/CreatePatientForm';
 import { formatPatientId, getInitials, stringToColor } from '../../lib/utils';
 import { EmptyState } from '../../components/ui/EmptyState';
 
 export function DiagnosticsPatients() {
+  const navigate = useNavigate();
   const { query, results, loading, search } = usePatientSearch();
+  const [showCreatePatient, setShowCreatePatient] = useState(false);
 
   return (
     <div className="dashboard-container">
-      <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
+      <div className="page-header" style={{ marginBottom: 'var(--sp-6)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 className="h2" style={{ margin: 0 }}>Patient Directory &amp; Test Linking</h1>
           <p className="body-sm text-muted" style={{ margin: '4px 0 0 0' }}>
             Lookup patients by unique Health ID or phone number before uploading official laboratory test reports.
           </p>
+        </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-md"
+            onClick={() => setShowCreatePatient(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <UserPlus size={16} /> Add New Patient
+          </button>
         </div>
       </div>
 
@@ -55,7 +68,9 @@ export function DiagnosticsPatients() {
             <EmptyState
               icon={Users}
               title={query.length >= 2 ? "No Patients Found" : "Type to Search Patients"}
-              description={query.length >= 2 ? "No registered patient matched your search query." : "Search by name, ID, or phone to find patient."}
+              description={query.length >= 2 ? "No patient matched your search query. Check the details or add a new patient." : "Search by name, Health ID, or phone to find patient."}
+              actionLabel="Add New Patient"
+              action={() => setShowCreatePatient(true)}
             />
           </div>
         )}
@@ -121,7 +136,11 @@ export function DiagnosticsPatients() {
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{p.phone || 'No phone recorded'}</div>
                       </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
-                        <Link to="/diagnostics/reports/new" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                        <Link
+                          to={`/diagnostics/reports/new?patientId=${p.id}`}
+                          className="btn btn-secondary btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                        >
                           <Upload size={14} /> Upload Report
                         </Link>
                       </td>
@@ -133,6 +152,25 @@ export function DiagnosticsPatients() {
           </div>
         )}
       </div>
+
+      <CreatePatientForm
+        isOpen={showCreatePatient}
+        onClose={() => setShowCreatePatient(false)}
+        onPatientCreated={(patient) => {
+          setShowCreatePatient(false);
+          if (patient?.id) {
+            navigate(`/diagnostics/reports/new?patientId=${patient.id}`);
+          }
+        }}
+        onDuplicateSelected={(patient) => {
+          setShowCreatePatient(false);
+          const targetId = patient?.profileId || patient?.id;
+          if (targetId) {
+            navigate(`/diagnostics/reports/new?patientId=${targetId}`);
+          }
+        }}
+      />
     </div>
   );
 }
+

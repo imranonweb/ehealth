@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, Search, ChevronRight, User, AlertCircle, RefreshCw,
   Filter, FileText, Pill, FlaskConical, Building2, CheckCircle2,
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { doctorService } from '../../services/doctorService';
 import { searchService } from '../../services/searchService';
+import { CreatePatientForm } from '../../components/forms/CreatePatientForm';
 import { formatPatientId, getInitials, formatDate, stringToColor, debounce } from '../../lib/utils';
 import { SkeletonTable, SkeletonCard } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -15,11 +16,13 @@ import './DoctorPatients.css';
 
 export function DoctorPatients() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showCreatePatient, setShowCreatePatient] = useState(false);
 
   // Live registry search state
   const [registryResults, setRegistryResults] = useState([]);
@@ -129,6 +132,14 @@ export function DoctorPatients() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-md"
+            onClick={() => setShowCreatePatient(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <UserPlus size={16} /> Add New Patient
+          </button>
           <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
             <Plus size={16} /> New Prescription
           </Link>
@@ -244,11 +255,11 @@ export function DoctorPatients() {
               title={searchQuery ? "No Matching Patients Found" : "No Patients Yet"}
               description={
                 searchQuery
-                  ? `No patient matched "${searchQuery}". Check the Health ID or name.`
-                  : "Search for a patient using their Health ID, name, or phone number above to review their history or write a prescription."
+                  ? `No patient matched "${searchQuery}". Check the Health ID or name, or add a new patient.`
+                  : 'Search for a patient using their Health ID, name, or phone number above to review their history or write a prescription.'
               }
-              actionLabel="Write New Prescription"
-              action={() => window.location.href = '/doctor/prescriptions/new'}
+              actionLabel="Add New Patient"
+              action={() => setShowCreatePatient(true)}
             />
           </div>
         ) : (
@@ -434,10 +445,31 @@ export function DoctorPatients() {
                   </div>
                 );
               })}
-            </div>
-          </>
-        )}
-      </div>
+              </div>
+            </>
+          )}
+        </div>
+
+      <CreatePatientForm
+        isOpen={showCreatePatient}
+        onClose={() => setShowCreatePatient(false)}
+        onPatientCreated={(patient) => {
+          setShowCreatePatient(false);
+          loadPatients();
+          if (patient?.id) {
+            navigate(`/doctor/patients/${patient.id}`);
+          }
+        }}
+        onDuplicateSelected={(patient) => {
+          setShowCreatePatient(false);
+          loadPatients();
+          const targetId = patient?.profileId || patient?.id;
+          if (targetId) {
+            navigate(`/doctor/patients/${targetId}`);
+          }
+        }}
+      />
     </div>
   );
 }
+

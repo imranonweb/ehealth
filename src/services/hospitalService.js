@@ -199,21 +199,28 @@ export const hospitalService = {
   },
 };
 
-async function ensureRelationship(patientId, providerId, providerType, orgId = null) {
-  const { data: existing } = await supabase
-    .from('patient_provider_relationships')
-    .select('id')
-    .eq('patient_profile_id', patientId)
-    .eq('provider_profile_id', providerId)
-    .single();
+/**
+ * Ensures an active provider-patient relationship exists.
+ *
+ * Uses the create_provider_relationship SECURITY DEFINER RPC instead of a
+ * direct INSERT. The direct INSERT approach was broken because:
+ *   - Providers can only INSERT relationships with status='pending' per RLS.
+ *   - Inserting with status='active' violated the RLS INSERT policy and was
+ *     silently rejected (caught by try/catch in callers).
+ *
+ * The RPC runs with elevated privileges but validates:
+ *   - Caller is an authenticated provider role
+ *   - Patient exists with role='patient'
+ *   - Will NOT re-activate if patient has explicitly revoked access
+ */
+async function ensureRelationship(patientId, _providerId, _providerType, orgId = null) {
+  const { error } = await supabase.rpc('create_provider_relationship', {
+    p_patient_id: patientId,
+    p_org_id: orgId || null,
+  });
 
-  if (!existing) {
-    await supabase.from('patient_provider_relationships').insert([{
-      patient_profile_id: patientId,
-      provider_profile_id: providerId,
-      provider_type: providerType,
-      organization_id: orgId,
-      status: 'active',
-    }]);
+  if (error) {
+    // Non-fatal: log but don't throw. The clinical record was already created.
+    console.warn('[hospitalService] create_provider_relationship error:', error.message);
   }
 }

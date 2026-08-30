@@ -47,6 +47,7 @@ export function Register() {
     address: '',
     gender: '',
     dateOfBirth: '',
+    healthId: '',          // Optional: Patient Health ID for account linking
   });
 
   const [showPw, setShowPw] = useState(false);
@@ -103,6 +104,8 @@ export function Register() {
         address: formData.address,
         gender: formData.gender,
         date_of_birth: formData.dateOfBirth,
+        // For patient role: Health ID from provider-created identity (enables account linking)
+        health_id: role === ROLES.PATIENT && formData.healthId.trim() ? formData.healthId.trim() : undefined,
       };
 
       const result = await signUp(formData.email.trim(), formData.password, metadata);
@@ -391,34 +394,62 @@ export function Register() {
 
         {/* Patient Specific Fields */}
         {role === ROLES.PATIENT && (
-          <div className="form-row">
-            <div className="field">
-              <label className="field-label">Date of Birth</label>
-              <input
-                className="input"
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                disabled={loading}
-              />
+          <>
+            <div className="form-row">
+              <div className="field">
+                <label className="field-label">Date of Birth</label>
+                <input
+                  className="input"
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
+              <div className="field">
+                <label className="field-label">Gender</label>
+                <select
+                  className="select"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  disabled={loading}
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
             </div>
+
+            {/* Health ID field for account linking */}
             <div className="field">
-              <label className="field-label">Gender</label>
-              <select
-                className="select"
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                disabled={loading}
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-              </select>
+              <label className="field-label">
+                Health ID
+                <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.8em', marginLeft: 6 }}>
+                  (optional — if assigned by a doctor or hospital)
+                </span>
+              </label>
+              <div className="input-wrap">
+                <input
+                  className="input"
+                  type="text"
+                  name="healthId"
+                  placeholder="e.g. P-9824F1A2"
+                  value={formData.healthId}
+                  onChange={handleChange}
+                  disabled={loading}
+                  style={{ fontFamily: 'monospace', letterSpacing: 1 }}
+                />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                If you already received a Health ID from a healthcare provider, enter it here
+                to link your existing medical records to this account.
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Password */}

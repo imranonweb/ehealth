@@ -135,65 +135,22 @@ export function AuthProvider({ children }) {
     });
     if (error) throw error;
 
-    /* Create profile row after successful signup */
-    if (data.user) {
-      const profileData = {
-        auth_user_id: data.user.id,
-        role: metadata.role || 'patient',
-        full_name: metadata.full_name || '',
-        email,
-        phone: metadata.phone || null,
-        date_of_birth: metadata.date_of_birth || null,
-        gender: metadata.gender || null,
-      };
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([profileData]);
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-      }
-
-      /* Create role-specific profile */
-      const prof = await fetchProfile(data.user.id);
-      if (prof) {
-        await createRoleProfile(prof, metadata);
-        setProfile(prof);
-        setRole(prof.role);
+    // Profile creation is handled entirely by the database trigger
+    // handle_new_auth_user() which runs AFTER INSERT ON auth.users.
+    // This works for all roles and for email-confirmation flows too.
+    //
+    // If a session was returned immediately (no email confirmation required),
+    // eagerly fetch the profile so the UI can navigate to the correct portal.
+    if (data.session && data.user) {
+      const p = await fetchProfile(data.user.id);
+      if (p) {
+        setProfile(p);
+        setRole(p.role);
       }
     }
 
     return data;
   }, [fetchProfile]);
-
-  /* ── Create role-specific profile rows ─────────────── */
-  async function createRoleProfile(profile, metadata) {
-    const r = profile.role;
-
-    if (r === 'doctor') {
-      await supabase.from('doctor_profiles').insert([{
-        profile_id: profile.id,
-        specialization: metadata.specialization || null,
-        license_number: metadata.license_number || metadata.licenseNumber || null,
-        qualification: metadata.qualification || null,
-      }]);
-    } else if (r === 'patient') {
-      await supabase.from('patient_profiles').insert([{
-        profile_id: profile.id,
-      }]);
-    } else if (r === 'diagnostics' || r === 'hospital') {
-      await supabase.from('organizations').insert([{
-        profile_id: profile.id,
-        name: metadata.org_name || metadata.orgName || metadata.full_name || '',
-        type: r,
-        address: metadata.address || null,
-        phone: metadata.phone || null,
-        email: profile.email,
-        license_number: metadata.license_number || metadata.licenseNumber || null,
-      }]);
-    }
-  }
 
   /* ── Sign Out ──────────────────────────────────────── */
   const signOut = useCallback(async () => {

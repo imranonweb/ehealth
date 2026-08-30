@@ -139,9 +139,20 @@ export function parseMedications(meds) {
 }
 
 /**
- * Generate a readable patient identifier.
+ * Format a patient identifier for display.
+ *
+ * Handles two input forms:
+ *   1. A real Health ID already formatted: "P-9824F1A2" → returns as-is
+ *   2. A raw UUID (profiles.id fallback): "550e8400-..." → "P-550E8400"
+ *
+ * IMPORTANT: Never pass a Health ID into this function expecting it to be
+ * reformatted — it will be returned unchanged. The function is idempotent.
  */
 export function formatPatientId(id) {
   if (!id) return '—';
-  return `P-${id.slice(0, 8).toUpperCase()}`;
+  const s = String(id).trim();
+  // Already a Health ID (starts with "P-" followed by hex chars) — return as-is
+  if (/^P-[0-9A-F]{4,}$/i.test(s)) return s.toUpperCase();
+  // UUID or raw hex — strip dashes, take first 8 chars, prefix with "P-"
+  return `P-${s.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 }
