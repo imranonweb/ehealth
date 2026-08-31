@@ -388,6 +388,11 @@ CREATE POLICY "profiles_insert_own"
 -- However: we upgrade the return set to also include is_registered so
 -- the frontend can badge provider-created patients differently.
 
+-- DROP required: return type changes from 6 → 7 columns (adds is_registered).
+-- PostgreSQL 42P13 prevents CREATE OR REPLACE when the return type changes.
+-- This function has no dependent objects (no policies, triggers, or views reference it).
+DROP FUNCTION IF EXISTS public.search_patients_for_provider(TEXT);
+
 CREATE OR REPLACE FUNCTION public.search_patients_for_provider(p_query TEXT)
 RETURNS TABLE (
   id                 UUID,
