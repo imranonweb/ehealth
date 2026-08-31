@@ -19,6 +19,7 @@ import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
+import { AuthCallback } from './pages/auth/AuthCallback';
 
 // Patient Pages
 import { PatientDashboard } from './pages/patient/Dashboard';
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Auth Routes */}
               <Route element={<PublicOnlyRoute><AuthLayout /></PublicOnlyRoute>}>

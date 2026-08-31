@@ -91,6 +91,25 @@ export function Login() {
       <h1 className="h2" style={{ marginBottom: 6 }}>Welcome back</h1>
       <p className="body-sm text-muted" style={{ marginBottom: 24 }}>Sign in to access your secure medical portal</p>
 
+      {location.state?.verified && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 16px',
+          background: 'var(--color-success-bg)',
+          color: 'var(--color-success)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          marginBottom: 20,
+          border: '1px solid var(--color-success)',
+        }}>
+          <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+          <span>Email verified successfully! You can now sign in.</span>
+        </div>
+      )}
+
       {errorMsg && (
         <div style={{
           padding: '14px 16px',
