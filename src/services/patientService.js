@@ -158,6 +158,45 @@ export const patientService = {
   },
 
   /**
+   * Get pending access requests (for the current patient to action).
+   */
+  async getPendingAccessRequests() {
+    const { data, error } = await supabase
+      .from('patient_provider_relationships')
+      .select(`
+        *,
+        provider:provider_profile_id(id, full_name, email, role, phone),
+        organization:organization_id(id, name, type, address, phone, email)
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * Approve a pending access request (patient approves provider access).
+   */
+  async approveAccessRequest(relationshipId) {
+    const { error } = await supabase.rpc('approve_provider_access', {
+      p_relationship_id: relationshipId,
+    });
+    if (error) throw error;
+  },
+
+  /**
+   * Reject a pending request OR revoke an existing active relationship.
+   */
+  async revokeAccess(relationshipId) {
+    const { error } = await supabase.rpc('reject_provider_access', {
+      p_relationship_id: relationshipId,
+    });
+    if (error) throw error;
+  },
+
+
+  /**
    * Get a single prescription by ID.
    */
   async getPrescriptionById(id) {

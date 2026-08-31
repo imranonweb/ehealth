@@ -1,15 +1,84 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Users, Search, ChevronRight, Upload, UserPlus } from 'lucide-react';
+import { Users, Search, Upload, UserPlus, Clock, ShieldX, ShieldCheck } from 'lucide-react';
 import { usePatientSearch } from '../../hooks/usePatientSearch';
 import { CreatePatientForm } from '../../components/forms/CreatePatientForm';
+import { AccessRequestModal } from '../../components/access/AccessRequestModal';
+import { AccessStatusBadge } from '../../components/access/AccessStatusBadge';
 import { formatPatientId, getInitials, stringToColor } from '../../lib/utils';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export function DiagnosticsPatients() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { query, results, loading, search } = usePatientSearch();
   const [showCreatePatient, setShowCreatePatient] = useState(false);
+  const [orgId, setOrgId] = useState(null);
+
+  // Map of patient profile UUID → relationship { id, status }
+  const [relMap, setRelMap] = useState({});
+  const [relLoading, setRelLoading] = useState(false);
+
+  // Selected patient for access request modal
+  const [requestTarget, setRequestTarget] = useState(null);
+
+  // Resolve org ID once
+  useEffect(() => {
+    if (!profile?.id) return;
+    supabase
+      .from('organizations')
+      .select('id')
+      .eq('profile_id', profile.id)
+      .maybeSingle()
+      .then(({ data }) => setOrgId(data?.id ?? null));
+  }, [profile?.id]);
+
+  // Fetch relationships for the current search result set
+  const fetchRelationships = useCallback(async (patientIds) => {
+    if (!patientIds.length || !profile?.id) return;
+    setRelLoading(true);
+    try {
+      const orClause = orgId
+        ? `provider_profile_id.eq.${profile.id},organization_id.eq.${orgId}`
+        : `provider_profile_id.eq.${profile.id}`;
+
+      const { data } = await supabase
+        .from('patient_provider_relationships')
+        .select('id, patient_profile_id, status')
+        .in('patient_profile_id', patientIds)
+        .or(orClause)
+        .order('created_at', { ascending: false });
+
+      const map = {};
+      const rank = { active: 3, pending: 2, revoked: 1 };
+      (data || []).forEach((rel) => {
+        const prev = map[rel.patient_profile_id];
+        if (!prev || (rank[rel.status] ?? 0) > (rank[prev.status] ?? 0)) {
+          map[rel.patient_profile_id] = { id: rel.id, status: rel.status };
+        }
+      });
+      setRelMap(map);
+    } finally {
+      setRelLoading(false);
+    }
+  }, [profile?.id, orgId]);
+
+  useEffect(() => {
+    if (results.length > 0) {
+      fetchRelationships(results.map((p) => p.id));
+    } else {
+      setRelMap({});
+    }
+  }, [results, fetchRelationships]);
+
+  const handleRequestSent = (patientId, status) => {
+    setRelMap((prev) => ({
+      ...prev,
+      [patientId]: { id: prev[patientId]?.id, status: status === 'already_active' ? 'active' : 'pending' },
+    }));
+  };
 
   return (
     <div className="dashboard-container">
@@ -17,7 +86,7 @@ export function DiagnosticsPatients() {
         <div>
           <h1 className="h2" style={{ margin: 0 }}>Patient Directory &amp; Test Linking</h1>
           <p className="body-sm text-muted" style={{ margin: '4px 0 0 0' }}>
-            Lookup patients by unique Health ID or phone number before uploading official laboratory test reports.
+            Search patients before uploading lab reports. Patient consent is required to link reports.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
@@ -51,15 +120,11 @@ export function DiagnosticsPatients() {
 
       <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
         <div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid var(--border-default)',
-          backgroundColor: 'var(--bg-surface)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          padding: '20px 24px', borderBottom: '1px solid var(--border-default)',
+          backgroundColor: 'var(--bg-surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {loading ? 'Searching Registry…' : results.length > 0 ? `Matched Patients (${results.length})` : 'Search Results'}
+            {loading || relLoading ? 'Searching Registry…' : results.length > 0 ? `Matched Patients (${results.length})` : 'Search Results'}
           </div>
         </div>
 
@@ -67,8 +132,8 @@ export function DiagnosticsPatients() {
           <div style={{ padding: 'var(--sp-10) var(--sp-6)' }}>
             <EmptyState
               icon={Users}
-              title={query.length >= 2 ? "No Patients Found" : "Type to Search Patients"}
-              description={query.length >= 2 ? "No patient matched your search query. Check the details or add a new patient." : "Search by name, Health ID, or phone to find patient."}
+              title={query.length >= 2 ? 'No Patients Found' : 'Type to Search Patients'}
+              description={query.length >= 2 ? 'No patient matched your search query. Check the details or add a new patient.' : 'Search by name, Health ID, or phone to find patient.'}
               actionLabel="Add New Patient"
               action={() => setShowCreatePatient(true)}
             />
@@ -83,28 +148,26 @@ export function DiagnosticsPatients() {
                   <th className="table-head" style={{ padding: '14px 24px' }}>Patient</th>
                   <th className="table-head" style={{ padding: '14px 20px' }}>Health ID</th>
                   <th className="table-head" style={{ padding: '14px 20px' }}>Contact</th>
+                  <th className="table-head" style={{ padding: '14px 20px' }}>Access Status</th>
                   <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Action</th>
                 </tr>
               </thead>
               <tbody className="table-body">
                 {results.map((p) => {
                   const initials = getInitials(p.full_name);
+                  const rel = relMap[p.id];
+                  const status = rel?.status ?? null;
+
                   return (
                     <tr key={p.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
                       <td className="table-cell" style={{ padding: '18px 24px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <div style={{
-                            width: 38,
-                            height: 38,
+                            width: 38, height: 38,
                             borderRadius: 'var(--radius-md)',
-                            backgroundColor: stringToColor(p.full_name),
-                            color: '#FFFFFF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '0.8125rem',
-                            flexShrink: 0,
+                            backgroundColor: stringToColor(p.full_name), color: '#FFFFFF',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 700, fontSize: '0.8125rem', flexShrink: 0,
                           }}>
                             {initials}
                           </div>
@@ -112,21 +175,15 @@ export function DiagnosticsPatients() {
                             <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9375rem', display: 'block' }}>
                               {p.full_name}
                             </span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              {p.email}
-                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.email}</span>
                           </div>
                         </div>
                       </td>
                       <td className="table-cell" style={{ padding: '18px 20px' }}>
                         <span style={{
-                          fontFamily: 'monospace',
-                          fontSize: '0.8125rem',
-                          fontWeight: 700,
-                          color: 'var(--accent)',
-                          backgroundColor: 'var(--bg-surface-muted)',
-                          padding: '2px 8px',
-                          borderRadius: 'var(--radius-xs)',
+                          fontFamily: 'monospace', fontSize: '0.8125rem', fontWeight: 700,
+                          color: 'var(--accent)', backgroundColor: 'var(--bg-surface-muted)',
+                          padding: '2px 8px', borderRadius: 'var(--radius-xs)',
                           border: '1px solid var(--border-default)',
                         }}>
                           {formatPatientId(p.patient_identifier || p.id)}
@@ -135,14 +192,41 @@ export function DiagnosticsPatients() {
                       <td className="table-cell" style={{ padding: '18px 20px' }}>
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>{p.phone || 'No phone recorded'}</div>
                       </td>
+                      <td className="table-cell" style={{ padding: '18px 20px' }}>
+                        <AccessStatusBadge status={status} />
+                      </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
-                        <Link
-                          to={`/diagnostics/reports/new?patientId=${p.id}`}
-                          className="btn btn-secondary btn-sm"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
-                        >
-                          <Upload size={14} /> Upload Report
-                        </Link>
+                        {status === 'active' ? (
+                          <Link
+                            to={`/diagnostics/reports/new?patientId=${p.id}`}
+                            className="btn btn-secondary btn-sm"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <Upload size={14} /> Upload Report
+                          </Link>
+                        ) : status === 'pending' ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
+                            <Clock size={14} /> Awaiting Patient Approval
+                          </div>
+                        ) : status === 'revoked' ? (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setRequestTarget(p)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <ShieldX size={13} /> Request Access Again
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => setRequestTarget(p)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <ShieldCheck size={13} /> Request Access
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -158,19 +242,25 @@ export function DiagnosticsPatients() {
         onClose={() => setShowCreatePatient(false)}
         onPatientCreated={(patient) => {
           setShowCreatePatient(false);
-          if (patient?.id) {
-            navigate(`/diagnostics/reports/new?patientId=${patient.id}`);
-          }
+          if (patient?.id) navigate(`/diagnostics/reports/new?patientId=${patient.id}`);
         }}
         onDuplicateSelected={(patient) => {
           setShowCreatePatient(false);
           const targetId = patient?.profileId || patient?.id;
-          if (targetId) {
-            navigate(`/diagnostics/reports/new?patientId=${targetId}`);
-          }
+          if (targetId) navigate(`/diagnostics/reports/new?patientId=${targetId}`);
+        }}
+      />
+
+      <AccessRequestModal
+        patient={requestTarget}
+        orgId={orgId}
+        isOpen={!!requestTarget}
+        onClose={() => setRequestTarget(null)}
+        onRequestSent={(status) => {
+          if (requestTarget) handleRequestSent(requestTarget.id, status);
+          setRequestTarget(null);
         }}
       />
     </div>
   );
 }
-

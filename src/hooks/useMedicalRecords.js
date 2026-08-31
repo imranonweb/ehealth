@@ -136,6 +136,31 @@ export function usePatientProviders() {
 }
 
 /**
+ * Hook for patient access requests (pending relationship approvals).
+ */
+export function usePatientAccessRequests() {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await patientService.getPendingAccessRequests();
+      setRequests(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load access requests');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  return { requests, loading, error, refresh: fetch };
+}
+
+/**
  * Hook for patient dashboard stats.
  */
 export function usePatientDashboardStats() {
