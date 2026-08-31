@@ -185,8 +185,16 @@ BEGIN
 
   -- ── Create role-specific sub-profile ──────────────────────────────
   IF v_role = 'patient' THEN
-    INSERT INTO public.patient_profiles (profile_id, is_registered)
-    VALUES (v_new_profile_id, TRUE)
+   INSERT INTO public.patient_profiles (
+  profile_id,
+  is_registered,
+  registered_at
+)
+VALUES (
+  v_new_profile_id,
+  TRUE,
+  now()
+)
     ON CONFLICT (profile_id) DO NOTHING;
 
   ELSIF v_role = 'doctor' THEN
