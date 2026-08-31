@@ -36,10 +36,10 @@ export function Sidebar({ role, profile, isOpen, onClose }) {
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         {/* Brand Header */}
         <div className="sidebar-brand">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Link to="/" aria-label="E-Health Home" style={{ display: 'flex', flexDirection: 'column', gap: 2, textDecoration: 'none' }}>
             <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
             <div className="sidebar-brand-role">{config.label}</div>
-          </div>
+          </Link>
           <button
             type="button"
             className="sidebar-close-btn"

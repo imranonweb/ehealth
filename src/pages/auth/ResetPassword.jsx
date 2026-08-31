@@ -50,7 +50,9 @@ export function ResetPassword() {
     <div style={{ width: '100%', maxWidth: 440 }}>
       {/* Brand Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 32 }}>
-        <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+        <Link to="/" aria-label="E-Health Home" style={{ display: 'inline-flex' }}>
+          <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+        </Link>
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Set New Password</h1>

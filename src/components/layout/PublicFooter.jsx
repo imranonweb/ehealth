@@ -7,9 +7,9 @@ export function PublicFooter() {
     <footer className="public-footer">
       <div className="container footer-container">
         <div className="footer-brand">
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Link to="/" aria-label="E-Health Home" style={{ display: 'inline-flex', alignItems: 'center' }}>
             <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
-          </div>
+          </Link>
           <p className="caption" style={{ marginTop: 12, lineHeight: 1.6 }}>
             Centralized digital healthcare platform connecting patients, doctors, diagnostic centers, and hospitals under strict privacy governance.
           </p>

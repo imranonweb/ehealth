@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   E-HEALTH PUBLIC HOMEPAGE STYLES
+   E-HEALTH PUBLIC HOMEPAGE STYLES & ANIMATIONS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .landing-page {
@@ -11,9 +11,32 @@
   flex-direction: column;
 }
 
+/* ── Animations ──────────────────────────────────────────────────────── */
+.animate-fade-in {
+  animation: heroFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-up {
+  animation: heroSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both 0.1s;
+}
+
+.animate-slide-up-delayed {
+  animation: heroSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both 0.2s;
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Hero Section ─────────────────────────────────────────────────────── */
 .hero-section {
-  padding: clamp(64px, 9vw, 110px) 0 clamp(52px, 7vw, 84px);
+  padding: clamp(60px, 8vw, 100px) 0 clamp(48px, 6vw, 76px);
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
   position: relative;
@@ -26,9 +49,9 @@
   top: -120px;
   left: 50%;
   transform: translateX(-50%);
-  width: 680px;
-  height: 340px;
-  background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.12), transparent 70%);
+  width: 720px;
+  height: 380px;
+  background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.14), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -37,13 +60,16 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 6px 16px;
   background-color: var(--accent-subtle);
   border: 1px solid rgba(20, 184, 166, 0.3);
   border-radius: var(--radius-full);
   margin-bottom: 24px;
   position: relative;
   z-index: 1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .hero-title {
@@ -54,6 +80,8 @@
   color: var(--text-primary);
   position: relative;
   z-index: 1;
+  max-width: 840px;
+  margin: 0 auto 24px;
 }
 
 .text-accent {
@@ -66,6 +94,8 @@
   line-height: 1.6;
   position: relative;
   z-index: 1;
+  max-width: 660px;
+  margin: 0 auto 36px;
 }
 
 .hero-actions {
@@ -75,6 +105,30 @@
   flex-wrap: wrap;
   position: relative;
   z-index: 1;
+}
+
+.hero-metrics {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.metric-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 /* ── Trust Strip ──────────────────────────────────────────────────────── */
@@ -87,7 +141,7 @@
 .trust-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
 .trust-cell {
@@ -132,9 +186,16 @@
   }
 }
 
+/* ── Section Heading Helper ───────────────────────────────────────────── */
+.section-heading {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 48px;
+}
+
 /* ── How It Works Section ─────────────────────────────────────────────── */
 .how-it-works-section {
-  padding: clamp(64px, 8vw, 96px) 0;
+  padding: clamp(60px, 8vw, 92px) 0;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
 }
@@ -148,18 +209,18 @@
 .step-card {
   background: var(--bg-surface-muted);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   padding: clamp(24px, 4vw, 32px) clamp(20px, 3vw, 24px);
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: all var(--transition-normal);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .step-card:hover {
   border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
 }
 
 .step-number {
@@ -190,220 +251,195 @@
   }
 }
 
-/* ── Ledger Grid (Core Workflows) ─────────────────────────────────────── */
+/* ── Roles / Specialized Portals ──────────────────────────────────────── */
 .workflows-section {
-  padding: clamp(64px, 8vw, 96px) 0;
+  padding: clamp(60px, 8vw, 92px) 0;
   background-color: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
 }
 
-.ledger-grid {
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.role-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-.ledger-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  padding: clamp(24px, 4vw, 32px) 0;
-  border-bottom: 1px solid var(--border-default);
-  transition: background-color var(--transition-fast);
+.role-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.1);
 }
 
-.ledger-row:first-child {
-  border-top: 1px solid var(--border-default);
-}
-
-.ledger-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
+.role-avatar-badge {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background-color: var(--bg-surface-muted);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.role-avatar-emoji {
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-block;
+}
+
+.role-badge-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-muted);
+  color: var(--text-primary);
   border: 1px solid var(--border-default);
 }
 
-.ledger-icon.blue { background-color: var(--color-blue-bg); color: var(--color-blue); border-color: rgba(37, 99, 235, 0.2); }
-.ledger-icon.purple { background-color: var(--color-purple-bg); color: var(--color-purple); border-color: rgba(124, 58, 237, 0.2); }
-.ledger-icon.teal { background-color: var(--color-teal-bg); color: var(--color-teal); border-color: rgba(13, 148, 136, 0.2); }
+.role-avatar-badge.doctor .role-badge-pill { background: var(--color-blue-bg); color: var(--color-blue); border-color: rgba(37, 99, 235, 0.2); }
+.role-avatar-badge.patient .role-badge-pill { background: var(--accent-subtle); color: var(--accent); border-color: rgba(20, 184, 166, 0.2); }
+.role-avatar-badge.hospital .role-badge-pill { background: var(--color-teal-bg); color: var(--color-teal); border-color: rgba(13, 148, 136, 0.2); }
+.role-avatar-badge.diagnostics .role-badge-pill { background: var(--color-purple-bg); color: var(--color-purple); border-color: rgba(124, 58, 237, 0.2); }
 
-.ledger-content {
-  flex: 1;
+.role-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 10px;
 }
 
-.ledger-action {
-  flex-shrink: 0;
-  margin-top: 4px;
+.role-desc {
+  font-size: 0.84375rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 768px) {
-  .ledger-row {
-    flex-direction: column;
-    align-items: flex-start;
+.role-features {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78125rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+  .roles-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+@media (max-width: 640px) {
+  .roles-grid {
+    grid-template-columns: 1fr;
     gap: 16px;
   }
-  .ledger-action {
-    margin-top: 8px;
-  }
 }
 
-/* ── Engineering Team Section ─────────────────────────────────────────── */
-.team-section {
-  padding: clamp(64px, 8vw, 96px) 0;
+/* ── Security Architecture Section ─────────────────────────────────────── */
+.security-section {
+  padding: clamp(50px, 6vw, 76px) 0;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
 }
 
-.team-grid {
+.security-box {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: clamp(32px, 5vw, 48px);
+}
+
+.security-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.security-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
-.team-card {
-  background-color: var(--bg-surface-muted);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 32px 24px;
+.security-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transition: all var(--transition-normal);
-  position: relative;
+  gap: 10px;
 }
 
-.team-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-  background-color: var(--bg-surface-elevated);
+.security-card h4 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
 }
 
-.team-avatar-wrap {
-  position: relative;
-  margin-bottom: 20px;
+.security-card p {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 840px) {
+  .security-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .security-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* ── Contact Strip Section (PART 8: Email Support Only) ───────────────── */
+.contact-strip-section {
+  padding: 40px 0;
+  background-color: var(--bg-app);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.contact-strip-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 24px 32px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
-.team-avatar-frame {
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid var(--accent);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  background-color: var(--bg-surface-elevated);
+.contact-icon-bubble {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  position: relative;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
-}
-
-.team-card:hover .team-avatar-frame {
-  border-color: var(--accent-hover);
-  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.35);
-}
-
-.team-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-  transition: transform var(--transition-normal);
-}
-
-.team-card:hover .team-avatar-img {
-  transform: scale(1.06);
-}
-
-/* Face-centered slight zoom for Sinthia so face is prominent and clear */
-.team-avatar-img.team-avatar-sinthia {
-  transform: scale(1.45) translateY(6%);
-  object-position: center 8%;
-}
-
-.team-card:hover .team-avatar-img.team-avatar-sinthia {
-  transform: scale(1.52) translateY(6%);
-}
-
-.team-name {
-  font-size: 1.1875rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.team-role {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent);
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.team-bio {
-  font-size: 0.84375rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  margin-bottom: 20px;
-  flex: 1;
-}
-
-.team-skills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  margin-top: auto;
-}
-
-.team-skill-tag {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  color: var(--text-muted);
-}
-
-.team-badge-banner {
-  margin-top: 48px;
-  padding: 20px 24px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-default);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-@media (max-width: 960px) {
-  .team-grid {
-    grid-template-columns: 1fr;
-    max-width: 520px;
-    margin: 0 auto;
-    gap: 20px;
-  }
 }
 
 /* ── Call To Action (CTA) Section ─────────────────────────────────────── */
 .cta-section {
-  padding: clamp(64px, 8vw, 96px) 0;
-  background-color: var(--bg-app);
+  padding: clamp(60px, 8vw, 92px) 0;
+  background-color: var(--bg-surface);
 }
 
 .cta-box {
@@ -430,4 +466,15 @@
   max-width: 580px;
   margin: 0 auto 32px;
   line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-up-delayed,
+  .step-card,
+  .role-card {
+    animation: none;
+    transition: none;
+  }
 }

@@ -51,11 +51,15 @@ export function Contact() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <Mail size={20} color="var(--accent)" />
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Direct Contact</h3>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Email Support</h3>
               </div>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', paddingLeft: 32 }}>
-                inquiries@ehealth.org.bd<br />
-                +880 (Contact via email preferred)
+                <a href="mailto:inquiries@ehealth.org.bd" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+                  inquiries@ehealth.org.bd
+                </a>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  Institutional &amp; Technical Support Desk
+                </div>
               </div>
             </div>
 

@@ -131,7 +131,9 @@ export function Register() {
     return (
       <div style={{ width: '100%', maxWidth: 500 }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
-          <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+          <Link to="/" aria-label="E-Health Home" style={{ display: 'inline-flex' }}>
+            <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+          </Link>
         </div>
 
         <div className="card" style={{ padding: '36px 32px', textAlign: 'center', boxShadow: 'var(--shadow-md)', border: '1px solid var(--border-default)' }}>
@@ -197,7 +199,9 @@ export function Register() {
     <div style={{ width: '100%', maxWidth: 520 }}>
       {/* Brand Header */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 28 }}>
-        <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+        <Link to="/" aria-label="E-Health Home" style={{ display: 'inline-flex' }}>
+          <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
+        </Link>
       </div>
 
       <h1 className="h2" style={{ marginBottom: 6 }}>Create an Account</h1>

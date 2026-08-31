@@ -18,12 +18,18 @@ export function Drawer({ isOpen, onClose, title, children, width = 520, classNam
     }
   }, [isOpen, onClose]);
 
+  const resolvedWidth = typeof width === 'number' ? `${width}px` : (width || '560px');
+
   return (
     <>
       <div className={`drawer-overlay ${isOpen ? 'open' : ''}`} ref={overlayRef} onClick={onClose} />
       <aside
         className={`drawer ${isOpen ? 'open' : ''} ${className}`}
-        style={{ width }}
+        style={{
+          '--drawer-target-width': resolvedWidth,
+          maxWidth: '100vw',
+          width: `min(100vw, ${resolvedWidth})`,
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={title}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
   X, Download, Pill, FlaskConical, Building2, FileText, Calendar,
-  User, Stethoscope, Eye, AlertCircle, Sparkles
+  User, Stethoscope, Eye, AlertCircle, Sparkles, Loader2
 } from 'lucide-react';
 import { Drawer } from '../ui/Drawer';
-import { DocumentViewer } from '../documents/DocumentViewer';
+import { PdfViewerModal } from '../common/PdfViewerModal';
+import { EmptyState } from '../ui/EmptyState';
 import { formatDate, parseMedications } from '../../lib/utils';
 import { patientService } from '../../services/patientService';
 
@@ -58,11 +59,11 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
         isOpen={isOpen}
         onClose={onClose}
         title={typeLabels[record?.record_type] || 'Medical Record Detail'}
-        width={560}
+        width={620}
       >
         {loading ? (
           <div style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
-            <div className="auth-loading-spinner" style={{ margin: '0 auto' }} />
+            <Loader2 size={32} className="spin text-primary" style={{ margin: '0 auto' }} />
             <p className="text-muted" style={{ marginTop: 12, fontSize: '0.875rem' }}>
               Retrieving verified medical record…
             </p>
@@ -71,7 +72,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
           <div className="record-detail">
             {/* Header info */}
             <div className="record-detail-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-default)', paddingBottom: 12 }}>
-              <div className="record-detail-date">
+              <div className="record-detail-date" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                 <Calendar size={15} color="var(--accent)" />
                 <span>Recorded on {formatDate(detail.prescription_date || detail.report_date || detail.admission_date)}</span>
               </div>
@@ -84,11 +85,11 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             {record.record_type === 'prescription' && (
               <>
                 <DetailSection title="Clinical Diagnosis" icon={Stethoscope}>
-                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {detail.diagnosis || 'Clinical Diagnosis'}
                   </p>
                   {detail.clinical_notes && (
-                    <p style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                    <p style={{ marginTop: 6, color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.5, margin: '6px 0 0 0' }}>
                       {detail.clinical_notes}
                     </p>
                   )}
@@ -99,7 +100,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                     <div className="medication-list-detail">
                       {parseMedications(detail.medications).map((med, i) => (
                         <div key={i} className="medication-item-detail">
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 6 }}>
                             <div className="med-name">{med.name}</div>
                             <span className="badge" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', fontWeight: 600 }}>
                               {med.dosage}
@@ -109,7 +110,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                             Schedule: <strong>{med.frequency}</strong> · Duration: {med.duration}
                           </div>
                           {med.instructions && (
-                            <div className="med-instructions" style={{ marginTop: 6 }}>
+                            <div className="med-instructions" style={{ marginTop: 6, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                               💡 {med.instructions}
                             </div>
                           )}
@@ -121,7 +122,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
 
                 {detail.instructions && (
                   <DetailSection title="Patient Instructions & Advice" icon={FileText}>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.instructions}</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{detail.instructions}</p>
                   </DetailSection>
                 )}
 
@@ -142,7 +143,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                     <div className="ai-disclaimer">
                       ⚠️ AI-generated summary for educational preview only. Verify against original prescription.
                     </div>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
                       {detail.ai_extraction[0].summary}
                     </p>
                   </DetailSection>
@@ -154,7 +155,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             {record.record_type === 'diagnostic_report' && (
               <>
                 <DetailSection title="Investigation / Test Name" icon={FlaskConical}>
-                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     {detail.test_name}
                   </p>
                   {detail.test_category && (
@@ -165,21 +166,21 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                 </DetailSection>
 
                 <DetailSection title="Results Summary & Findings" icon={FileText}>
-                  <p style={{ fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  <p style={{ fontSize: '0.875rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>
                     {detail.summary || 'No summary entered.'}
                   </p>
                 </DetailSection>
 
                 {detail.doctor_notes && (
                   <DetailSection title="Pathologist / Consultant Remarks" icon={Stethoscope}>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.doctor_notes}</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{detail.doctor_notes}</p>
                   </DetailSection>
                 )}
 
                 <DetailSection title="Diagnostic Laboratory" icon={Building2}>
-                  <p style={{ fontWeight: 600 }}>{detail.diagnostics_org?.name || 'Diagnostic Center'}</p>
+                  <p style={{ fontWeight: 600, margin: 0 }}>{detail.diagnostics_org?.name || 'Diagnostic Center'}</p>
                   {detail.doctor && (
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2, margin: '2px 0 0 0' }}>
                       Referring Doctor: {detail.doctor.full_name}
                     </p>
                   )}
@@ -191,7 +192,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             {record.record_type === 'hospital_visit' && (
               <>
                 <DetailSection title="Encounter Logistics" icon={Building2}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.875rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, fontSize: '0.875rem' }}>
                     <div>
                       <span className="text-muted">Type:</span> <strong>{detail.visit_type?.replace('_', ' ').toUpperCase()}</strong>
                     </div>
@@ -208,25 +209,25 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                 </DetailSection>
 
                 <DetailSection title="Chief Complaint & Reason" icon={FileText}>
-                  <p style={{ fontSize: '0.875rem' }}>{detail.reason || 'Not specified'}</p>
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}>{detail.reason || 'Not specified'}</p>
                 </DetailSection>
 
                 {detail.diagnosis_summary && (
                   <DetailSection title="Discharge / Diagnosis Summary" icon={Stethoscope}>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.diagnosis_summary}</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{detail.diagnosis_summary}</p>
                   </DetailSection>
                 )}
 
                 {detail.notes && (
                   <DetailSection title="Clinical Course & Internal Notes" icon={FileText}>
-                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{detail.notes}</p>
+                    <p style={{ fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>{detail.notes}</p>
                   </DetailSection>
                 )}
 
                 <DetailSection title="Hospital Facility" icon={Building2}>
-                  <p style={{ fontWeight: 600 }}>{detail.hospital?.name || 'Hospital'}</p>
+                  <p style={{ fontWeight: 600, margin: 0 }}>{detail.hospital?.name || 'Hospital'}</p>
                   {detail.doctor && (
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2, margin: '2px 0 0 0' }}>
                       Attending Physician: {detail.doctor.full_name}
                     </p>
                   )}
@@ -241,6 +242,7 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
                   type="button"
                   className="btn btn-primary btn-md w-full"
                   onClick={() => setDocViewerOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   <Eye size={16} /> View Original Document Attachment
                 </button>
@@ -260,18 +262,22 @@ export function RecordDetailDrawer({ isOpen, onClose, record }) {
             </div>
           </div>
         ) : (
-          <div style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
-            <p className="text-muted">No details found for this record.</p>
+          <div style={{ padding: 'var(--sp-8) var(--sp-4)' }}>
+            <EmptyState
+              icon={FileText}
+              title="No Details Found"
+              description="The requested medical record could not be loaded or contains no additional parameters."
+            />
           </div>
         )}
       </Drawer>
 
-      {/* Embedded Document Viewer Modal */}
+      {/* Embedded Reusable Document Viewer Modal */}
       {detail?.document_path && (
-        <DocumentViewer
+        <PdfViewerModal
           isOpen={docViewerOpen}
           onClose={() => setDocViewerOpen(false)}
-          documentPath={detail.document_path}
+          filePath={detail.document_path}
           title={typeLabels[record?.record_type] || 'Medical Document'}
         />
       )}

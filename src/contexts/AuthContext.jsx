@@ -52,34 +52,50 @@ export function AuthProvider({ children }) {
   /* ── Initialize auth state ─────────────────────────── */
   useEffect(() => {
     let mounted = true;
+    let initialResolved = false;
 
-    async function initAuth() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session?.user && mounted) {
-          setUser(session.user);
-          const p = await fetchProfile(session.user.id);
-          if (mounted && p) {
+    async function handleSession(session) {
+      if (!mounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        const p = await fetchProfile(session.user.id);
+        if (mounted) {
+          if (p) {
             setProfile(p);
             setRole(p.role);
+          } else {
+            setProfile(null);
+            setRole(null);
           }
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Auth init error:', err);
-      } finally {
-        if (mounted) setLoading(false);
+      } else {
+        if (mounted) {
+          setUser(null);
+          setProfile(null);
+          setRole(null);
+          setLoading(false);
+        }
       }
     }
 
-    initAuth();
+    // 1. Initial explicit session get
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!initialResolved && mounted) {
+        initialResolved = true;
+        handleSession(session);
+      }
+    }).catch((err) => {
+      console.error('Auth getSession error:', err);
+      if (mounted) setLoading(false);
+    });
 
-    /* Listen for auth changes (login, logout, token refresh) */
+    // 2. Listen for subsequent auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
 
-        if (event === 'SIGNED_OUT' || !session?.user) {
+        if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setRole(null);
@@ -87,17 +103,10 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        setUser(session.user);
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          const p = await fetchProfile(session.user.id);
-          if (mounted && p) {
-            setProfile(p);
-            setRole(p.role);
-          }
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+          initialResolved = true;
+          await handleSession(session);
         }
-
-        if (mounted) setLoading(false);
       }
     );
 

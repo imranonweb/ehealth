@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import {
   Activity, ShieldCheck, Database, UserCheck, Lock, Pill,
-  FlaskConical, BedDouble, ArrowRight, Code, CheckCircle2,
-  HeartPulse, Stethoscope, Sparkles, Users
+  FlaskConical, BedDouble, ArrowRight, CheckCircle2,
+  HeartPulse, Stethoscope, Sparkles, Users, Mail, Eye, KeyRound
 } from 'lucide-react';
 import { PublicNavbar } from '../../components/layout/PublicNavbar';
 import { PublicFooter } from '../../components/layout/PublicFooter';
@@ -17,23 +17,21 @@ export function Landing() {
         {/* ── 1. Hero Section ──────────────────────────────────────────────── */}
         <section className="hero-section">
           <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div className="hero-badge">
+            <div className="hero-badge animate-fade-in">
               <Activity size={14} color="var(--accent)" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                Unified Healthcare Infrastructure for Bangladesh
-              </span>
+              <span>Unified Healthcare Infrastructure for Bangladesh</span>
             </div>
-            
-            <h1 className="hero-title" style={{ maxWidth: 840, margin: '0 auto 24px' }}>
+
+            <h1 className="hero-title animate-slide-up">
               The Trusted Record for<br />
               <span className="text-accent">Modern Healthcare</span>
             </h1>
-            
-            <p className="hero-subtitle" style={{ maxWidth: 640, margin: '0 auto 40px' }}>
-              A single, secure architecture connecting patients, doctors, diagnostic centers, and hospitals. Every prescription, lab report, and hospital stay—unified into one lifetime record.
+
+            <p className="hero-subtitle animate-slide-up-delayed">
+              A secure, consent-driven architecture connecting patients, doctors, diagnostic centers, and hospitals. Every prescription, lab report, and hospital stay—unified into one lifetime record.
             </p>
-            
-            <div className="hero-actions">
+
+            <div className="hero-actions animate-slide-up-delayed">
               <Link to="/register" className="btn btn-primary btn-lg">
                 Create Free Account <ArrowRight size={16} />
               </Link>
@@ -41,10 +39,26 @@ export function Landing() {
                 Institutional Integration
               </Link>
             </div>
+
+            {/* Platform Metrics */}
+            <div className="hero-metrics">
+              <div className="metric-pill">
+                <ShieldCheck size={16} color="var(--accent)" />
+                <span>100% Patient Consent Governed</span>
+              </div>
+              <div className="metric-pill">
+                <Lock size={16} color="var(--accent)" />
+                <span>Zero-Trust Encrypted Storage</span>
+              </div>
+              <div className="metric-pill">
+                <HeartPulse size={16} color="var(--accent)" />
+                <span>Multi-Portal Synchronized Care</span>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ── 2. Trust Strip ───────────────────────────────────────────────── */}
+        {/* ── 2. Trust & Architecture Strip ─────────────────────────────────── */}
         <section className="trust-strip">
           <div className="container">
             <div className="trust-grid">
@@ -59,21 +73,21 @@ export function Landing() {
                 <Lock size={22} color="var(--accent)" />
                 <div>
                   <strong>Encrypted Storage</strong>
-                  <span>Signed URLs for medical documents</span>
+                  <span>Time-limited signed URLs for documents</span>
                 </div>
               </div>
               <div className="trust-cell">
                 <UserCheck size={22} color="var(--accent)" />
                 <div>
                   <strong>Patient Ownership</strong>
-                  <span>Zero unsolicited data access</span>
+                  <span>Explicit consent required for history access</span>
                 </div>
               </div>
               <div className="trust-cell">
                 <Database size={22} color="var(--accent)" />
                 <div>
                   <strong>Immutable Records</strong>
-                  <span>Original files preserved with provenance</span>
+                  <span>Digital records preserved with full provenance</span>
                 </div>
               </div>
             </div>
@@ -83,13 +97,13 @@ export function Landing() {
         {/* ── 3. How It Works ──────────────────────────────────────────────── */}
         <section className="how-it-works-section">
           <div className="container">
-            <div style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto 48px' }}>
+            <div className="section-heading">
               <span className="label" style={{ color: 'var(--accent)' }}>System Architecture</span>
               <h2 className="h2" style={{ fontSize: '2rem', margin: '8px 0 12px' }}>
                 How E-Health Unifies Care
               </h2>
               <p className="body" style={{ color: 'var(--text-secondary)' }}>
-                Three simple steps create a continuous, lifelong medical record across private chambers, diagnostics, and multi-specialty hospitals.
+                Three simple steps create a continuous, lifelong medical record across private chambers, diagnostic labs, and multi-specialty hospitals.
               </p>
             </div>
 
@@ -104,7 +118,7 @@ export function Landing() {
                   Universal Patient ID
                 </h3>
                 <p className="body-sm">
-                  Patients register once and receive a secure Health Identifier (e.g. <code>P-9824F1A2</code>). No medical data can be accessed without explicit patient authorization.
+                  Patients register once and receive a permanent Health Identifier (e.g. <code>P-9824F1A2</code>). No medical data can be accessed without explicit patient approval.
                 </p>
               </div>
 
@@ -115,10 +129,10 @@ export function Landing() {
                   <Stethoscope size={22} />
                 </div>
                 <h3 className="h3" style={{ fontSize: '1.125rem', marginBottom: 8 }}>
-                  Point-of-Care Entries
+                  Point-of-Care Digital Entries
                 </h3>
                 <p className="body-sm">
-                  Doctors issue e-prescriptions, diagnostic centers upload certified lab reports, and hospitals log admissions directly into the patient's record with digital signatures.
+                  Doctors issue e-prescriptions, diagnostic labs upload certified reports, and hospitals log admissions directly into the patient's record with digital timestamps.
                 </p>
               </div>
 
@@ -132,231 +146,176 @@ export function Landing() {
                   Lifelong Clinical Continuity
                 </h3>
                 <p className="body-sm">
-                  Whenever the patient visits a new doctor or hospital, their complete historical timeline is accessible immediately, preventing dangerous drug interactions and duplicated tests.
+                  Whenever the patient visits a new doctor or hospital, their authorized clinical timeline is accessible immediately, preventing dangerous drug interactions and duplicated tests.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 4. Core Portals (Four Workflows) ──────────────────────────────── */}
+        {/* ── 4. Four Tailored User Roles (With Professional Avatars) ───────── */}
         <section className="workflows-section">
           <div className="container">
-            <div style={{ marginBottom: 48 }}>
-              <span className="label" style={{ color: 'var(--accent)' }}>Tailored Interfaces</span>
+            <div className="section-heading">
+              <span className="label" style={{ color: 'var(--accent)' }}>Tailored Workflows</span>
               <h2 className="h2" style={{ fontSize: '2rem', margin: '8px 0 12px' }}>
-                One Architecture. Four Workflows.
+                One Architecture. Four Specialized Portals.
               </h2>
               <p className="body" style={{ color: 'var(--text-secondary)' }}>
-                A cohesive system specifically designed for each healthcare stakeholder in the clinical ecosystem.
+                Dedicated, role-specific interfaces designed for each healthcare stakeholder in the clinical ecosystem.
               </p>
             </div>
 
-            <div className="ledger-grid">
-              {/* Patient Ledger */}
-              <div className="ledger-row">
-                <div className="ledger-icon" style={{ backgroundColor: 'var(--bg-surface-elevated)', color: 'var(--text-primary)' }}>
-                  <Activity size={20} />
+            <div className="roles-grid">
+              {/* Doctor Role Card */}
+              <div className="role-card">
+                <div className="role-avatar-badge doctor">
+                  <span className="role-avatar-emoji">👨‍⚕️</span>
+                  <div className="role-badge-pill">Doctor Workspace</div>
                 </div>
-                <div className="ledger-content">
-                  <h3 className="h3" style={{ marginBottom: 4 }}>Patient Vault</h3>
-                  <p className="body-sm">
-                    A lifetime chronological timeline of prescriptions, lab findings, and hospital stays. Educational AI assists in understanding complex medical terminology and dosage timings without compromising data security.
+                <h3 className="role-title">Physicians & Consultants</h3>
+                <p className="role-desc">
+                  Review complete longitudinal patient records, check past prescriptions and drug allergies, and issue structured electronic prescriptions with attached scans.
+                </p>
+                <div className="role-features">
+                  <span>✓ Longitudinal Patient Chart</span>
+                  <span>✓ Structured e-Prescribing</span>
+                  <span>✓ Instant Patient ID Search</span>
+                </div>
+                <Link to="/register" className="btn btn-outline btn-sm w-full" style={{ marginTop: 'auto' }}>
+                  Doctor Access <ArrowRight size={14} />
+                </Link>
+              </div>
+
+              {/* Patient Role Card */}
+              <div className="role-card">
+                <div className="role-avatar-badge patient">
+                  <span className="role-avatar-emoji">👩</span>
+                  <div className="role-badge-pill">Patient Health Vault</div>
+                </div>
+                <h3 className="role-title">Patients & Families</h3>
+                <p className="role-desc">
+                  Access your complete medical history, download verified diagnostic reports and prescriptions, and retain full sovereignty over which providers can view your data.
+                </p>
+                <div className="role-features">
+                  <span>✓ Universal Health Identifier</span>
+                  <span>✓ Granular Consent Control</span>
+                  <span>✓ AI-Assisted Health Insights</span>
+                </div>
+                <Link to="/register" className="btn btn-outline btn-sm w-full" style={{ marginTop: 'auto' }}>
+                  Patient Portal <ArrowRight size={14} />
+                </Link>
+              </div>
+
+              {/* Hospital Role Card */}
+              <div className="role-card">
+                <div className="role-avatar-badge hospital">
+                  <span className="role-avatar-emoji">🏥</span>
+                  <div className="role-badge-pill">Hospital Desk</div>
+                </div>
+                <h3 className="role-title">Hospitals & Clinics</h3>
+                <p className="role-desc">
+                  Coordinate inpatient admissions, outpatient triage encounters, and surgical discharge summaries across all internal medical departments.
+                </p>
+                <div className="role-features">
+                  <span>✓ Admission & Discharge Logs</span>
+                  <span>✓ Multi-Department Triage</span>
+                  <span>✓ Institutional Staff Management</span>
+                </div>
+                <Link to="/register" className="btn btn-outline btn-sm w-full" style={{ marginTop: 'auto' }}>
+                  Hospital Portal <ArrowRight size={14} />
+                </Link>
+              </div>
+
+              {/* Diagnostics Role Card */}
+              <div className="role-card">
+                <div className="role-avatar-badge diagnostics">
+                  <span className="role-avatar-emoji">🔬</span>
+                  <div className="role-badge-pill">Diagnostics Terminal</div>
+                </div>
+                <h3 className="role-title">Diagnostic Centers & Labs</h3>
+                <p className="role-desc">
+                  Upload certified lab reports, pathology summaries, and radiology imaging directly into the authorized patient record with encrypted storage.
+                </p>
+                <div className="role-features">
+                  <span>✓ Direct PDF Report Dispatch</span>
+                  <span>✓ Structured Test Parameters</span>
+                  <span>✓ Immutable Lab Provenance</span>
+                </div>
+                <Link to="/register" className="btn btn-outline btn-sm w-full" style={{ marginTop: 'auto' }}>
+                  Diagnostics Portal <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 5. Security & Privacy Architecture ───────────────────────────── */}
+        <section className="security-section">
+          <div className="container">
+            <div className="security-box">
+              <div className="security-header">
+                <ShieldCheck size={32} color="var(--accent)" />
+                <div>
+                  <h3 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                    Enterprise Security & Privacy Architecture
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                    Engineered from the database layer up to ensure zero unauthorized patient data leakage.
                   </p>
-                </div>
-                <div className="ledger-action">
-                  <Link to="/register" className="btn btn-outline btn-sm">For Patients</Link>
                 </div>
               </div>
 
-              {/* Doctor Ledger */}
-              <div className="ledger-row">
-                <div className="ledger-icon blue">
-                  <Pill size={20} />
+              <div className="security-grid">
+                <div className="security-card">
+                  <KeyRound size={20} color="var(--accent)" />
+                  <h4>PostgreSQL Row-Level Security</h4>
+                  <p>Database queries are evaluated server-side. Providers only query patients where active authorized relationships exist.</p>
                 </div>
-                <div className="ledger-content">
-                  <h3 className="h3" style={{ marginBottom: 4 }}>Physician Workspace</h3>
-                  <p className="body-sm">
-                    Review complete longitudinal medical histories when consulting authorized patients. Issue structured e-prescriptions with automatic dosage schedules and attach digital scans for permanent record keeping.
-                  </p>
+                <div className="security-card">
+                  <Lock size={20} color="var(--accent)" />
+                  <h4>Private Encrypted Storage</h4>
+                  <p>Prescriptions and lab scans are never stored publicly. Access requires short-lived signed URLs generated only for authorized users.</p>
                 </div>
-                <div className="ledger-action">
-                  <Link to="/register" className="btn btn-outline btn-sm">For Doctors</Link>
-                </div>
-              </div>
-
-              {/* Diagnostics Ledger */}
-              <div className="ledger-row">
-                <div className="ledger-icon purple">
-                  <FlaskConical size={20} />
-                </div>
-                <div className="ledger-content">
-                  <h3 className="h3" style={{ marginBottom: 4 }}>Diagnostics Terminal</h3>
-                  <p className="body-sm">
-                    Dispatch lab results, pathology summaries, and radiology imaging directly into the patient's record. Every report carries institutional provenance and cannot be altered once delivered.
-                  </p>
-                </div>
-                <div className="ledger-action">
-                  <Link to="/register" className="btn btn-outline btn-sm">For Labs</Link>
-                </div>
-              </div>
-
-              {/* Hospital Ledger */}
-              <div className="ledger-row">
-                <div className="ledger-icon teal">
-                  <BedDouble size={20} />
-                </div>
-                <div className="ledger-content">
-                  <h3 className="h3" style={{ marginBottom: 4 }}>Hospital Desk</h3>
-                  <p className="body-sm">
-                    Manage inpatient admissions, triage encounters, and surgical discharge summaries. Ensure multi-department continuity across internal medicine, surgery, and out-patient follow-ups.
-                  </p>
-                </div>
-                <div className="ledger-action">
-                  <Link to="/register" className="btn btn-outline btn-sm">For Hospitals</Link>
+                <div className="security-card">
+                  <Eye size={20} color="var(--accent)" />
+                  <h4>Explicit Patient Consent</h4>
+                  <p>Searching for a patient does not grant access to medical records. Patients must explicitly approve access requests.</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── 5. The Engineering Team Section ──────────────────────────────── */}
-        <section className="team-section">
+        {/* ── 6. Direct Contact & Support ──────────────────────────────────── */}
+        <section className="contact-strip-section">
           <div className="container">
-            <div style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto 48px' }}>
-              <span className="label" style={{ color: 'var(--accent)' }}>Leadership & Development</span>
-              <h2 className="h2" style={{ fontSize: '2rem', margin: '8px 0 12px' }}>
-                The Engineering Team
-              </h2>
-              <p className="body" style={{ color: 'var(--text-secondary)' }}>
-                The core developers, system architects, and designers building Bangladesh's unified digital healthcare infrastructure.
-              </p>
-            </div>
-
-            <div className="team-grid">
-              {/* Profile 1: Md. Al Imran Emon */}
-              <div className="team-card card-hover">
-                <div className="team-avatar-wrap">
-                  <div className="team-avatar-frame">
-                    <img
-                      src="/Al-Imran-Emon.png"
-                      alt="Md. Al Imran Emon"
-                      className="team-avatar-img"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="avatar avatar-xl avatar-teal" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
-                      AE
-                    </div>
-                  </div>
-                </div>
-                <h3 className="team-name">Md. Al Imran Emon</h3>
-                <div className="team-role">Lead Developer & Systems Architect</div>
-                <p className="team-bio">
-                  Architected the core PostgreSQL Row-Level Security (RLS) governance model, private encrypted storage pipeline, and longitudinal timeline engine.
-                </p>
-                <div className="team-skills">
-                  <span className="team-skill-tag">System Architecture</span>
-                  <span className="team-skill-tag">PostgreSQL RLS</span>
-                  <span className="team-skill-tag">Supabase</span>
-                  <span className="team-skill-tag">API Security</span>
-                </div>
-              </div>
-
-              {/* Profile 2: Mashuk Rahman */}
-              <div className="team-card card-hover">
-                <div className="team-avatar-wrap">
-                  <div className="team-avatar-frame">
-                    <img
-                      src="/Mashuk.jpeg"
-                      alt="Mashuk Rahman"
-                      className="team-avatar-img"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="avatar avatar-xl avatar-blue" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
-                      MR
-                    </div>
-                  </div>
-                </div>
-                <h3 className="team-name">Mashuk Rahman</h3>
-                <div className="team-role">Frontend Developer</div>
-                <p className="team-bio">
-                  Engineered the responsive physician prescribing interface, multi-portal state synchronization, patient search indexing, and real-time medical timeline views.
-                </p>
-                <div className="team-skills">
-                  <span className="team-skill-tag">React 19</span>
-                  <span className="team-skill-tag">Clinical UI</span>
-                  <span className="team-skill-tag">State Management</span>
-                  <span className="team-skill-tag">Performance</span>
-                </div>
-              </div>
-
-              {/* Profile 3: Sinthia Akter */}
-              <div className="team-card card-hover">
-                <div className="team-avatar-wrap">
-                  <div className="team-avatar-frame">
-                    <img
-                      src="/Sinthia.png"
-                      alt="Sinthia Akter"
-                      className="team-avatar-img team-avatar-sinthia"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="avatar avatar-xl avatar-purple" style={{ display: 'none', width: '100%', height: '100%', fontSize: '1.5rem', borderRadius: '50%' }}>
-                      SA
-                    </div>
-                  </div>
-                </div>
-                <h3 className="team-name">Sinthia Akter</h3>
-                <div className="team-role">UI/UX Designer</div>
-                <p className="team-bio">
-                  Formulated the design system tokens, clinical typography contrast rules, dark/light theme dynamics, and patient-first accessible interaction patterns.
-                </p>
-                <div className="team-skills">
-                  <span className="team-skill-tag">UI/UX Design</span>
-                  <span className="team-skill-tag">Design Systems</span>
-                  <span className="team-skill-tag">WCAG Standards</span>
-                  <span className="team-skill-tag">User Research</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Engineering Standards Banner */}
-            <div className="team-badge-banner">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--accent-subtle)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Code size={18} />
+            <div className="contact-strip-box">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div className="contact-icon-bubble">
+                  <Mail size={24} color="var(--accent)" />
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    Engineering Excellence & Privacy by Design
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    100% Client-Isolated RLS Policies · Zero Plaintext Exits · FHIR-Aligned Record Structures
-                  </div>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>Institutional Support &amp; Technical Inquiries</h3>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                    Need help onboarding your clinic, hospital, or diagnostic center? Reach out via our direct email desk.
+                  </p>
                 </div>
               </div>
-              <Link to="/about" className="btn btn-ghost btn-sm" style={{ gap: 6 }}>
-                Learn More About Us <ArrowRight size={14} />
-              </Link>
+              <a href="mailto:inquiries@ehealth.org.bd" className="btn btn-secondary btn-md" style={{ whiteSpace: 'nowrap' }}>
+                <Mail size={16} /> inquiries@ehealth.org.bd
+              </a>
             </div>
           </div>
         </section>
 
-        {/* ── 6. Call To Action (CTA) ──────────────────────────────────────── */}
+        {/* ── 7. Call To Action (CTA) ──────────────────────────────────────── */}
         <section className="cta-section">
           <div className="container">
             <div className="cta-box">
               <h2>Ready for Connected Healthcare?</h2>
               <p>
-                Join thousands of patients, doctors, and medical institutions already unifying healthcare records across Bangladesh.
+                Join patients, doctors, hospitals, and diagnostic centers unifying healthcare records across Bangladesh.
               </p>
               <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link to="/register" className="btn btn-primary btn-lg">

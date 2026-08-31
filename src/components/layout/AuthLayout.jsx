@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { Activity, ShieldCheck, HeartPulse, Lock } from 'lucide-react';
 import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 import './AuthLayout.css';
@@ -11,7 +11,9 @@ export function AuthLayout() {
         <div className="auth-panel-inner">
           {/* Logo Header */}
           <div className="auth-panel-brand">
-            <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+            <Link to="/" aria-label="E-Health Home" style={{ display: 'inline-flex' }}>
+              <img src="/Ehealthlogo.png" alt="E-Health" style={{ height: 48, width: 'auto', objectFit: 'contain' }} />
+            </Link>
           </div>
 
           {/* Core Value Proposition */}

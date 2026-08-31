@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { canAccessRoute, getDefaultRoute } from '../../lib/permissions';
+import { AppLoadingScreen } from './AppLoadingScreen';
 
 /**
  * Route guard that checks auth state and role permissions.
@@ -10,14 +11,9 @@ export function ProtectedRoute({ children, allowedRoles }) {
   const { user, role, loading } = useAuth();
   const location = useLocation();
 
-  /* Show loading spinner during auth initialization */
+  /* Show loading screen during auth initialization */
   if (loading) {
-    return (
-      <div className="auth-loading">
-        <div className="auth-loading-spinner" />
-        <p className="auth-loading-text">Loading your session…</p>
-      </div>
-    );
+    return <AppLoadingScreen message="Loading your workspace…" />;
   }
 
   /* Not authenticated → redirect to login */
@@ -45,11 +41,7 @@ export function PublicOnlyRoute({ children }) {
   const { user, role, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="auth-loading">
-        <div className="auth-loading-spinner" />
-      </div>
-    );
+    return <AppLoadingScreen message="Checking authentication…" />;
   }
 
   if (user && role) {
