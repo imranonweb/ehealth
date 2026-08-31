@@ -211,7 +211,7 @@ VALUES (
     ) VALUES (
       v_new_profile_id,
       COALESCE(v_org_name, v_full_name, 'Organization'),
-      v_role::org_type,
+      v_role::TEXT::org_type,
       v_address,
       v_phone,
       NEW.email,
