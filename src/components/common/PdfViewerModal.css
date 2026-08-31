@@ -1,0 +1,214 @@
+/* In-App PDF & Document Viewer Modal */
+.pdf-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  animation: pdfFadeIn 0.2s ease both;
+}
+
+@keyframes pdfFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pdf-viewer-modal {
+  width: min(1080px, 95vw);
+  height: min(88vh, 850px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pdf-viewer-modal.fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
+}
+
+/* Header */
+.pdf-viewer-header {
+  height: 60px;
+  padding: 0 var(--sp-6);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.pdf-viewer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pdf-type-icon {
+  flex-shrink: 0;
+  color: #EF4444;
+}
+
+.pdf-type-icon.img {
+  color: #3B82F6;
+}
+
+.pdf-viewer-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-viewer-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.pdf-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-surface-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pdf-action-btn:hover {
+  background: var(--bg-surface-sunken);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.pdf-action-btn.btn-primary-view {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
+}
+
+.pdf-action-btn.btn-primary-view:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.pdf-action-btn.close {
+  background: transparent;
+  border-color: transparent;
+  padding: 6px;
+}
+
+.pdf-action-btn.close:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Body */
+.pdf-viewer-body {
+  flex: 1;
+  background: #0f172a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pdf-viewer-iframe-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.pdf-viewer-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+}
+
+.pdf-viewer-image-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.pdf-viewer-img {
+  max-width: 90%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.pdf-viewer-loading,
+.pdf-viewer-error,
+.pdf-viewer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-8);
+  color: #94a3b8;
+  gap: 12px;
+}
+
+.pdf-viewer-error h3 {
+  color: #f87171;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.pdf-viewer-error p {
+  color: #94a3b8;
+  max-width: 420px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .pdf-viewer-modal {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  .pdf-viewer-header {
+    padding: 0 var(--sp-4);
+  }
+  .pdf-viewer-actions span.hide-mobile {
+    display: none;
+  }
+}

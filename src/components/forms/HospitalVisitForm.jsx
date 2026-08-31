@@ -88,7 +88,10 @@ export function HospitalVisitForm({ onSuccess, redirectPath = '/hospital/visits'
           <PatientSearch
             selectedPatient={selectedPatient}
             onSelectPatient={setSelectedPatient}
-            onClear={() => setSelectedPatient(null)}
+            onClear={() => {
+              setSelectedPatient(null);
+              setSearchParams({}, { replace: true });
+            }}
           />
         )}
       </div>

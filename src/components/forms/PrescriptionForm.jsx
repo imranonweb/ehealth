@@ -124,7 +124,10 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, initialPa
           <PatientSearch
             selectedPatient={selectedPatient}
             onSelectPatient={setSelectedPatient}
-            onClear={() => setSelectedPatient(null)}
+            onClear={() => {
+              setSelectedPatient(null);
+              setSearchParams({}, { replace: true });
+            }}
           />
         )}
       </div>

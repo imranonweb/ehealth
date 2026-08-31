@@ -4,6 +4,7 @@ import { FlaskConical, Upload, Calendar, ChevronRight, FileText, CheckCircle2, E
 import { diagnosticsService } from '../../services/diagnosticsService';
 import { formatDate, formatPatientId, getInitials, stringToColor } from '../../lib/utils';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
+import { PdfViewerModal } from '../../components/common/PdfViewerModal';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 
@@ -12,6 +13,7 @@ export function DiagnosticsReports() {
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pdfModal, setPdfModal] = useState({ isOpen: false, path: null, title: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +37,17 @@ export function DiagnosticsReports() {
       record_reference_id: r.id,
     });
     setDrawerOpen(true);
+  };
+
+  const handleOpenPdf = (e, r) => {
+    e.stopPropagation();
+    if (r.document_path) {
+      setPdfModal({
+        isOpen: true,
+        path: r.document_path,
+        title: `${r.test_name} - Report PDF`,
+      });
+    }
   };
 
   return (
@@ -147,14 +160,26 @@ export function DiagnosticsReports() {
                         )}
                       </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleOpenDetail(r)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
-                        >
-                          <Eye size={14} /> View Details
-                        </button>
+                        <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+                          {r.document_path && (
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm"
+                              onClick={(e) => handleOpenPdf(e, r)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                            >
+                              <FileText size={14} /> View PDF
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => handleOpenDetail(r)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                          >
+                            <Eye size={14} /> View Details
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -170,6 +195,14 @@ export function DiagnosticsReports() {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         record={selectedRecord}
+      />
+
+      {/* Reusable In-App PDF Viewer Modal */}
+      <PdfViewerModal
+        isOpen={pdfModal.isOpen}
+        onClose={() => setPdfModal({ isOpen: false, path: null, title: '' })}
+        filePath={pdfModal.path}
+        title={pdfModal.title}
       />
     </div>
   );

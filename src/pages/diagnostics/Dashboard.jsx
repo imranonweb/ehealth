@@ -178,7 +178,7 @@ export function DiagnosticsDashboard() {
                           </div>
                           <div>
                             <Link
-                              to={`/diagnostics/patients`}
+                              to={`/diagnostics/upload-report?patientId=${encodeURIComponent(r.patient_id)}`}
                               style={{
                                 fontWeight: 700,
                                 color: 'var(--text-primary)',
