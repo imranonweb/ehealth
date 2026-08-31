@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Users, Search, Upload, UserPlus, Clock, ShieldX, ShieldCheck } from 'lucide-react';
 import { usePatientSearch } from '../../hooks/usePatientSearch';
 import { CreatePatientForm } from '../../components/forms/CreatePatientForm';
@@ -17,14 +17,14 @@ export function DiagnosticsPatients() {
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [orgId, setOrgId] = useState(null);
 
-  // Map of patient profile UUID → relationship { id, status }
+  // Map of patient profile UUID -> relationship { id, status }
   const [relMap, setRelMap] = useState({});
   const [relLoading, setRelLoading] = useState(false);
 
   // Selected patient for access request modal
   const [requestTarget, setRequestTarget] = useState(null);
 
-  // Resolve org ID once
+  // Resolve organization ID for currently logged-in diagnostics account
   useEffect(() => {
     if (!profile?.id) return;
     supabase
@@ -32,38 +32,65 @@ export function DiagnosticsPatients() {
       .select('id')
       .eq('profile_id', profile.id)
       .maybeSingle()
-      .then(({ data }) => setOrgId(data?.id ?? null));
+      .then(({ data }) => {
+        if (data?.id) setOrgId(data.id);
+      });
   }, [profile?.id]);
 
-  // Fetch relationships for the current search result set
+  // Fetch relationships specifically belonging to THIS organization
   const fetchRelationships = useCallback(async (patientIds) => {
-    if (!patientIds.length || !profile?.id) return;
+    if (!patientIds || !patientIds.length || !profile?.id) return;
     setRelLoading(true);
     try {
-      const orClause = orgId
-        ? `provider_profile_id.eq.${profile.id},organization_id.eq.${orgId}`
-        : `provider_profile_id.eq.${profile.id}`;
+      // Ensure we have the current organization ID
+      let currentOrgId = orgId;
+      if (!currentOrgId && (profile.role === 'diagnostics' || profile.role === 'hospital')) {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+        currentOrgId = orgData?.id || null;
+        if (currentOrgId) setOrgId(currentOrgId);
+      }
 
-      const { data } = await supabase
+      let queryBuilder = supabase
         .from('patient_provider_relationships')
-        .select('id, patient_profile_id, status')
-        .in('patient_profile_id', patientIds)
-        .or(orClause)
-        .order('created_at', { ascending: false });
+        .select('id, patient_profile_id, status, organization_id, provider_profile_id')
+        .in('patient_profile_id', patientIds);
+
+      // Filter by organization_id if available, otherwise by provider_profile_id
+      if (currentOrgId) {
+        queryBuilder = queryBuilder.or(`organization_id.eq.${currentOrgId},provider_profile_id.eq.${profile.id}`);
+      } else {
+        queryBuilder = queryBuilder.eq('provider_profile_id', profile.id);
+      }
+
+      const { data, error } = await queryBuilder.order('created_at', { ascending: false });
+      if (error) {
+        console.warn('[DiagnosticsPatients] fetchRelationships warning:', error.message);
+      }
 
       const map = {};
-      const rank = { active: 3, pending: 2, revoked: 1 };
+      const rank = { active: 3, pending: 2, revoked: 1, expired: 0 };
       (data || []).forEach((rel) => {
+        // Enforce strict organization scoping: ignore relationships of other orgs
+        const belongsToThisOrg = currentOrgId && rel.organization_id === currentOrgId;
+        const belongsToThisProvider = rel.provider_profile_id === profile.id;
+        if (!belongsToThisOrg && !belongsToThisProvider) return;
+
         const prev = map[rel.patient_profile_id];
         if (!prev || (rank[rel.status] ?? 0) > (rank[prev.status] ?? 0)) {
           map[rel.patient_profile_id] = { id: rel.id, status: rel.status };
         }
       });
       setRelMap(map);
+    } catch (err) {
+      console.warn('[DiagnosticsPatients] fetchRelationships error:', err);
     } finally {
       setRelLoading(false);
     }
-  }, [profile?.id, orgId]);
+  }, [profile?.id, profile?.role, orgId]);
 
   useEffect(() => {
     if (results.length > 0) {
@@ -76,8 +103,15 @@ export function DiagnosticsPatients() {
   const handleRequestSent = (patientId, status) => {
     setRelMap((prev) => ({
       ...prev,
-      [patientId]: { id: prev[patientId]?.id, status: status === 'already_active' ? 'active' : 'pending' },
+      [patientId]: {
+        id: prev[patientId]?.id,
+        status: status === 'already_active' ? 'active' : 'pending',
+      },
     }));
+  };
+
+  const handleUploadReport = (patient) => {
+    navigate(`/diagnostics/upload-report?patientId=${encodeURIComponent(patient.id)}`);
   };
 
   return (
@@ -86,7 +120,7 @@ export function DiagnosticsPatients() {
         <div>
           <h1 className="h2" style={{ margin: 0 }}>Patient Directory &amp; Test Linking</h1>
           <p className="body-sm text-muted" style={{ margin: '4px 0 0 0' }}>
-            Search patients before uploading lab reports. Patient consent is required to link reports.
+            Search patients by name, Health ID, or phone. Patient consent is required before linking lab reports.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
@@ -197,17 +231,33 @@ export function DiagnosticsPatients() {
                       </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         {status === 'active' ? (
-                          <Link
-                            to={`/diagnostics/reports/new?patientId=${p.id}`}
-                            className="btn btn-secondary btn-sm"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleUploadReport(p)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                           >
                             <Upload size={14} /> Upload Report
-                          </Link>
+                          </button>
                         ) : status === 'pending' ? (
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            disabled
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              color: 'var(--color-warning)',
+                              borderColor: 'var(--color-warning)',
+                              background: 'var(--color-warning-bg)',
+                              opacity: 0.9,
+                              cursor: 'not-allowed',
+                              fontWeight: 600,
+                            }}
+                          >
                             <Clock size={14} /> Awaiting Patient Approval
-                          </div>
+                          </button>
                         ) : status === 'revoked' ? (
                           <button
                             type="button"
@@ -215,7 +265,7 @@ export function DiagnosticsPatients() {
                             onClick={() => setRequestTarget(p)}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                           >
-                            <ShieldX size={13} /> Request Access Again
+                            <ShieldX size={14} /> Request Access Again
                           </button>
                         ) : (
                           <button
@@ -224,7 +274,7 @@ export function DiagnosticsPatients() {
                             onClick={() => setRequestTarget(p)}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                           >
-                            <ShieldCheck size={13} /> Request Access
+                            <ShieldCheck size={14} /> Request Access
                           </button>
                         )}
                       </td>
@@ -242,12 +292,16 @@ export function DiagnosticsPatients() {
         onClose={() => setShowCreatePatient(false)}
         onPatientCreated={(patient) => {
           setShowCreatePatient(false);
-          if (patient?.id) navigate(`/diagnostics/reports/new?patientId=${patient.id}`);
+          if (patient?.id) {
+            navigate(`/diagnostics/upload-report?patientId=${encodeURIComponent(patient.id)}`);
+          }
         }}
         onDuplicateSelected={(patient) => {
           setShowCreatePatient(false);
           const targetId = patient?.profileId || patient?.id;
-          if (targetId) navigate(`/diagnostics/reports/new?patientId=${targetId}`);
+          if (targetId) {
+            navigate(`/diagnostics/upload-report?patientId=${encodeURIComponent(targetId)}`);
+          }
         }}
       />
 

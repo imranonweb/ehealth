@@ -3,14 +3,12 @@
  * as a coloured badge with contextual label.
  *
  * Props:
- *   status — 'active' | 'pending' | 'revoked' | null | undefined
+ *   status — 'active' | 'pending' | 'revoked' | 'none' | null | undefined
  */
 export function AccessStatusBadge({ status }) {
-  if (!status) return null;
-
   const config = {
     active: {
-      label: 'ACCESS GRANTED',
+      label: '✓ ACCESS GRANTED',
       style: {
         background: 'var(--color-success-bg)',
         color: 'var(--color-success)',
@@ -18,7 +16,7 @@ export function AccessStatusBadge({ status }) {
       },
     },
     pending: {
-      label: 'AWAITING APPROVAL',
+      label: '⏳ AWAITING APPROVAL',
       style: {
         background: 'var(--color-warning-bg)',
         color: 'var(--color-warning)',
@@ -35,22 +33,27 @@ export function AccessStatusBadge({ status }) {
     },
   };
 
-  const { label, style } = config[status] ?? {
-    label: status.toUpperCase(),
-    style: { background: 'var(--bg-surface-muted)', color: 'var(--text-muted)', border: '1px solid transparent' },
+  const current = status && config[status] ? config[status] : {
+    label: 'NO ACCESS',
+    style: {
+      background: 'var(--bg-surface-muted)',
+      color: 'var(--text-muted)',
+      border: '1px solid var(--border-default)',
+    },
   };
 
   return (
     <span style={{
-      ...style,
+      ...current.style,
       display: 'inline-block',
       fontSize: '0.6875rem',
       fontWeight: 700,
       letterSpacing: '0.04em',
       padding: '2px 8px',
       borderRadius: 'var(--radius-xs)',
+      whiteSpace: 'nowrap',
     }}>
-      {label}
+      {current.label}
     </span>
   );
 }

@@ -76,7 +76,7 @@ export const roleConfig = {
     ],
     routes: [
       '/diagnostics', '/diagnostics/patients', '/diagnostics/reports',
-      '/diagnostics/reports/new', '/diagnostics/profile',
+      '/diagnostics/reports/new', '/diagnostics/upload-report', '/diagnostics/profile',
     ],
     fab: null,
   },

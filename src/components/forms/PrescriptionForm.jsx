@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Pill, Save, Loader2, FileText, Calendar, Building2, Upload, AlertCircle } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { MedicationRows } from './MedicationRows';
@@ -12,11 +12,12 @@ import { useToast } from '../../contexts/ToastContext';
 
 export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, initialPatient, onSuccess, redirectPath = '/doctor/prescriptions' }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const urlPatientId = searchParams.get('patientId');
   const { success, error: toastError } = useToast();
 
-  const [selectedPatient, setSelectedPatient] = useState(initialPatient || null);
+  const [selectedPatient, setSelectedPatient] = useState(location.state?.patient || initialPatient || null);
   const [loadingPatient, setLoadingPatient] = useState(false);
   const [diagnosis, setDiagnosis] = useState('');
   const [prescriptionDate, setPrescriptionDate] = useState(new Date().toISOString().split('T')[0]);

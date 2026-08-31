@@ -52,6 +52,7 @@ AS $$
 DECLARE
   v_provider_id  UUID;
   v_role         user_role;
+  v_org_id       UUID;
   v_existing_id  UUID;
   v_existing_status TEXT;
 BEGIN
@@ -75,13 +76,17 @@ BEGIN
     RAISE EXCEPTION 'Patient not found: %', p_patient_id;
   END IF;
 
-  -- ── 3. Check for existing relationship ────────────────────────────
+  -- ── 3. Resolve organization ID for organization roles ──────────────
+  v_org_id := COALESCE(p_org_id, public.get_my_organization_id());
+
+  -- ── 4. Check for existing relationship ────────────────────────────
   SELECT id, status::TEXT INTO v_existing_id, v_existing_status
   FROM   public.patient_provider_relationships
   WHERE  patient_profile_id = p_patient_id
     AND  (
-           provider_profile_id = v_provider_id
-           OR (p_org_id IS NOT NULL AND organization_id = p_org_id)
+           (v_org_id IS NOT NULL AND organization_id = v_org_id)
+           OR (v_org_id IS NULL AND provider_profile_id = v_provider_id)
+           OR provider_profile_id = v_provider_id
          )
   ORDER BY
     -- Prioritise: active > pending > revoked
@@ -109,7 +114,7 @@ BEGIN
     -- status = 'revoked': fall through to create a fresh pending request
   END IF;
 
-  -- ── 4. Insert new PENDING relationship ────────────────────────────
+  -- ── 5. Insert new PENDING relationship ────────────────────────────
   INSERT INTO public.patient_provider_relationships (
     patient_profile_id,
     provider_profile_id,
@@ -122,7 +127,7 @@ BEGIN
     p_patient_id,
     v_provider_id,
     v_role,
-    p_org_id,
+    v_org_id,
     'pending',
     v_provider_id,
     p_note

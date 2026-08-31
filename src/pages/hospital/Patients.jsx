@@ -17,14 +17,14 @@ export function HospitalPatients() {
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [orgId, setOrgId] = useState(null);
 
-  // Map of patient profile UUID → relationship { id, status }
+  // Map of patient profile UUID -> relationship { id, status }
   const [relMap, setRelMap] = useState({});
   const [relLoading, setRelLoading] = useState(false);
 
   // Selected patient for access request modal
   const [requestTarget, setRequestTarget] = useState(null);
 
-  // Resolve org ID once
+  // Resolve org ID
   useEffect(() => {
     if (!profile?.id) return;
     supabase
@@ -32,39 +32,63 @@ export function HospitalPatients() {
       .select('id')
       .eq('profile_id', profile.id)
       .maybeSingle()
-      .then(({ data }) => setOrgId(data?.id ?? null));
+      .then(({ data }) => {
+        if (data?.id) setOrgId(data.id);
+      });
   }, [profile?.id]);
 
   // Fetch relationships for the current search result set
   const fetchRelationships = useCallback(async (patientIds) => {
-    if (!patientIds.length || !profile?.id) return;
+    if (!patientIds || !patientIds.length || !profile?.id) return;
     setRelLoading(true);
     try {
-      const orClause = orgId
-        ? `provider_profile_id.eq.${profile.id},organization_id.eq.${orgId}`
-        : `provider_profile_id.eq.${profile.id}`;
+      let currentOrgId = orgId;
+      if (!currentOrgId && (profile.role === 'hospital' || profile.role === 'diagnostics')) {
+        const { data: orgData } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('profile_id', profile.id)
+          .maybeSingle();
+        currentOrgId = orgData?.id || null;
+        if (currentOrgId) setOrgId(currentOrgId);
+      }
 
-      const { data } = await supabase
+      let queryBuilder = supabase
         .from('patient_provider_relationships')
-        .select('id, patient_profile_id, status')
-        .in('patient_profile_id', patientIds)
-        .or(orClause)
-        .order('created_at', { ascending: false });
+        .select('id, patient_profile_id, status, organization_id, provider_profile_id')
+        .in('patient_profile_id', patientIds);
+
+      if (currentOrgId) {
+        queryBuilder = queryBuilder.or(`organization_id.eq.${currentOrgId},provider_profile_id.eq.${profile.id}`);
+      } else {
+        queryBuilder = queryBuilder.eq('provider_profile_id', profile.id);
+      }
+
+      const { data, error } = await queryBuilder.order('created_at', { ascending: false });
+      if (error) {
+        console.warn('[HospitalPatients] fetchRelationships warning:', error.message);
+      }
 
       const map = {};
+      const rank = { active: 3, pending: 2, revoked: 1, expired: 0 };
       (data || []).forEach((rel) => {
-        // Keep the most-privileged status per patient
+        // Enforce strict organization / provider scoping
+        const belongsToThisOrg = currentOrgId && rel.organization_id === currentOrgId;
+        const belongsToThisProvider = rel.provider_profile_id === profile.id;
+        if (!belongsToThisOrg && !belongsToThisProvider) return;
+
         const prev = map[rel.patient_profile_id];
-        const rank = { active: 3, pending: 2, revoked: 1 };
         if (!prev || (rank[rel.status] ?? 0) > (rank[prev.status] ?? 0)) {
           map[rel.patient_profile_id] = { id: rel.id, status: rel.status };
         }
       });
       setRelMap(map);
+    } catch (err) {
+      console.warn('[HospitalPatients] fetchRelationships error:', err);
     } finally {
       setRelLoading(false);
     }
-  }, [profile?.id, orgId]);
+  }, [profile?.id, profile?.role, orgId]);
 
   useEffect(() => {
     if (results.length > 0) {
@@ -77,7 +101,10 @@ export function HospitalPatients() {
   const handleRequestSent = (patientId, status) => {
     setRelMap((prev) => ({
       ...prev,
-      [patientId]: { id: prev[patientId]?.id, status: status === 'already_active' ? 'active' : 'pending' },
+      [patientId]: {
+        id: prev[patientId]?.id,
+        status: status === 'already_active' ? 'active' : 'pending',
+      },
     }));
   };
 
@@ -87,7 +114,7 @@ export function HospitalPatients() {
         <div>
           <h1 className="page-title">Hospital Patient Lookup</h1>
           <p className="page-sub">
-            Search patients by name, Health ID, or phone. Request consent to view medical history.
+            Search patients by name, Health ID, or phone. Request consent to view complete medical history.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
@@ -201,16 +228,25 @@ export function HospitalPatients() {
                         <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                           {status === 'active' ? (
                             <>
-                              <Link to={`/hospital/visits/new?patientId=${p.id}`} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <Link
+                                to={`/hospital/visits/new?patientId=${p.id}`}
+                                state={{ patient: p }}
+                                className="btn btn-primary btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                              >
                                 <BedDouble size={13} /> New Visit
                               </Link>
-                              <Link to={`/hospital/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <Link
+                                to={`/hospital/patients/${p.id}`}
+                                className="btn btn-secondary btn-sm"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                              >
                                 View Medical File <ChevronRight size={14} />
                               </Link>
                             </>
                           ) : status === 'pending' ? (
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
-                              <Clock size={14} /> Awaiting Patient Approval
+                              <Clock size={14} /> Awaiting Approval
                             </div>
                           ) : status === 'revoked' ? (
                             <button

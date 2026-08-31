@@ -128,6 +128,7 @@ export default function App() {
                 <Route path="patients" element={<DiagnosticsPatients />} />
                 <Route path="reports" element={<DiagnosticsReports />} />
                 <Route path="reports/new" element={<DiagnosticsNewReport />} />
+                <Route path="upload-report" element={<DiagnosticsNewReport />} />
                 <Route path="profile" element={<DiagnosticsProfile />} />
               </Route>
 

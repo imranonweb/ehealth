@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { BedDouble, Save, Loader2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { hospitalService } from '../../services/hospitalService';
@@ -8,11 +8,12 @@ import { useToast } from '../../contexts/ToastContext';
 
 export function HospitalVisitForm({ onSuccess, redirectPath = '/hospital/visits' }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const urlPatientId = searchParams.get('patientId');
   const { success, error: toastError } = useToast();
 
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(location.state?.patient || null);
   const [loadingPatient, setLoadingPatient] = useState(false);
   const [visitType, setVisitType] = useState('outpatient');
   const [department, setDepartment] = useState('General Medicine');
