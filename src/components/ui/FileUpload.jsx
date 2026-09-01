@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { AlertCircle, Upload, X, FileText, Image as ImageIcon, CheckCircle } from 'lucide-react';
-import { formatFileSize } from '../../lib/utils';
-import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '../../lib/validators';
+import { formatFileSize, ALLOWED_FILE_TYPES, ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE } from '../../lib/validators';
 
 export function FileUpload({
   onFileSelect,
@@ -11,7 +10,7 @@ export function FileUpload({
   progress = 0,
   error = null,
   success = false,
-  accept = '.pdf,.jpg,.jpeg,.png',
+  accept = '.pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp',
   className = '',
 }) {
   const [dragOver, setDragOver] = useState(false);
@@ -33,8 +32,12 @@ export function FileUpload({
   };
 
   const handleFile = (f) => {
-    if (!ALLOWED_FILE_TYPES.includes(f.type)) {
-      setValidationError('Choose a PDF, JPG, or PNG file.');
+    const ext = '.' + (f.name?.split('.').pop() || '').toLowerCase();
+    const isTypeAllowed = ALLOWED_FILE_TYPES.includes(f.type);
+    const isExtAllowed = ALLOWED_FILE_EXTENSIONS.includes(ext);
+
+    if (!isTypeAllowed && !isExtAllowed) {
+      setValidationError('Choose a PDF, JPG, PNG, or WEBP file.');
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
@@ -45,7 +48,7 @@ export function FileUpload({
     onFileSelect?.(f);
   };
 
-  const isImage = file && file.type?.startsWith('image/');
+  const isImage = file && (file.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.name));
   const FileIcon = isImage ? ImageIcon : FileText;
 
   return (
@@ -66,7 +69,7 @@ export function FileUpload({
           <p className="file-upload-text">
             <strong>Click to upload</strong> or drag and drop
           </p>
-          <p className="file-upload-hint">PDF, JPG, or PNG (max 10 MB)</p>
+          <p className="file-upload-hint">PDF, JPG, PNG, or WEBP (max 10 MB)</p>
           <input
             ref={inputRef}
             type="file"
