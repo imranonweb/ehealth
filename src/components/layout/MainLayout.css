@@ -1,28 +1,38 @@
-/* Main layout wrapper */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN APP LAYOUT — fluid shell for all authenticated portals
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Outer shell: sidebar on the left (desktop), full-width on mobile */
 .main-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   background-color: var(--bg-app);
   padding-left: var(--sidebar-width);
   transition: padding-left var(--transition-normal);
-  width: 100%;
 }
 
+/* Body area that sits to the right of the sidebar */
 .main-body {
   flex: 1;
+  min-width: 0;         /* prevents flex child overflow */
   display: flex;
   flex-direction: column;
-  min-width: 0;
   background-color: var(--bg-app);
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
 }
 
+/* On tablets / phones the sidebar slides in as a drawer — no body shift */
 @media (max-width: 1024px) {
   .main-layout {
     padding-left: 0;
   }
 }
 
+/* Scrollable content area */
 .main-scroll {
   flex: 1;
   overflow-y: auto;
@@ -31,6 +41,7 @@
   flex-direction: column;
 }
 
+/* Content wrapper — fills available width; each page/dashboard controls its own max-width */
 .main-content {
   flex: 1;
   width: 100%;

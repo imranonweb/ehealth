@@ -38,9 +38,11 @@
   }
 }
 
-/* Global Search */
+/* Global Search — flex so it fills available space between menu-btn and actions */
 .navbar-search {
   position: relative;
+  flex: 1;
+  min-width: 0;
   max-width: 440px;
   width: 100%;
 }
@@ -190,3 +192,7 @@
   background-color: var(--color-danger-bg);
 }
 
+/* Fluid: hide search on very small screens to prevent overflow */
+@media (max-width: 480px) {
+  .navbar-search { display: none; }
+}

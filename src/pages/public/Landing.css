@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   E-HEALTH PUBLIC HOMEPAGE STYLES & ANIMATIONS
+   E-HEALTH PUBLIC HOMEPAGE — FLUID RESPONSIVE STYLES
+   All spacing uses clamp() so the page breathes from 320 px to 1600+ px.
+   All colours come from design-system tokens so dark-mode works for free.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .landing-page {
@@ -9,9 +11,10 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
-/* ── Animations ──────────────────────────────────────────────────────── */
+/* ── Animations ──────────────────────────────────────────────────────────── */
 .animate-fade-in {
   animation: heroFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -26,30 +29,31 @@
 
 @keyframes heroFadeIn {
   from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
 @keyframes heroSlideUp {
   from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
-/* ── Hero Section ─────────────────────────────────────────────────────── */
+/* ── Hero Section ────────────────────────────────────────────────────────── */
 .hero-section {
-  padding: clamp(60px, 8vw, 100px) 0 clamp(48px, 6vw, 76px);
+  padding: clamp(48px, 8vw, 104px) 0 clamp(40px, 6vw, 80px);
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
   position: relative;
   overflow: hidden;
+  width: 100%;
 }
 
 .hero-section::before {
   content: '';
   position: absolute;
-  top: -120px;
+  top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 720px;
+  width: min(720px, 100vw);
   height: 380px;
   background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.14), transparent 70%);
   pointer-events: none;
@@ -73,34 +77,32 @@
 }
 
 .hero-title {
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-size: clamp(1.875rem, 5vw, 3.5rem);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.12;
   letter-spacing: -0.035em;
   color: var(--text-primary);
   position: relative;
   z-index: 1;
-  max-width: 840px;
+  max-width: min(840px, 100%);
   margin: 0 auto 24px;
 }
 
-.text-accent {
-  color: var(--accent);
-}
+.text-accent { color: var(--accent); }
 
 .hero-subtitle {
-  font-size: clamp(1rem, 2vw, 1.1875rem);
+  font-size: clamp(0.9375rem, 2vw, 1.1875rem);
   color: var(--text-secondary);
   line-height: 1.6;
   position: relative;
   z-index: 1;
-  max-width: 660px;
+  max-width: min(660px, 100%);
   margin: 0 auto 36px;
 }
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
   position: relative;
@@ -109,10 +111,10 @@
 
 .hero-metrics {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 48px;
+  margin-top: clamp(32px, 5vw, 52px);
   position: relative;
   z-index: 1;
 }
@@ -121,27 +123,28 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-full);
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-secondary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-xs);
 }
 
-/* ── Trust Strip ──────────────────────────────────────────────────────── */
+/* ── Trust Strip ─────────────────────────────────────────────────────────── */
 .trust-strip {
   background-color: var(--bg-surface-elevated);
   border-bottom: 1px solid var(--border-default);
-  padding: 28px 0;
+  padding: clamp(20px, 3vw, 32px) 0;
+  width: 100%;
 }
 
 .trust-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
+  gap: 16px;
 }
 
 .trust-cell {
@@ -153,9 +156,7 @@
   transition: background-color var(--transition-fast);
 }
 
-.trust-cell:hover {
-  background-color: var(--accent-subtle);
-}
+.trust-cell:hover { background-color: var(--accent-subtle); }
 
 .trust-cell strong {
   display: block;
@@ -174,53 +175,50 @@
 }
 
 @media (max-width: 1024px) {
-  .trust-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
+  .trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 }
-@media (max-width: 640px) {
-  .trust-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+@media (max-width: 600px) {
+  .trust-grid { grid-template-columns: 1fr; gap: 8px; }
 }
 
-/* ── Section Heading Helper ───────────────────────────────────────────── */
+/* ── Section Heading ─────────────────────────────────────────────────────── */
 .section-heading {
   text-align: center;
-  max-width: 680px;
-  margin: 0 auto 48px;
+  max-width: min(680px, 100%);
+  margin: 0 auto clamp(32px, 5vw, 52px);
 }
 
-/* ── How It Works Section ─────────────────────────────────────────────── */
+/* ── How It Works ────────────────────────────────────────────────────────── */
 .how-it-works-section {
-  padding: clamp(60px, 8vw, 92px) 0;
+  padding: clamp(48px, 7vw, 96px) 0;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
+  width: 100%;
 }
 
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: clamp(16px, 2.5vw, 24px);
 }
 
 .step-card {
   background: var(--bg-surface-muted);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: clamp(24px, 4vw, 32px) clamp(20px, 3vw, 24px);
+  padding: clamp(20px, 3.5vw, 32px) clamp(16px, 2.5vw, 24px);
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
 }
 
 .step-card:hover {
   border-color: var(--accent);
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
 }
 
 .step-number {
@@ -244,48 +242,46 @@
   margin-bottom: 16px;
 }
 
-@media (max-width: 900px) {
-  .steps-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+@media (max-width: 860px) {
+  .steps-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 
-/* ── Roles / Specialized Portals ──────────────────────────────────────── */
+/* ── Role Portals ────────────────────────────────────────────────────────── */
 .workflows-section {
-  padding: clamp(60px, 8vw, 92px) 0;
+  padding: clamp(48px, 7vw, 96px) 0;
   background-color: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
+  width: 100%;
 }
 
 .roles-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
+  gap: clamp(14px, 2vw, 24px);
 }
 
 .role-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: 28px 24px;
+  padding: clamp(20px, 3vw, 28px) clamp(16px, 2.5vw, 24px);
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-xs);
 }
 
 .role-card:hover {
   border-color: var(--accent);
   transform: translateY(-5px);
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
 }
 
 .role-avatar-badge {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .role-avatar-emoji {
@@ -304,13 +300,13 @@
   border: 1px solid var(--border-default);
 }
 
-.role-avatar-badge.doctor .role-badge-pill { background: var(--color-blue-bg); color: var(--color-blue); border-color: rgba(37, 99, 235, 0.2); }
-.role-avatar-badge.patient .role-badge-pill { background: var(--accent-subtle); color: var(--accent); border-color: rgba(20, 184, 166, 0.2); }
-.role-avatar-badge.hospital .role-badge-pill { background: var(--color-teal-bg); color: var(--color-teal); border-color: rgba(13, 148, 136, 0.2); }
-.role-avatar-badge.diagnostics .role-badge-pill { background: var(--color-purple-bg); color: var(--color-purple); border-color: rgba(124, 58, 237, 0.2); }
+.role-avatar-badge.doctor     .role-badge-pill { background: var(--color-blue-bg);   color: var(--color-blue);   border-color: rgba(37,  99,  235, 0.2); }
+.role-avatar-badge.patient    .role-badge-pill { background: var(--accent-subtle);   color: var(--accent);       border-color: rgba(20,  184, 166, 0.2); }
+.role-avatar-badge.hospital   .role-badge-pill { background: var(--color-teal-bg);   color: var(--color-teal);   border-color: rgba(13,  148, 136, 0.2); }
+.role-avatar-badge.diagnostics .role-badge-pill { background: var(--color-purple-bg); color: var(--color-purple); border-color: rgba(124, 58,  237, 0.2); }
 
 .role-title {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 10px;
@@ -320,7 +316,7 @@
   font-size: 0.84375rem;
   color: var(--text-secondary);
   line-height: 1.55;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .role-features {
@@ -329,49 +325,45 @@
   gap: 6px;
   font-size: 0.78125rem;
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 1200px) {
-  .roles-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-  }
+@media (max-width: 1100px) {
+  .roles-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 }
-@media (max-width: 640px) {
-  .roles-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+@media (max-width: 600px) {
+  .roles-grid { grid-template-columns: 1fr; gap: 12px; }
 }
 
-/* ── Security Architecture Section ─────────────────────────────────────── */
+/* ── Security Architecture ───────────────────────────────────────────────── */
 .security-section {
-  padding: clamp(50px, 6vw, 76px) 0;
+  padding: clamp(40px, 6vw, 80px) 0;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-default);
+  width: 100%;
 }
 
 .security-box {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: clamp(32px, 5vw, 48px);
+  padding: clamp(24px, 4.5vw, 48px);
 }
 
 .security-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--border-default);
+  flex-wrap: wrap;
 }
 
 .security-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: clamp(16px, 3vw, 28px);
 }
 
 .security-card {
@@ -395,33 +387,27 @@
 }
 
 @media (max-width: 840px) {
-  .security-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .security-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .security-grid   { grid-template-columns: 1fr; gap: 18px; }
+  .security-header { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
-/* ── Contact Strip Section (PART 8: Email Support Only) ───────────────── */
+/* ── Contact Strip ───────────────────────────────────────────────────────── */
 .contact-strip-section {
-  padding: 40px 0;
+  padding: clamp(28px, 4vw, 48px) 0;
   background-color: var(--bg-app);
   border-bottom: 1px solid var(--border-default);
+  width: 100%;
 }
 
 .contact-strip-box {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: 24px 32px;
+  padding: clamp(16px, 3vw, 28px) clamp(16px, 3.5vw, 36px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -436,38 +422,40 @@
   flex-shrink: 0;
 }
 
-/* ── Call To Action (CTA) Section ─────────────────────────────────────── */
+/* ── CTA Section ─────────────────────────────────────────────────────────── */
 .cta-section {
-  padding: clamp(60px, 8vw, 92px) 0;
+  padding: clamp(48px, 7vw, 96px) 0;
   background-color: var(--bg-surface);
+  width: 100%;
 }
 
 .cta-box {
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(37, 99, 235, 0.08));
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(37, 99, 235, 0.07));
   border: 1.5px solid var(--accent);
   border-radius: var(--radius-xl);
-  padding: clamp(36px, 6vw, 64px) clamp(24px, 5vw, 48px);
+  padding: clamp(32px, 6vw, 64px) clamp(20px, 5vw, 48px);
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
 .cta-box h2 {
-  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   letter-spacing: -0.03em;
 }
 
 .cta-box p {
-  font-size: clamp(0.9375rem, 2vw, 1.0625rem);
+  font-size: clamp(0.9rem, 2vw, 1.0625rem);
   color: var(--text-secondary);
-  max-width: 580px;
-  margin: 0 auto 32px;
+  max-width: min(580px, 100%);
+  margin: 0 auto 28px;
   line-height: 1.6;
 }
 
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-up,

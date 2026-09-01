@@ -209,15 +209,9 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--sp-6);
-  padding-right: var(--sp-6);
-}
-
-@media (max-width: 640px) {
-  .container {
-    padding-left: var(--sp-4);
-    padding-right: var(--sp-4);
-  }
+  /* Fluid side padding: 16 px on small phones → 24 px on desktop */
+  padding-left: clamp(var(--sp-4), 4vw, var(--sp-6));
+  padding-right: clamp(var(--sp-4), 4vw, var(--sp-6));
 }
 
 .dashboard-container {
@@ -225,14 +219,9 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
-  padding: var(--sp-6) var(--sp-8);
+  /* Vertical: 16–32 px. Horizontal: 16–32 px. Fluid all the way. */
+  padding: clamp(var(--sp-4), 3vw, var(--sp-8)) clamp(var(--sp-4), 4vw, var(--sp-8));
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: var(--sp-4);
-  }
 }
 
 .page-header {
@@ -264,28 +253,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 1024px) {
-  .dashboard-container {
-    padding: var(--sp-4) var(--sp-5);
-  }
-  .grid-4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .grid-3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
-  .dashboard-container {
-    padding: var(--sp-4);
-  }
-  .grid-4, .grid-3, .grid-2 {
-    grid-template-columns: 1fr;
-  }
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; }
 }
 
 /* ── Cards & Surfaces ────────────────────────────────────────────────────── */

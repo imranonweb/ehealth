@@ -1,14 +1,20 @@
-/* Auth Layout */
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUTH LAYOUT — fluid, dark-mode aware
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Outer shell */
 .auth-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
+  width: 100%;
 }
 
-/* Left Brand Panel */
+/* ── Left Brand Panel ─────────────────────────────────────────────────────── */
 .auth-panel {
   display: none;
-  width: 44%;
+  width: clamp(320px, 42%, 520px);
   background: #0B1120;
   border-right: 1px solid #253044;
   position: relative;
@@ -17,15 +23,13 @@
 }
 
 @media (min-width: 1024px) {
-  .auth-panel {
-    display: flex;
-  }
+  .auth-panel { display: flex; }
 }
 
 .auth-panel-inner {
   position: relative;
   z-index: 1;
-  padding: 48px;
+  padding: clamp(32px, 5vw, 52px);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -36,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 48px;
+  margin-bottom: clamp(32px, 5vw, 52px);
 }
 
 .auth-logo-icon {
@@ -48,6 +52,14 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  flex-shrink: 0;
+}
+
+/* Panel logo image */
+.auth-panel-brand img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
 .auth-logo-text {
@@ -65,12 +77,12 @@
 }
 
 .auth-panel-headline h2 {
-  font-size: 2.125rem;
+  font-size: clamp(1.5rem, 3.5vw, 2.125rem);
   font-weight: 800;
   color: #F8FAFC;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .auth-panel-headline p {
@@ -89,16 +101,14 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 16px;
+  padding: 13px 15px;
   background: #111827;
   border: 1px solid #253044;
   border-radius: var(--radius-lg);
   transition: border-color var(--transition-fast);
 }
 
-.auth-highlight-item:hover {
-  border-color: #334155;
-}
+.auth-highlight-item:hover { border-color: #334155; }
 
 .auth-highlight-icon {
   width: 36px;
@@ -125,14 +135,15 @@
   margin-top: 2px;
 }
 
-/* Right Form Area */
+/* ── Right Form Area ──────────────────────────────────────────────────────── */
 .auth-right {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
+  padding: clamp(24px, 5vw, 56px) clamp(16px, 5vw, 40px);
   overflow-y: auto;
   position: relative;
   background-color: var(--bg-app);
@@ -140,12 +151,12 @@
 
 .auth-top-actions {
   position: absolute;
-  top: 24px;
-  right: 24px;
+  top: 20px;
+  right: 20px;
 }
 
 .auth-form-wrap {
   width: 100%;
-  max-width: 440px;
+  max-width: min(440px, 100%);
   animation: fadeIn 0.3s ease both;
 }
