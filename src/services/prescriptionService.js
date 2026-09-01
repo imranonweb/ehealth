@@ -28,7 +28,17 @@ export const prescriptionService = {
     }
 
     // 1. Ensure provider-patient relationship before insert so RLS check succeeds
-    await ensureClinicalRelationship(prescriptionData.patient_id, hospitalId);
+    try {
+      await supabase.rpc('ensure_clinical_relationship', {
+        p_patient_id: prescriptionData.patient_id,
+        p_org_id: hospitalId || null,
+      });
+    } catch (rpcEx) {
+      await supabase.rpc('create_provider_relationship', {
+        p_patient_id: prescriptionData.patient_id,
+        p_org_id: hospitalId || null,
+      }).catch(() => {});
+    }
 
     const payload = {
       patient_id: prescriptionData.patient_id,
@@ -82,11 +92,16 @@ export const prescriptionService = {
    * Get prescriptions created by the current doctor.
    */
   async getMyPrescriptions({ page = 1, perPage = 20 } = {}) {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) return { prescriptions: [], total: 0 };
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('id')
-      .eq('auth_user_id', (await supabase.auth.getUser()).data.user.id)
+      .eq('auth_user_id', authData.user.id)
       .single();
+
+    if (!profile) return { prescriptions: [], total: 0 };
 
     const { data, error, count } = await supabase
       .from('prescriptions')
@@ -95,7 +110,7 @@ export const prescriptionService = {
         patient:patient_id(id, full_name, email),
         hospital:hospital_id(id, name)
       `, { count: 'exact' })
-      .eq('doctor_id', profile.id)
+      .or(`doctor_id.eq.${profile.id},created_by.eq.${profile.id}`)
       .order('prescription_date', { ascending: false })
       .range((page - 1) * perPage, page * perPage - 1);
 
@@ -130,9 +145,9 @@ export const prescriptionService = {
       .from('prescriptions')
       .select(`
         *,
-        patient:patient_id(id, full_name, email),
         doctor:doctor_id(id, full_name, email),
         hospital:hospital_id(id, name),
+        patient:patient_id(id, full_name, email, date_of_birth, gender),
         ai_extraction:prescription_ai_extractions(*)
       `)
       .eq('id', id)
@@ -142,31 +157,3 @@ export const prescriptionService = {
     return data;
   },
 };
-
-/**
- * Ensures an active provider-patient relationship exists for a legitimate clinical action.
- *
- * Uses the ensure_clinical_relationship SECURITY DEFINER RPC (or fallback create_provider_relationship)
- * to verify identity and ensure the relationship before clinical records are saved.
- */
-async function ensureClinicalRelationship(patientId, orgId = null) {
-  try {
-    const { error } = await supabase.rpc('ensure_clinical_relationship', {
-      p_patient_id: patientId,
-      p_org_id: orgId || null,
-    });
-
-    if (error) {
-      // Fallback to create_provider_relationship if 008 RPC is not yet deployed
-      const { error: fallbackErr } = await supabase.rpc('create_provider_relationship', {
-        p_patient_id: patientId,
-        p_org_id: orgId || null,
-      });
-      if (fallbackErr) {
-        console.warn('[prescriptionService] ensureClinicalRelationship fallback warning:', fallbackErr.message);
-      }
-    }
-  } catch (err) {
-    console.warn('[prescriptionService] ensureClinicalRelationship exception:', err);
-  }
-}

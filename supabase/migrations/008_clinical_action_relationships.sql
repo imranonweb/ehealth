@@ -153,3 +153,19 @@ GRANT EXECUTE ON FUNCTION public.ensure_clinical_relationship(UUID, UUID) TO aut
 UPDATE storage.buckets
 SET allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 WHERE id = 'medical-records';
+
+
+-- ───────────────────────────────────────────────────────────
+-- 3. TIMELINE & REPORT RLS ENHANCEMENTS
+-- ───────────────────────────────────────────────────────────
+-- Ensure providers can always view timeline entries they authored
+DROP POLICY IF EXISTS "timeline_select_creator" ON medical_records;
+CREATE POLICY "timeline_select_creator"
+  ON medical_records FOR SELECT
+  USING (created_by = get_my_profile_id());
+
+-- Ensure diagnostics staff can always view reports created by their organization
+DROP POLICY IF EXISTS "reports_select_creator" ON diagnostic_reports;
+CREATE POLICY "reports_select_creator"
+  ON diagnostic_reports FOR SELECT
+  USING (created_by = get_my_profile_id() OR diagnostics_organization_id = get_my_organization_id());
