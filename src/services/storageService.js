@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '../lib/validators';
+import { ALLOWED_FILE_TYPES, ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE } from '../lib/validators';
 
 export const storageService = {
   /**
@@ -9,15 +9,19 @@ export const storageService = {
   async uploadFile(file, patientId, category = 'general') {
     // Validate
     if (!file) throw new Error('No file provided');
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error('File must be PDF, JPG, or PNG');
+
+    const ext = (file.name?.split('.').pop() || '').toLowerCase();
+    const isTypeAllowed = ALLOWED_FILE_TYPES.includes(file.type);
+    const isExtAllowed = ALLOWED_FILE_EXTENSIONS.includes(`.${ext}`);
+
+    if (!isTypeAllowed && !isExtAllowed) {
+      throw new Error('File must be PDF, JPG, JPEG, PNG, or WEBP');
     }
     if (file.size > MAX_FILE_SIZE) {
       throw new Error('File size must be under 10 MB');
     }
 
     // Sanitize filename
-    const ext = file.name.split('.').pop();
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const path = `patients/${patientId}/${category}/${safeName}`;
 
@@ -25,7 +29,7 @@ export const storageService = {
       .from('medical-records')
       .upload(path, file, {
         cacheControl: '3600',
-        contentType: file.type,
+        contentType: file.type || 'application/octet-stream',
         upsert: false,
       });
 

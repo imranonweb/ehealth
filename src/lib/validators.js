@@ -3,7 +3,20 @@
    Security validation must ALSO happen on the server / via RLS.
    ─────────────────────────────────────────────────────────── */
 
-export const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+export const ALLOWED_FILE_TYPES = [
+  'application/pdf',
+  'application/x-pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/svg+xml',
+];
+
+export const ALLOWED_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg'];
+
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export function validateEmail(email) {
@@ -52,8 +65,13 @@ export function validateDateNotFuture(dateStr, fieldName = 'Date') {
 
 export function validateFile(file) {
   if (!file) return 'Please select a file';
-  if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-    return 'File must be PDF, JPG, or PNG';
+  
+  const ext = '.' + (file.name?.split('.').pop() || '').toLowerCase();
+  const isTypeAllowed = ALLOWED_FILE_TYPES.includes(file.type);
+  const isExtAllowed = ALLOWED_FILE_EXTENSIONS.includes(ext);
+
+  if (!isTypeAllowed && !isExtAllowed) {
+    return 'File must be a PDF or image (JPG, PNG, WEBP, etc.)';
   }
   if (file.size > MAX_FILE_SIZE) {
     return `File size must be under ${formatFileSize(MAX_FILE_SIZE)}`;
@@ -84,7 +102,8 @@ export function validateForm(fields) {
   return Object.keys(errors).length ? errors : null;
 }
 
-function formatFileSize(bytes) {
+export function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
