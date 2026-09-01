@@ -226,24 +226,23 @@ export function HospitalPatients() {
                       </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                          <Link
+                            to={`/hospital/visits/new?patientId=${p.id}`}
+                            state={{ patient: p }}
+                            className="btn btn-primary btn-sm"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <BedDouble size={13} /> New Visit
+                          </Link>
+
                           {status === 'active' ? (
-                            <>
-                              <Link
-                                to={`/hospital/visits/new?patientId=${p.id}`}
-                                state={{ patient: p }}
-                                className="btn btn-primary btn-sm"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                              >
-                                <BedDouble size={13} /> New Visit
-                              </Link>
-                              <Link
-                                to={`/hospital/patients/${p.id}`}
-                                className="btn btn-secondary btn-sm"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                              >
-                                View Medical File <ChevronRight size={14} />
-                              </Link>
-                            </>
+                            <Link
+                              to={`/hospital/patients/${p.id}`}
+                              className="btn btn-secondary btn-sm"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                              View Medical File <ChevronRight size={14} />
+                            </Link>
                           ) : status === 'pending' ? (
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
                               <Clock size={14} /> Awaiting Approval
@@ -260,7 +259,7 @@ export function HospitalPatients() {
                           ) : (
                             <button
                               type="button"
-                              className="btn btn-primary btn-sm"
+                              className="btn btn-secondary btn-sm"
                               onClick={() => setRequestTarget(p)}
                               style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                             >

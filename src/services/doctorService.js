@@ -305,19 +305,6 @@ export const doctorService = {
 
       if (!patient) return null;
 
-      // Ensure the provider-patient relationship exists now that we're loading
-      // their detail page. This handles the case where a doctor found the patient
-      // via search, selected them, and is now viewing their record for the first time.
-      // The relationship creation is best-effort and non-blocking.
-      try {
-        await supabase.rpc('create_provider_relationship', {
-          p_patient_id: patientId,
-          p_org_id: null,  // Doctors are individual providers, no org_id
-        });
-      } catch (relErr) {
-        console.warn('[doctorService] create_provider_relationship in getPatientDetail:', relErr);
-      }
-
       // 2. Fetch all accessible records for timeline and tabs
       const [recRes, prescRes, repRes, visRes] = await Promise.all([
         supabase

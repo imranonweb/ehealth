@@ -19,6 +19,9 @@ export const diagnosticsService = {
 
     if (!org) throw new Error('Organization not found for this user');
 
+    // 1. Ensure provider-patient relationship before insert
+    await ensureClinicalRelationship(reportData.patient_id, org.id);
+
     const payload = {
       ...reportData,
       diagnostics_organization_id: org.id,
@@ -33,20 +36,22 @@ export const diagnosticsService = {
 
     if (error) throw error;
 
-    // Create timeline entry
-    await supabase.from('medical_records').insert([{
-      patient_id: data.patient_id,
-      record_type: 'diagnostic_report',
-      record_reference_id: data.id,
-      record_date: data.report_date,
-      title: data.test_name,
-      summary: data.summary,
-      provider_name: reportData.doctor_name || '',
-      organization_name: org.name,
-    }]);
-
-    // Ensure relationship
-    await ensureRelationship(data.patient_id, profile.id, 'diagnostics', org.id);
+    // 2. Create timeline entry
+    try {
+      await supabase.from('medical_records').insert([{
+        patient_id: data.patient_id,
+        record_type: 'diagnostic_report',
+        record_reference_id: data.id,
+        record_date: data.report_date,
+        title: data.test_name,
+        summary: data.summary,
+        provider_name: reportData.doctor_name || '',
+        organization_name: org.name,
+        created_by: profile.id,
+      }]);
+    } catch (recErr) {
+      console.warn('[diagnosticsService] timeline index warning:', recErr);
+    }
 
     return data;
   },
@@ -137,19 +142,26 @@ export const diagnosticsService = {
 };
 
 /**
- * Ensures an active provider-patient relationship exists.
- *
- * Uses the create_provider_relationship SECURITY DEFINER RPC instead of a
- * direct INSERT with status='active', which was rejected by RLS.
+ * Ensures an active provider-patient relationship exists for diagnostic actions.
+ * Uses ensure_clinical_relationship RPC with fallback to create_provider_relationship.
  */
-async function ensureRelationship(patientId, _providerId, _providerType, orgId = null) {
-  const { error } = await supabase.rpc('create_provider_relationship', {
-    p_patient_id: patientId,
-    p_org_id: orgId || null,
-  });
+async function ensureClinicalRelationship(patientId, orgId = null) {
+  try {
+    const { error } = await supabase.rpc('ensure_clinical_relationship', {
+      p_patient_id: patientId,
+      p_org_id: orgId || null,
+    });
 
-  if (error) {
-    // Non-fatal: log but don't throw. The clinical record was already created.
-    console.warn('[diagnosticsService] create_provider_relationship error:', error.message);
+    if (error) {
+      const { error: fallbackErr } = await supabase.rpc('create_provider_relationship', {
+        p_patient_id: patientId,
+        p_org_id: orgId || null,
+      });
+      if (fallbackErr) {
+        console.warn('[diagnosticsService] ensureClinicalRelationship fallback warning:', fallbackErr.message);
+      }
+    }
+  } catch (err) {
+    console.warn('[diagnosticsService] ensureClinicalRelationship exception:', err);
   }
 }

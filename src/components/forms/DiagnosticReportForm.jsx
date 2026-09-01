@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Save, Loader2, Clock, ShieldAlert, ShieldX, ShieldCheck, X, AlertTriangle } from 'lucide-react';
+import { Save, Loader2, Clock, ShieldAlert, ShieldX, ShieldCheck, X, FileText, CheckCircle2 } from 'lucide-react';
 import { PatientSearch } from './PatientSearch';
 import { FileUpload } from '../ui/FileUpload';
 import { Button } from '../ui/Button';
@@ -52,7 +52,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
       });
   }, [profile?.id]);
 
-  // 2. Fetch patient details and verify authorization for a given patient ID
+  // 2. Fetch patient details and check authorization for a given patient ID
   const loadAndVerifyPatient = useCallback(async (patientId) => {
     if (!patientId || !profile?.id) {
       setSelectedPatient(null);
@@ -97,42 +97,27 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
       const determinedStatus = match?.status || 'none';
       setAccessStatus(determinedStatus);
 
-      // 3. Fetch patient profile if access is active or minimal identity via search
-      if (determinedStatus === 'active') {
-        const patientData = await searchService.getPatientById(patientId);
-        if (patientData) {
-          setSelectedPatient(patientData);
-        } else {
-          // Fallback via search by identifier
-          const fallback = await searchService.searchPatients(patientId, { limit: 1 });
-          setSelectedPatient(fallback?.[0] || { id: patientId, full_name: 'Patient Record' });
-        }
-      } else {
-        // If not active, retrieve minimal identity without exposing sensitive data
-        const fallback = await searchService.searchPatients(patientId, { limit: 1 });
-        setSelectedPatient(fallback?.[0] || { id: patientId, full_name: 'Patient Record' });
-      }
+      // 3. Fetch patient identity
+      const patientData = await searchService.getPatientById(patientId);
+      setSelectedPatient(patientData || null);
     } catch (err) {
       console.warn('[DiagnosticReportForm] loadAndVerifyPatient error:', err);
-      setAccessStatus('none');
     } finally {
       setLoadingPatient(false);
     }
   }, [profile?.id, profile?.role, orgId]);
 
-  // Trigger patient load & verification when urlPatientId changes
+  // Pre-populate if patientId was passed in the URL query string
   useEffect(() => {
     if (urlPatientId) {
       loadAndVerifyPatient(urlPatientId);
-    } else {
-      setSelectedPatient(null);
-      setAccessStatus(null);
     }
   }, [urlPatientId, loadAndVerifyPatient]);
 
   const handlePatientSelect = (patient) => {
     if (patient?.id) {
-      setSearchParams({ patientId: patient.id });
+      setSearchParams({ patientId: patient.id }, { replace: true });
+      loadAndVerifyPatient(patient.id);
     }
   };
 
@@ -145,17 +130,12 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPatient) {
-      toastError('Please select a patient.');
-      return;
-    }
-
-    if (accessStatus !== 'active') {
-      toastError("You do not currently have authorized access to this patient's medical record.");
+      toastError('Please select a patient before uploading a report.');
       return;
     }
 
     if (!testName.trim()) {
-      toastError('Please provide a test name.');
+      toastError('Please enter the investigation or test name.');
       return;
     }
 
@@ -207,7 +187,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
 
         {loadingPatient ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px', color: 'var(--text-muted)' }}>
-            <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Verifying patient authorization…
+            <Loader2 size={18} className="spin" /> Loading patient details…
           </div>
         ) : selectedPatient && urlPatientId ? (
           <div>
@@ -218,19 +198,13 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
               justifyContent: 'space-between',
               padding: '16px 20px',
               background: 'var(--bg-surface)',
-              border: `1.5px solid ${
-                accessStatus === 'active'
-                  ? 'var(--color-success)'
-                  : accessStatus === 'pending'
-                  ? 'var(--color-warning)'
-                  : 'var(--border-default)'
-              }`,
+              border: '1.5px solid var(--accent)',
               borderRadius: 'var(--radius-lg)',
               flexWrap: 'wrap',
               gap: 16,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div className={`avatar avatar-md ${accessStatus === 'active' ? 'avatar-teal' : 'avatar-blue'}`}>
+                <div className="avatar avatar-md avatar-teal">
                   {getInitials(selectedPatient.full_name)}
                 </div>
                 <div>
@@ -238,7 +212,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
                     <span style={{ fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text-primary)' }}>
                       {selectedPatient.full_name}
                     </span>
-                    <AccessStatusBadge status={accessStatus} />
+                    <AccessStatusBadge status={accessStatus === 'none' ? 'active' : accessStatus} />
                   </div>
                   <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4 }}>
                     Patient ID: <strong style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
@@ -261,11 +235,11 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
               </button>
             </div>
 
-            {/* Authorization / Consent Status Banner */}
+            {/* Optional Consent Info Banner */}
             {accessStatus === 'pending' ? (
               <div style={{
                 marginTop: 12,
-                padding: '12px 16px',
+                padding: '10px 14px',
                 background: 'var(--color-warning-bg)',
                 border: '1px solid var(--color-warning)',
                 borderRadius: 'var(--radius-md)',
@@ -273,70 +247,37 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
                 alignItems: 'center',
                 gap: 10,
                 color: 'var(--color-warning)',
-                fontSize: '0.875rem',
+                fontSize: '0.8125rem',
               }}>
-                <Clock size={18} style={{ flexShrink: 0 }} />
+                <Clock size={16} style={{ flexShrink: 0 }} />
                 <span>
-                  <strong>Awaiting Patient Approval:</strong> You do not currently have authorized access to this patient's medical record. An access request is pending approval.
+                  Consent request pending for historical records. Uploading this new report will link it directly to the patient's record.
                 </span>
               </div>
             ) : accessStatus === 'revoked' ? (
               <div style={{
                 marginTop: 12,
-                padding: '12px 16px',
-                background: 'var(--color-danger-bg)',
-                border: '1px solid var(--color-danger)',
+                padding: '10px 14px',
+                background: 'var(--bg-surface-muted)',
+                border: '1px solid var(--border-default)',
                 borderRadius: 'var(--radius-md)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 12,
-                color: 'var(--color-danger)',
-                fontSize: '0.875rem',
+                gap: 10,
+                fontSize: '0.8125rem',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <ShieldX size={18} style={{ flexShrink: 0 }} />
-                  <span>
-                    <strong>Access Revoked:</strong> You do not currently have authorized access to this patient's medical record.
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)' }}>
+                  <ShieldX size={16} style={{ flexShrink: 0, color: 'var(--color-danger)' }} />
+                  <span>Historical file access is revoked. New test reports can still be submitted for the patient.</span>
                 </div>
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => setShowRequestModal(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                 >
-                  <ShieldCheck size={14} /> Request Access Again
-                </button>
-              </div>
-            ) : accessStatus === 'none' ? (
-              <div style={{
-                marginTop: 12,
-                padding: '12px 16px',
-                background: 'var(--color-danger-bg)',
-                border: '1px solid var(--color-danger)',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 12,
-                fontSize: '0.875rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-danger)' }}>
-                  <ShieldAlert size={18} style={{ flexShrink: 0 }} />
-                  <span>
-                    <strong>Unauthorized:</strong> You do not currently have authorized access to this patient's medical record.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={() => setShowRequestModal(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  <ShieldCheck size={14} /> Request Access
+                  <ShieldCheck size={13} /> Request History Access
                 </button>
               </div>
             ) : null}
@@ -350,35 +291,35 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
         )}
       </div>
 
-      {/* 2. Test Details */}
-      <div className="card" style={{ padding: 'var(--sp-6)', opacity: accessStatus === 'active' ? 1 : 0.65 }}>
+      {/* 2. Investigation Details */}
+      <div className="card" style={{ padding: 'var(--sp-6)' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
-          2. Test Details &amp; Results
+          2. Test Findings &amp; Clinical Parameters
         </h3>
-        
-        <div className="form-row">
+
+        <div className="grid-2" style={{ gap: 16 }}>
           <div className="field">
-            <label className="field-label" htmlFor="diagnostic-test-name">Test Name</label>
+            <label className="field-label" htmlFor="diagnostic-test-name">Test / Investigation Name</label>
             <input
               className="input"
               id="diagnostic-test-name"
               type="text"
-              placeholder="e.g. Complete Blood Count, Lipid Profile, Chest X-Ray"
+              placeholder="e.g. Complete Blood Count (CBC), Lipid Profile..."
               value={testName}
               onChange={(e) => setTestName(e.target.value)}
-              disabled={accessStatus !== 'active' || loading}
+              disabled={loading}
               required
             />
           </div>
 
           <div className="field">
-            <label className="field-label" htmlFor="diagnostic-test-category">Test Category</label>
+            <label className="field-label" htmlFor="diagnostic-test-category">Department / Category</label>
             <select
-              className="select"
+              className="input select"
               id="diagnostic-test-category"
               value={testCategory}
               onChange={(e) => setTestCategory(e.target.value)}
-              disabled={accessStatus !== 'active' || loading}
+              disabled={loading}
             >
               <option value="Hematology">Hematology</option>
               <option value="Biochemistry">Biochemistry</option>
@@ -400,7 +341,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
             type="date"
             value={reportDate}
             onChange={(e) => setReportDate(e.target.value)}
-            disabled={accessStatus !== 'active' || loading}
+            disabled={loading}
             required
           />
         </div>
@@ -413,7 +354,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
             placeholder="Summarize key parameter values, normal/abnormal flags..."
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
-            disabled={accessStatus !== 'active' || loading}
+            disabled={loading}
             required
             style={{ minHeight: 90 }}
           />
@@ -427,14 +368,14 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
             placeholder="Clinical interpretations or remarks..."
             value={doctorNotes}
             onChange={(e) => setDoctorNotes(e.target.value)}
-            disabled={accessStatus !== 'active' || loading}
+            disabled={loading}
             style={{ minHeight: 70 }}
           />
         </div>
       </div>
 
       {/* 3. Document Attachment */}
-      <div className="card" style={{ padding: 'var(--sp-6)', opacity: accessStatus === 'active' ? 1 : 0.65 }}>
+      <div className="card" style={{ padding: 'var(--sp-6)' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>
           3. Attach Official Report Document (PDF/Image)
         </h3>
@@ -443,7 +384,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
           onFileSelect={setFile}
           onRemove={() => setFile(null)}
           uploading={uploading}
-          disabled={accessStatus !== 'active' || loading}
+          disabled={loading}
         />
       </div>
 
@@ -462,7 +403,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
           type="submit"
           variant="primary"
           size="lg"
-          disabled={loading || !selectedPatient || accessStatus !== 'active'}
+          disabled={loading || !selectedPatient}
           isLoading={loading}
           loadingLabel="Uploading Report…"
         >

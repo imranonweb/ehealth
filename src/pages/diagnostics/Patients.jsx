@@ -230,7 +230,7 @@ export function DiagnosticsPatients() {
                         <AccessStatusBadge status={status} />
                       </td>
                       <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
-                        {status === 'active' ? (
+                        <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                           <button
                             type="button"
                             className="btn btn-primary btn-sm"
@@ -239,44 +239,31 @@ export function DiagnosticsPatients() {
                           >
                             <Upload size={14} /> Upload Report
                           </button>
-                        ) : status === 'pending' ? (
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            disabled
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              color: 'var(--color-warning)',
-                              borderColor: 'var(--color-warning)',
-                              background: 'var(--color-warning-bg)',
-                              opacity: 0.9,
-                              cursor: 'not-allowed',
-                              fontWeight: 600,
-                            }}
-                          >
-                            <Clock size={14} /> Awaiting Patient Approval
-                          </button>
-                        ) : status === 'revoked' ? (
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setRequestTarget(p)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                          >
-                            <ShieldX size={14} /> Request Access Again
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                            onClick={() => setRequestTarget(p)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                          >
-                            <ShieldCheck size={14} /> Request Access
-                          </button>
-                        )}
+
+                          {status === 'pending' ? (
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
+                              <Clock size={14} /> Awaiting Approval
+                            </div>
+                          ) : status === 'revoked' ? (
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setRequestTarget(p)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                              <ShieldX size={14} /> Request Access Again
+                            </button>
+                          ) : status !== 'active' ? (
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setRequestTarget(p)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                              <ShieldCheck size={14} /> Request Access
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -119,7 +119,17 @@ export function Register() {
       }
     } catch (err) {
       console.error('Registration failed:', err);
-      const msg = err?.message || 'Failed to create account. Please try again.';
+      let msg = err?.message || 'Failed to create account. Please try again.';
+      
+      // Provide clear actionable guidance for Supabase email rate limit error
+      if (
+        msg.toLowerCase().includes('rate limit') ||
+        msg.toLowerCase().includes('email rate limit exceeded') ||
+        err?.status === 429
+      ) {
+        msg = 'Supabase email rate limit exceeded (maximum 3-4 emails/hour on free tier). Please wait a few minutes, or in your Supabase Dashboard: go to Authentication > Providers > Email and disable "Confirm email" for testing, or configure Custom SMTP.';
+      }
+
       setErrorMsg(msg);
       toastError(msg);
     } finally {
