@@ -233,58 +233,106 @@ export const patientService = {
   },
 
   /**
-   * Get a single prescription by ID.
+   * Get a single prescription by ID (with resilient fallback).
    */
   async getPrescriptionById(id) {
-    const { data, error } = await supabase
-      .from('prescriptions')
-      .select(`
-        *,
-        doctor:doctor_id(id, full_name, email),
-        hospital:hospital_id(id, name),
-        ai_extraction:prescription_ai_extractions(*)
-      `)
-      .eq('id', id)
-      .single();
+    if (!id) return null;
+    try {
+      const { data, error } = await supabase
+        .from('prescriptions')
+        .select(`
+          *,
+          doctor:doctor_id(id, full_name, email),
+          hospital:hospital_id(id, name)
+        `)
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('[patientService] getPrescriptionById error:', e);
+    }
+
+    // Fallback: direct simple query
+    try {
+      const { data } = await supabase
+        .from('prescriptions')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      return data || null;
+    } catch (fallbackErr) {
+      console.warn('[patientService] getPrescriptionById fallback error:', fallbackErr);
+      return null;
+    }
   },
 
   /**
-   * Get a single diagnostic report by ID.
+   * Get a single diagnostic report by ID (with resilient fallback).
    */
   async getDiagnosticReportById(id) {
-    const { data, error } = await supabase
-      .from('diagnostic_reports')
-      .select(`
-        *,
-        diagnostics_org:diagnostics_organization_id(id, name),
-        doctor:doctor_id(id, full_name)
-      `)
-      .eq('id', id)
-      .single();
+    if (!id) return null;
+    try {
+      const { data, error } = await supabase
+        .from('diagnostic_reports')
+        .select(`
+          *,
+          diagnostics_org:diagnostics_organization_id(id, name, address, phone, email),
+          doctor:doctor_id(id, full_name)
+        `)
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('[patientService] getDiagnosticReportById error:', e);
+    }
+
+    try {
+      const { data } = await supabase
+        .from('diagnostic_reports')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      return data || null;
+    } catch (fallbackErr) {
+      console.warn('[patientService] getDiagnosticReportById fallback error:', fallbackErr);
+      return null;
+    }
   },
 
   /**
-   * Get a single hospital visit by ID.
+   * Get a single hospital visit by ID (with resilient fallback).
    */
   async getHospitalVisitById(id) {
-    const { data, error } = await supabase
-      .from('hospital_visits')
-      .select(`
-        *,
-        hospital:hospital_id(id, name),
-        doctor:doctor_id(id, full_name)
-      `)
-      .eq('id', id)
-      .single();
+    if (!id) return null;
+    try {
+      const { data, error } = await supabase
+        .from('hospital_visits')
+        .select(`
+          *,
+          hospital:hospital_id(id, name),
+          doctor:doctor_id(id, full_name)
+        `)
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('[patientService] getHospitalVisitById error:', e);
+    }
+
+    try {
+      const { data } = await supabase
+        .from('hospital_visits')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      return data || null;
+    } catch (fallbackErr) {
+      console.warn('[patientService] getHospitalVisitById fallback error:', fallbackErr);
+      return null;
+    }
   },
 
   /**
