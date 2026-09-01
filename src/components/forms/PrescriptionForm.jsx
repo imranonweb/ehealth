@@ -75,7 +75,7 @@ export function PrescriptionForm({ defaultDoctorId, defaultHospitalId, initialPa
       // Handle optional file attachment
       if (file) {
         setUploading(true);
-        const uploadResult = await storageService.uploadFile(file, selectedPatient.id, 'prescriptions');
+        const uploadResult = await storageService.uploadFile(file, selectedPatient.id, 'prescriptions', defaultHospitalId);
         documentPath = uploadResult.path;
         setUploading(false);
       }

@@ -1,22 +1,28 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Users, Search, ChevronRight, User, AlertCircle, RefreshCw,
   Filter, FileText, Pill, FlaskConical, Building2, CheckCircle2,
-  Calendar, ShieldCheck, Plus, UserPlus, Loader2
+  Calendar, ShieldCheck, Plus, UserPlus, Loader2, Clock, ShieldX
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { doctorService } from '../../services/doctorService';
 import { searchService } from '../../services/searchService';
 import { CreatePatientForm } from '../../components/forms/CreatePatientForm';
+import { AccessRequestModal } from '../../components/access/AccessRequestModal';
+import { AccessStatusBadge } from '../../components/access/AccessStatusBadge';
 import { formatPatientId, getInitials, formatDate, stringToColor, debounce } from '../../lib/utils';
 import { SkeletonTable, SkeletonCard } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { useToast } from '../../contexts/ToastContext';
 import './DoctorPatients.css';
 
 export function DoctorPatients() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { success, error: toastError } = useToast();
+
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,6 +33,8 @@ export function DoctorPatients() {
   // Live registry search state
   const [registryResults, setRegistryResults] = useState([]);
   const [searchingRegistry, setSearchingRegistry] = useState(false);
+  const [relMap, setRelMap] = useState({}); // patientId -> status
+  const [requestTarget, setRequestTarget] = useState(null);
 
   const loadPatients = async () => {
     if (!profile?.id) return;
@@ -47,6 +55,26 @@ export function DoctorPatients() {
     loadPatients();
   }, [profile?.id]);
 
+  // Fetch relationships for registry results
+  const fetchRelationships = useCallback(async (patientIds) => {
+    if (!patientIds || !patientIds.length || !profile?.id) return;
+    try {
+      const { data } = await supabase
+        .from('patient_provider_relationships')
+        .select('id, patient_profile_id, status')
+        .eq('provider_profile_id', profile.id)
+        .in('patient_profile_id', patientIds);
+
+      const map = {};
+      (data || []).forEach((r) => {
+        map[r.patient_profile_id] = r.status;
+      });
+      setRelMap((prev) => ({ ...prev, ...map }));
+    } catch (err) {
+      console.warn('[DoctorPatients] fetchRelationships error:', err);
+    }
+  }, [profile?.id]);
+
   // Debounced registry search
   const debouncedSearch = useRef(
     debounce(async (query) => {
@@ -59,6 +87,9 @@ export function DoctorPatients() {
       try {
         const results = await searchService.searchPatients(query);
         setRegistryResults(results);
+        if (results.length > 0) {
+          fetchRelationships(results.map((r) => r.id));
+        }
       } catch (err) {
         console.warn('Registry search failed:', err);
         setRegistryResults([]);
@@ -115,18 +146,18 @@ export function DoctorPatients() {
       isRegistrySearch: true,
       record_count: 0,
       last_record: null,
-      relationship_status: 'registry',
+      relationship_status: relMap[p.id] || 'none',
     }));
 
     return [...filteredLocalPatients, ...extraRegistry];
-  }, [filteredLocalPatients, registryResults, searchQuery]);
+  }, [filteredLocalPatients, registryResults, searchQuery, relMap]);
 
   return (
     <div className="dashboard-container">
       {/* Header */}
       <div className="page-header" style={{ marginBottom: 'var(--sp-6)' }}>
         <div>
-          <h1 className="page-title">Patient Directory & Consultations</h1>
+          <h1 className="page-title">Patient Directory &amp; Consultations</h1>
           <p className="page-sub">
             Search patient records, review medical histories, and issue official e-prescriptions.
           </p>
@@ -138,142 +169,108 @@ export function DoctorPatients() {
             onClick={() => setShowCreatePatient(true)}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            <UserPlus size={16} /> Add New Patient
+            <UserPlus size={16} /> Register Patient
           </button>
-          <Link to="/doctor/prescriptions/new" className="btn btn-primary btn-md">
+          <Link
+            to="/doctor/prescriptions/new"
+            className="btn btn-primary btn-md"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
             <Plus size={16} /> New Prescription
           </Link>
         </div>
       </div>
 
-      {/* Error state */}
-      {error && (
-        <div className="card" style={{
-          padding: 'var(--sp-4)',
-          marginBottom: 'var(--sp-6)',
-          backgroundColor: 'var(--color-danger-bg)',
-          borderColor: 'var(--color-danger)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-danger)' }}>
-            <AlertCircle size={18} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{error}</span>
-          </div>
-          <button type="button" onClick={loadPatients} className="btn btn-secondary btn-sm">
-            <RefreshCw size={14} /> Try again
-          </button>
-        </div>
-      )}
-
-      {/* Controls Card (Search + Filter Tabs) */}
-      <div className="card" style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-6)' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-          {/* Search Box */}
-          <div style={{ position: 'relative', flex: '1 1 340px', maxWidth: 520 }}>
-            {searchingRegistry ? (
-              <Loader2 size={16} className="input-icon spin" style={{ color: 'var(--accent)' }} />
-            ) : (
-              <Search size={16} className="input-icon" />
-            )}
+      {/* Search and Filters Bar */}
+      <div className="card" style={{ padding: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative', flex: '1 1 300px', minWidth: 260 }}>
+            <Search size={16} className="input-icon" />
             <input
               type="text"
               className="input has-icon"
-              placeholder="Search patients by name, Health ID (e.g. P-9824F1A2), phone, or email..."
+              placeholder="Search by patient name, Health ID (e.g. P-1234), email, phone..."
               value={searchQuery}
               onChange={handleSearchChange}
-              style={{ height: 42, fontSize: '0.9375rem' }}
             />
+            {searchingRegistry && (
+              <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                <Loader2 size={16} className="spin text-primary" />
+              </div>
+            )}
           </div>
 
-          {/* Filter Pills */}
-          <div className="filter-pill-bar">
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
             <button
               type="button"
-              className={`filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
+              className={`btn btn-xs ${activeFilter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
               onClick={() => setActiveFilter('all')}
             >
-              All Patients ({searchQuery.trim() ? combinedSearchResults.length : patients.length})
+              All ({patients.length})
             </button>
             <button
               type="button"
-              className={`filter-pill ${activeFilter === 'recent' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('recent')}
-            >
-              Has Activity
-            </button>
-            <button
-              type="button"
-              className={`filter-pill ${activeFilter === 'prescriptions' ? 'active' : ''}`}
+              className={`btn btn-xs ${activeFilter === 'prescriptions' ? 'btn-primary' : 'btn-ghost'}`}
               onClick={() => setActiveFilter('prescriptions')}
             >
-              Prescriptions
+              <Pill size={12} /> Prescriptions
             </button>
             <button
               type="button"
-              className={`filter-pill ${activeFilter === 'reports' ? 'active' : ''}`}
+              className={`btn btn-xs ${activeFilter === 'reports' ? 'btn-primary' : 'btn-ghost'}`}
               onClick={() => setActiveFilter('reports')}
             >
-              Lab Reports
+              <FlaskConical size={12} /> Lab Reports
             </button>
             <button
               type="button"
-              className={`filter-pill ${activeFilter === 'visits' ? 'active' : ''}`}
+              className={`btn btn-xs ${activeFilter === 'visits' ? 'btn-primary' : 'btn-ghost'}`}
               onClick={() => setActiveFilter('visits')}
             >
-              Hospital Records
+              <Building2 size={12} /> Hospital Visits
             </button>
           </div>
         </div>
       </div>
 
-      {/* Patient List Content */}
-      <div className="card" style={{ padding: 'var(--sp-6)' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 'var(--sp-4)',
-          borderBottom: '1px solid var(--border-default)',
-          paddingBottom: 'var(--sp-4)',
-        }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
-            {searchQuery.trim() ? `Search Results (${combinedSearchResults.length})` : `Active Consultations (${patients.length})`}
-          </h2>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Centralized National Health Registry
-          </span>
-        </div>
-
+      {/* Main Table / Directory List */}
+      <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
         {loading ? (
-          <SkeletonTable rows={4} cols={5} />
-        ) : combinedSearchResults.length === 0 ? (
-          <div style={{ padding: 'var(--sp-8) 0' }}>
-            <EmptyState
-              icon={Users}
-              title={searchQuery ? "No Matching Patients Found" : "No Patients Yet"}
-              description={
-                searchQuery
-                  ? `No patient matched "${searchQuery}". Check the Health ID or name, or add a new patient.`
-                  : 'Search for a patient using their Health ID, name, or phone number above to review their history or write a prescription.'
-              }
-              actionLabel="Add New Patient"
-              action={() => setShowCreatePatient(true)}
-            />
+          <div style={{ padding: 'var(--sp-6)' }}>
+            <SkeletonTable rows={5} />
           </div>
+        ) : error ? (
+          <div style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
+            <AlertCircle size={36} className="text-danger" style={{ margin: '0 auto 12px' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 6px' }}>Failed to Load Patients</h3>
+            <p style={{ color: 'var(--text-muted)', margin: '0 0 16px', fontSize: '0.875rem' }}>{error}</p>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={loadPatients}>
+              <RefreshCw size={14} /> Retry
+            </button>
+          </div>
+        ) : combinedSearchResults.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title={searchQuery ? 'No Matching Patients Found' : 'No Authorized Patients Yet'}
+            description={
+              searchQuery
+                ? `No patients found matching "${searchQuery}". Use the Register Patient button above to create a new patient.`
+                : 'Patients you prescribe medications for or who have active authorizations with you will appear here.'
+            }
+            actionLabel="Register New Patient"
+            onAction={() => setShowCreatePatient(true)}
+          />
         ) : (
           <>
-            {/* Desktop Table View */}
-            <div className="table-container card-table-wrap hide-on-mobile">
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead className="table-header">
-                  <tr>
-                    <th className="table-head" style={{ padding: '14px 24px' }}>Patient</th>
+            <div className="table-responsive hide-on-mobile">
+              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr className="table-header">
+                    <th className="table-head" style={{ padding: '14px 24px' }}>Patient Identity</th>
                     <th className="table-head" style={{ padding: '14px 20px' }}>Health ID / Contact</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Last Clinical Record</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Status</th>
-                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Action</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Last Activity</th>
+                    <th className="table-head" style={{ padding: '14px 20px' }}>Authorization Status</th>
+                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
@@ -287,6 +284,7 @@ export function DoctorPatients() {
                       : null;
 
                     const initials = getInitials(p.full_name);
+                    const status = p.isRegistrySearch ? (relMap[p.id] || 'none') : (p.relationship_status || 'active');
 
                     return (
                       <tr key={p.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
@@ -372,26 +370,39 @@ export function DoctorPatients() {
 
                         {/* Status Column */}
                         <td className="table-cell" style={{ padding: '16px 20px' }}>
-                          {p.isRegistrySearch ? (
-                            <span className="badge" style={{ background: 'var(--bg-surface-muted)', color: 'var(--text-secondary)' }}>
-                              Registry Profile
-                            </span>
-                          ) : (
-                            <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                              <CheckCircle2 size={12} /> Active
-                            </span>
-                          )}
+                          <AccessStatusBadge status={status} />
                         </td>
 
                         {/* Action Column */}
                         <td className="table-cell" style={{ textAlign: 'right', padding: '16px 24px' }}>
                           <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-                            <Link to={`/doctor/prescriptions/new?patientId=${p.id}`} className="btn btn-primary btn-sm" style={{ fontWeight: 600 }}>
+                            <Link
+                              to={`/doctor/prescriptions/new?patientId=${p.id}`}
+                              state={{ patient: p }}
+                              className="btn btn-primary btn-sm"
+                              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                            >
                               <Plus size={13} /> Prescribe
                             </Link>
-                            <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
-                              View <ChevronRight size={13} />
-                            </Link>
+
+                            {status === 'active' ? (
+                              <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                                View <ChevronRight size={13} />
+                              </Link>
+                            ) : status === 'pending' ? (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8125rem', color: 'var(--color-warning)', fontWeight: 600 }}>
+                                <Clock size={13} /> Pending
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => setRequestTarget(p)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                              >
+                                <ShieldCheck size={13} /> Request Access
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -412,6 +423,8 @@ export function DoctorPatients() {
                   ? 'Hospital Visit'
                   : 'None';
 
+                const status = p.isRegistrySearch ? (relMap[p.id] || 'none') : (p.relationship_status || 'active');
+
                 return (
                   <div key={p.id} className="mobile-patient-card card card-hover">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -426,7 +439,7 @@ export function DoctorPatients() {
                           </div>
                         </div>
                       </div>
-                      <span className="badge badge-success" style={{ fontSize: '0.6875rem' }}>Active</span>
+                      <AccessStatusBadge status={status} />
                     </div>
 
                     <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 12 }}>
@@ -435,7 +448,7 @@ export function DoctorPatients() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      <Link to={`/doctor/prescriptions/new?patientId=${p.id}`} className="btn btn-primary btn-sm" style={{ justifyContent: 'center' }}>
+                      <Link to={`/doctor/prescriptions/new?patientId=${p.id}`} state={{ patient: p }} className="btn btn-primary btn-sm" style={{ justifyContent: 'center' }}>
                         <Plus size={14} /> Prescribe
                       </Link>
                       <Link to={`/doctor/patients/${p.id}`} className="btn btn-secondary btn-sm" style={{ justifyContent: 'center' }}>
@@ -445,10 +458,10 @@ export function DoctorPatients() {
                   </div>
                 );
               })}
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
+      </div>
 
       <CreatePatientForm
         isOpen={showCreatePatient}
@@ -469,7 +482,20 @@ export function DoctorPatients() {
           }
         }}
       />
+
+      <AccessRequestModal
+        patient={requestTarget}
+        orgId={null}
+        isOpen={!!requestTarget}
+        onClose={() => setRequestTarget(null)}
+        onRequestSent={(newStatus) => {
+          if (requestTarget?.id) {
+            setRelMap((prev) => ({ ...prev, [requestTarget.id]: newStatus === 'already_active' ? 'active' : 'pending' }));
+          }
+          setRequestTarget(null);
+          success('Consent request sent to patient. They can approve it in their portal.');
+        }}
+      />
     </div>
   );
 }
-

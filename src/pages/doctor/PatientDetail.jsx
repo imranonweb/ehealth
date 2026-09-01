@@ -1,43 +1,107 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Activity, Pill, Plus, ChevronLeft, Calendar, ShieldCheck, Lock,
-  Building2, FlaskConical, Eye
+  Building2, FlaskConical, Eye, Clock, ShieldX, ShieldAlert, Loader2
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { doctorService } from '../../services/doctorService';
+import { searchService } from '../../services/searchService';
+import { AccessRequestModal } from '../../components/access/AccessRequestModal';
+import { AccessStatusBadge } from '../../components/access/AccessStatusBadge';
 import { MedicalTimeline } from '../../components/records/MedicalTimeline';
 import { RecordDetailDrawer } from '../../components/records/RecordDetailDrawer';
 import { SkeletonCard, SkeletonTimeline } from '../../components/ui/Skeleton';
 import { formatPatientId, getInitials, formatDate, parseMedications } from '../../lib/utils';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { useToast } from '../../contexts/ToastContext';
 
 export function DoctorPatientDetail() {
   const { id } = useParams();
-  const [data, setData] = useState(null);
+  const { profile } = useAuth();
+  const { success, error: toastError } = useToast();
+
+  const [patient, setPatient] = useState(null);
+  const [timeline, setTimeline] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [visits, setVisits] = useState([]);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [accessStatus, setAccessStatus] = useState(null); // 'active' | 'pending' | 'revoked' | 'none'
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const loadPatient = async () => {
-    if (!id) return;
+  const loadPatientData = useCallback(async () => {
+    if (!id || !profile?.id) return;
     setLoading(true);
-    setError(null);
+
     try {
-      const res = await doctorService.getPatientDetail(id);
-      setData(res);
+      // 1. Check existing relationship status between this doctor and the patient
+      const { data: relRows } = await supabase
+        .from('patient_provider_relationships')
+        .select('id, status')
+        .eq('patient_profile_id', id)
+        .eq('provider_profile_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const rel = relRows?.[0] ?? null;
+      const status = rel?.status ?? 'none';
+      setAccessStatus(status);
+
+      // 2. Fetch patient identity (available via secure search RPC)
+      const patientData = await searchService.getPatientById(id);
+      setPatient(patientData || null);
+
+      // 3. Fetch full clinical records ONLY if access is active
+      if (status === 'active') {
+        const [recRes, prescRes, repRes, visRes] = await Promise.all([
+          supabase
+            .from('medical_records')
+            .select('*')
+            .eq('patient_id', id)
+            .order('record_date', { ascending: false }),
+          supabase
+            .from('prescriptions')
+            .select(`*, doctor:doctor_id(id, full_name), hospital:hospital_id(id, name)`)
+            .eq('patient_id', id)
+            .order('prescription_date', { ascending: false }),
+          supabase
+            .from('diagnostic_reports')
+            .select(`*, diagnostics_org:diagnostics_organization_id(id, name)`)
+            .eq('patient_id', id)
+            .order('report_date', { ascending: false }),
+          supabase
+            .from('hospital_visits')
+            .select(`*, hospital:hospital_id(id, name), doctor:doctor_id(id, full_name)`)
+            .eq('patient_id', id)
+            .order('admission_date', { ascending: false }),
+        ]);
+
+        setTimeline(recRes.data || []);
+        setPrescriptions(prescRes.data || []);
+        setReports(repRes.data || []);
+        setVisits(visRes.data || []);
+      } else {
+        setTimeline([]);
+        setPrescriptions([]);
+        setReports([]);
+        setVisits([]);
+      }
     } catch (err) {
-      console.error('Error fetching patient clinical record:', err);
-      setError('Unable to load patient records. You may not have an active authorization relationship.');
+      console.error('DoctorPatientDetail load error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, profile?.id]);
 
   useEffect(() => {
-    loadPatient();
-  }, [id]);
+    loadPatientData();
+  }, [loadPatientData]);
 
   const handleViewDetail = (record) => {
     setSelectedRecord(record);
@@ -55,8 +119,8 @@ export function DoctorPatientDetail() {
     );
   }
 
-  // Unauthorized or not found state
-  if (!data || !data.patient) {
+  // Not found state
+  if (!patient) {
     return (
       <div className="dashboard-container">
         <Link
@@ -72,7 +136,7 @@ export function DoctorPatientDetail() {
             marginBottom: 16,
           }}
         >
-          <ChevronLeft size={16} /> Back to Authorized Patients
+          <ChevronLeft size={16} /> Back to Patient Directory
         </Link>
 
         <div className="card" style={{ padding: 'var(--sp-8)', textAlign: 'center' }}>
@@ -90,25 +154,23 @@ export function DoctorPatientDetail() {
             <Lock size={28} />
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
-            Patient Not Accessible
+            Patient Not Found
           </h2>
           <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '0 auto 20px', fontSize: '0.875rem' }}>
-            {error || 'You do not have an active relationship authorization to access this patient’s medical records under healthcare privacy governance.'}
+            The requested patient profile could not be located in the healthcare registry.
           </p>
           <Link to="/doctor/patients" className="btn btn-primary btn-md">
-            Return to Authorized Patient Directory
+            Return to Patient Directory
           </Link>
         </div>
       </div>
     );
   }
 
-  const patient = data.patient;
-  const patProf = Array.isArray(patient.patient_profiles) ? patient.patient_profiles[0] : (patient.patient_profiles || patient);
-  const patientId = patProf?.patient_identifier || patient.patient_identifier || patient.id;
-  const allergies = patProf?.allergies || patient.allergies || 'None reported';
-  const bloodGroup = patient.blood_group || patProf?.blood_group || 'Not specified';
-  const emergencyContact = patProf?.emergency_contact || patient.emergency_contact || 'None listed';
+  const patientId = patient.patient_identifier || patient.id;
+  const allergies = patient.allergies || 'None reported';
+  const bloodGroup = patient.blood_group || 'Not specified';
+  const isAuthorized = accessStatus === 'active';
 
   return (
     <div className="dashboard-container">
@@ -126,7 +188,7 @@ export function DoctorPatientDetail() {
           marginBottom: 16,
         }}
       >
-        <ChevronLeft size={16} /> Back to Authorized Patients
+        <ChevronLeft size={16} /> Back to Patient Directory
       </Link>
 
       {/* Patient Header Card */}
@@ -137,428 +199,419 @@ export function DoctorPatientDetail() {
               {getInitials(patient.full_name)}
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <h1 style={{ fontSize: '1.375rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                   {patient.full_name}
                 </h1>
-                <span className="badge badge-success" style={{ fontSize: '0.6875rem' }}>
-                  <ShieldCheck size={12} /> Authorized Access
-                </span>
+                <AccessStatusBadge status={accessStatus} />
               </div>
               <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                Health ID: <strong style={{ color: 'var(--accent)' }}>{formatPatientId(patientId)}</strong> · Gender: <span style={{ textTransform: 'capitalize' }}>{patient.gender || '—'}</span> · DOB: {formatDate(patient.date_of_birth)}
+                Health ID: <strong style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>{formatPatientId(patientId)}</strong> · Gender: <span style={{ textTransform: 'capitalize' }}>{patient.gender || '—'}</span> {patient.date_of_birth && `· DOB: ${formatDate(patient.date_of_birth)}`}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Link to={`/doctor/prescriptions/new?patientId=${patient.id}`} className="btn btn-primary btn-md">
+          {/* Action Buttons: Doctor can ALWAYS issue a prescription! */}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            {!isAuthorized && accessStatus !== 'pending' && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-md"
+                onClick={() => setShowRequestModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <ShieldCheck size={16} /> Request Medical History Access
+              </button>
+            )}
+
+            <Link
+              to={`/doctor/prescriptions/new?patientId=${patient.id}`}
+              state={{ patient }}
+              className="btn btn-primary btn-md"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+            >
               <Plus size={16} /> Issue Prescription
             </Link>
           </div>
         </div>
 
-        {/* Clinical Flags Bar */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 16,
-          marginTop: 18,
-          paddingTop: 16,
-          borderTop: '1px solid var(--border-default)',
-        }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Blood Group
-            </div>
-            <div style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-danger)', marginTop: 2 }}>
-              {bloodGroup}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Known Allergies
-            </div>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-warning)', marginTop: 2 }}>
-              {allergies}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Contact Phone
-            </div>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
-              {patient.phone || '—'}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-              Emergency Contact
-            </div>
-            <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: 2 }}>
-              {emergencyContact}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--border-default)',
-        marginBottom: 'var(--sp-6)',
-        gap: 8,
-        overflowX: 'auto',
-      }}>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeTab === 'overview' ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setActiveTab('overview')}
-          style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
-        >
-          <Activity size={14} /> Overview
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeTab === 'timeline' ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setActiveTab('timeline')}
-          style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
-        >
-          <Calendar size={14} /> Medical History ({data.timeline.length})
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeTab === 'prescriptions' ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setActiveTab('prescriptions')}
-          style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
-        >
-          <Pill size={14} /> Prescriptions ({data.prescriptions.length})
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeTab === 'reports' ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setActiveTab('reports')}
-          style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
-        >
-          <FlaskConical size={14} /> Diagnostic Reports ({data.reports.length})
-        </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeTab === 'visits' ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setActiveTab('visits')}
-          style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
-        >
-          <Building2 size={14} /> Hospital Records ({data.visits.length})
-        </button>
-      </div>
-
-      {/* Tab Content: Overview */}
-      {activeTab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
-          {/* Quick Metrics */}
-          <div className="grid-3" style={{ gap: 'var(--sp-4)' }}>
-            <div className="card" style={{ padding: 'var(--sp-5)' }}>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Total Prescriptions</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                {data.prescriptions.length}
-              </div>
-            </div>
-            <div className="card" style={{ padding: 'var(--sp-5)' }}>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Lab Reports on File</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                {data.reports.length}
-              </div>
-            </div>
-            <div className="card" style={{ padding: 'var(--sp-5)' }}>
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Hospital Encounters</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                {data.visits.length}
-              </div>
-            </div>
-          </div>
-
-          {/* Longitudinal Clinical Timeline Preview */}
-          <div className="card" style={{ padding: 'var(--sp-6)' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 'var(--sp-4)',
-              borderBottom: '1px solid var(--border-default)',
-              paddingBottom: 'var(--sp-4)',
-            }}>
-              <div>
-                <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
-                  Recent Medical Timeline
-                </h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  Most recent clinical events in the patient's record.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                onClick={() => setActiveTab('timeline')}
-              >
-                View Full Timeline ({data.timeline.length})
-              </button>
-            </div>
-
-            <MedicalTimeline
-              records={data.timeline.slice(0, 4)}
-              loading={false}
-              onViewDetail={handleViewDetail}
-              emptyMessage="No medical records currently on file for this patient."
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Tab Content: Medical History Timeline */}
-      {activeTab === 'timeline' && (
-        <div className="card" style={{ padding: 'var(--sp-6)' }}>
+        {/* Clinical Flags Bar (Shown when authorized or available) */}
+        {isAuthorized && (
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--sp-6)',
-            borderBottom: '1px solid var(--border-default)',
-            paddingBottom: 'var(--sp-4)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 16,
+            marginTop: 18,
+            paddingTop: 16,
+            borderTop: '1px solid var(--border-default)',
           }}>
             <div>
-              <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                Longitudinal Clinical Timeline
-              </h2>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                Complete historical record of prescriptions, lab investigations, and hospital admissions.
-              </p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Blood Group
+              </div>
+              <div style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-danger)', marginTop: 2 }}>
+                {bloodGroup}
+              </div>
             </div>
-          </div>
-
-          <MedicalTimeline
-            records={data.timeline}
-            loading={false}
-            onViewDetail={handleViewDetail}
-            emptyMessage="No medical records currently on file for this patient."
-          />
-        </div>
-      )}
-
-      {/* Tab Content: Prescriptions */}
-      {activeTab === 'prescriptions' && (
-        <div className="card" style={{ padding: 'var(--sp-6)' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--sp-4)',
-            borderBottom: '1px solid var(--border-default)',
-            paddingBottom: 'var(--sp-4)',
-          }}>
             <div>
-              <h2 className="card-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                Prescription History
-              </h2>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                Prescriptions issued across all healthcare providers.
-              </p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Known Allergies
+              </div>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-warning)', marginTop: 2 }}>
+                {allergies}
+              </div>
             </div>
-            <Link to={`/doctor/prescriptions/new?patientId=${patient.id}`} className="btn btn-primary btn-sm">
-              <Plus size={14} /> New Prescription
-            </Link>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Contact Phone
+              </div>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
+                {patient.phone || '—'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Email
+              </div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: 2 }}>
+                {patient.email || '—'}
+              </div>
+            </div>
           </div>
+        )}
+      </div>
 
-          {data.prescriptions.length === 0 ? (
-            <EmptyState
-              icon={Pill}
-              title="No Prescriptions on File"
-              description="No prescriptions have been recorded for this patient yet."
-            />
+      {/* ── Main Panel Content ── */}
+      {!isAuthorized ? (
+        /* Consent Gate State */
+        <div className="card" style={{ padding: 'var(--sp-8)', textAlign: 'center', boxShadow: 'var(--shadow-sm)' }}>
+          {accessStatus === 'pending' ? (
+            <div>
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%',
+                background: 'var(--color-warning-bg)', color: 'var(--color-warning)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}>
+                <Clock size={30} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+                Consent Request Awaiting Approval
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: 480, margin: '0 auto 20px', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                You have requested access to view <strong>{patient.full_name}</strong>'s past medical history.
+                The patient must approve the request in their portal before historical records can be unlocked.
+              </p>
+              <div style={{
+                padding: '12px 18px', background: 'var(--bg-surface-sunken)',
+                borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: 10,
+                fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 20
+              }}>
+                <span>💡 You can still author new e-prescriptions for this patient anytime using the button above.</span>
+              </div>
+            </div>
+          ) : accessStatus === 'revoked' ? (
+            <div>
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%',
+                background: 'var(--color-danger-bg)', color: 'var(--color-danger)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}>
+                <ShieldX size={30} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+                Medical History Access Revoked
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: 480, margin: '0 auto 20px', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                The patient has explicitly revoked access to their historical records. Under medical privacy governance, you cannot view past history unless the patient grants access again.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-md"
+                  onClick={() => setShowRequestModal(true)}
+                >
+                  <ShieldCheck size={16} /> Request Access Again
+                </button>
+                <Link to={`/doctor/prescriptions/new?patientId=${patient.id}`} state={{ patient }} className="btn btn-primary btn-md">
+                  <Plus size={16} /> Issue New Prescription
+                </Link>
+              </div>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {data.prescriptions.map((p) => {
-                const meds = parseMedications(p.medications);
-                return (
-                  <div
-                    key={p.id}
-                    className="card card-hover"
-                    style={{ padding: 'var(--sp-5)', cursor: 'pointer' }}
-                    onClick={() => handleViewDetail({ record_type: 'prescription', record_reference_id: p.id })}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                      <div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                          {p.diagnosis || 'Prescription'}
-                        </h4>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                          {formatDate(p.prescription_date)} · {p.doctor?.full_name || 'Practitioner'} · {p.hospital?.name || 'Private Chamber'}
-                        </div>
-                      </div>
-                      <span className="badge badge-blue">Prescription</span>
-                    </div>
-
-                    {meds.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                        {meds.map((m, idx) => (
-                          <span key={idx} className="badge" style={{ background: 'var(--bg-surface-muted)', border: '1px solid var(--border-default)' }}>
-                            {m.name} ({m.dosage})
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div>
+              <div style={{
+                width: 60, height: 60, borderRadius: '50%',
+                background: 'var(--accent-subtle)', color: 'var(--accent)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}>
+                <ShieldAlert size={30} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+                Patient Consent Required for Medical History
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: 500, margin: '0 auto 20px', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                To protect patient privacy, past clinical history, prior diagnostic reports, and medications from other facilities are protected. You can request consent from the patient to view their complete history.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-md"
+                  onClick={() => setShowRequestModal(true)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700 }}
+                >
+                  <ShieldCheck size={16} /> Request Medical History Access
+                </button>
+                <Link
+                  to={`/doctor/prescriptions/new?patientId=${patient.id}`}
+                  state={{ patient }}
+                  className="btn btn-secondary btn-md"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Plus size={16} /> Issue Prescription Directly
+                </Link>
+              </div>
             </div>
           )}
         </div>
-      )}
-
-      {/* Tab Content: Diagnostic Reports */}
-      {activeTab === 'reports' && (
-        <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
+      ) : (
+        /* Full Authorized Clinical History */
+        <>
+          {/* Tabs Navigation */}
           <div style={{
-            padding: '20px 24px',
+            display: 'flex',
             borderBottom: '1px solid var(--border-default)',
-            backgroundColor: 'var(--bg-surface)',
+            marginBottom: 'var(--sp-6)',
+            gap: 8,
+            overflowX: 'auto',
           }}>
-            <h2 className="card-title" style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
-              Diagnostic Reports & Lab Tests
-            </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
-              Laboratory investigations, pathology reports, and imaging tests on file.
-            </p>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'overview' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('overview')}
+              style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
+            >
+              <Activity size={14} /> Overview
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'timeline' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('timeline')}
+              style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
+            >
+              <Calendar size={14} /> Medical History ({timeline.length})
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'prescriptions' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('prescriptions')}
+              style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
+            >
+              <Pill size={14} /> Prescriptions ({prescriptions.length})
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'reports' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('reports')}
+              style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
+            >
+              <FlaskConical size={14} /> Diagnostic Reports ({reports.length})
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${activeTab === 'visits' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveTab('visits')}
+              style={{ borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0', borderBottom: 'none' }}
+            >
+              <Building2 size={14} /> Hospital Visits ({visits.length})
+            </button>
           </div>
 
-          {data.reports.length === 0 ? (
-            <div style={{ padding: 'var(--sp-10) var(--sp-6)' }}>
-              <EmptyState
-                icon={FlaskConical}
-                title="No Diagnostic Reports on File"
-                description="No diagnostic reports or lab investigations recorded for this patient."
-              />
+          {/* Tab 1: Overview */}
+          {activeTab === 'overview' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Latest Active Medications */}
+              <div className="card" style={{ padding: 'var(--sp-6)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Pill size={18} color="var(--accent)" /> Current / Recent Medications
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From latest prescriptions</span>
+                </div>
+
+                {prescriptions.length === 0 ? (
+                  <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                    No recorded prescriptions for this patient yet.
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                    {parseMedications(prescriptions[0]?.medications).slice(0, 6).map((med, i) => (
+                      <div key={i} style={{
+                        padding: '12px 16px',
+                        background: 'var(--bg-surface-sunken)',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-default)',
+                      }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
+                          {med.name}
+                        </div>
+                        <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                          {med.dosage} · {med.frequency} · {med.duration}
+                        </div>
+                        {med.instructions && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2, fontStyle: 'italic' }}>
+                            {med.instructions}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Timeline Records */}
+              <div className="card" style={{ padding: 'var(--sp-6)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Activity size={18} color="var(--accent)" /> Recent Medical Encounters
+                </h3>
+                <MedicalTimeline records={timeline.slice(0, 5)} onViewDetail={handleViewDetail} />
+              </div>
             </div>
-          ) : (
-            <div className="table-container card-table-wrap">
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead className="table-header">
-                  <tr>
-                    <th className="table-head" style={{ padding: '14px 24px' }}>Date</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Investigation</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Category</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Facility</th>
-                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="table-body">
-                  {data.reports.map((r) => (
-                    <tr key={r.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
-                      <td className="table-cell" style={{ padding: '18px 24px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-                        {formatDate(r.report_date)}
-                      </td>
-                      <td className="table-cell" style={{ padding: '18px 20px' }}>
-                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.9375rem' }}>{r.test_name}</strong>
-                      </td>
-                      <td className="table-cell" style={{ padding: '18px 20px' }}>
-                        <span className="badge badge-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                          <FlaskConical size={12} />
-                          {r.test_category || 'Lab'}
-                        </span>
-                      </td>
-                      <td className="table-cell" style={{ padding: '18px 20px', color: 'var(--text-secondary)' }}>
-                        {r.diagnostics_org?.name || 'Diagnostic Lab'}
-                      </td>
-                      <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
+          )}
+
+          {/* Tab 2: Medical Timeline */}
+          {activeTab === 'timeline' && (
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              <MedicalTimeline records={timeline} onViewDetail={handleViewDetail} />
+            </div>
+          )}
+
+          {/* Tab 3: Prescriptions */}
+          {activeTab === 'prescriptions' && (
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              {prescriptions.length === 0 ? (
+                <EmptyState
+                  icon={Pill}
+                  title="No Prescriptions on File"
+                  description="This patient has not been issued any digital prescriptions yet."
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {prescriptions.map((p) => (
+                    <div key={p.id} className="card card-hover" style={{ padding: '16px 20px', border: '1px solid var(--border-default)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                            {p.diagnosis || 'Prescription'}
+                          </div>
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                            {formatDate(p.prescription_date)} · Prescribed by: <strong>{p.doctor?.full_name || 'Doctor'}</strong> {p.hospital?.name && `(${p.hospital.name})`}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleViewDetail({ record_type: 'prescription', record_reference_id: p.id })}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <Eye size={14} /> View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 4: Diagnostic Reports */}
+          {activeTab === 'reports' && (
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              {reports.length === 0 ? (
+                <EmptyState
+                  icon={FlaskConical}
+                  title="No Diagnostic Reports"
+                  description="No laboratory or diagnostic imaging reports recorded for this patient."
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {reports.map((r) => (
+                    <div key={r.id} className="card card-hover" style={{ padding: '16px 20px', border: '1px solid var(--border-default)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                            {r.test_name}
+                          </div>
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                            {formatDate(r.report_date)} · Category: <strong>{r.test_category}</strong> {r.diagnostics_org?.name && `· Lab: ${r.diagnostics_org.name}`}
+                          </div>
+                          {r.summary && (
+                            <div style={{ fontSize: '0.84375rem', color: 'var(--text-secondary)', marginTop: 6 }}>
+                              {r.summary}
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
                           onClick={() => handleViewDetail({ record_type: 'diagnostic_report', record_reference_id: r.id })}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                         >
-                          <Eye size={14} /> View
+                          <Eye size={14} /> View Findings
                         </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* Tab Content: Hospital Records */}
-      {activeTab === 'visits' && (
-        <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
-          <div style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--border-default)',
-            backgroundColor: 'var(--bg-surface)',
-          }}>
-            <h2 className="card-title" style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
-              Hospital Encounters & Admissions
-            </h2>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
-              Hospitalization admissions, discharge summaries, and emergency visits.
-            </p>
-          </div>
-
-          {data.visits.length === 0 ? (
-            <div style={{ padding: 'var(--sp-10) var(--sp-6)' }}>
-              <EmptyState
-                icon={Building2}
-                title="No Hospital Encounters on File"
-                description="No hospital visits or inpatient admissions recorded for this patient."
-              />
-            </div>
-          ) : (
-            <div className="table-container card-table-wrap">
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead className="table-header">
-                  <tr>
-                    <th className="table-head" style={{ padding: '14px 24px' }}>Date</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Type</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Department</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Hospital</th>
-                    <th className="table-head" style={{ padding: '14px 20px' }}>Summary / Diagnosis</th>
-                    <th className="table-head" style={{ textAlign: 'right', padding: '14px 24px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="table-body">
-                  {data.visits.map((v) => (
-                    <tr key={v.id} className="table-row" style={{ transition: 'background-color 0.15s ease' }}>
-                      <td className="table-cell" style={{ padding: '18px 24px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-                        {formatDate(v.admission_date)}
-                      </td>
-                      <td className="table-cell" style={{ padding: '18px 20px' }}>
-                        <span className="badge badge-primary" style={{ textTransform: 'capitalize' }}>
-                          {v.visit_type?.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="table-cell" style={{ padding: '18px 20px', color: 'var(--text-secondary)' }}>{v.department || 'General'}</td>
-                      <td className="table-cell" style={{ padding: '18px 20px', fontWeight: 500 }}>{v.hospital?.name || 'Hospital'}</td>
-                      <td className="table-cell" style={{ padding: '18px 20px' }}>
-                        <div style={{ maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-primary)', fontWeight: 500 }}>
-                          {v.diagnosis_summary || v.reason || '—'}
+          {/* Tab 5: Hospital Visits */}
+          {activeTab === 'visits' && (
+            <div className="card" style={{ padding: 'var(--sp-6)' }}>
+              {visits.length === 0 ? (
+                <EmptyState
+                  icon={Building2}
+                  title="No Hospital Encounters"
+                  description="No recorded inpatient admissions or emergency visits on file."
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {visits.map((v) => (
+                    <div key={v.id} className="card card-hover" style={{ padding: '16px 20px', border: '1px solid var(--border-default)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                            Hospital Visit — {v.department || 'General'}
+                          </div>
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                            Admission: {formatDate(v.admission_date)} {v.discharge_date && `· Discharged: ${formatDate(v.discharge_date)}`} · Facility: <strong>{v.hospital?.name || 'Hospital'}</strong>
+                          </div>
+                          {v.reason && (
+                            <div style={{ fontSize: '0.84375rem', color: 'var(--text-secondary)', marginTop: 6 }}>
+                              Reason: {v.reason}
+                            </div>
+                          )}
                         </div>
-                      </td>
-                      <td className="table-cell" style={{ textAlign: 'right', padding: '18px 24px' }}>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
                           onClick={() => handleViewDetail({ record_type: 'hospital_visit', record_reference_id: v.id })}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                         >
-                          <Eye size={14} /> View
+                          <Eye size={14} /> View Record
                         </button>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Record Detail Drawer */}
@@ -566,6 +619,20 @@ export function DoctorPatientDetail() {
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         record={selectedRecord}
+      />
+
+      {/* Access Request Modal */}
+      <AccessRequestModal
+        patient={patient}
+        orgId={null}
+        isOpen={showRequestModal}
+        onClose={() => setShowRequestModal(false)}
+        onRequestSent={(newStatus) => {
+          setAccessStatus(newStatus === 'already_active' ? 'active' : 'pending');
+          setShowRequestModal(false);
+          success('Consent request sent to patient. They can approve it in their portal.');
+          loadPatientData();
+        }}
       />
     </div>
   );

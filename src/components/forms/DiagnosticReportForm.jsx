@@ -145,7 +145,7 @@ export function DiagnosticReportForm({ onSuccess, redirectPath = '/diagnostics/r
 
       if (file) {
         setUploading(true);
-        const uploadResult = await storageService.uploadFile(file, selectedPatient.id, 'diagnostic_reports');
+        const uploadResult = await storageService.uploadFile(file, selectedPatient.id, 'diagnostic_reports', orgId);
         documentPath = uploadResult.path;
         setUploading(false);
       }

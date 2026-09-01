@@ -144,3 +144,12 @@ $$;
 
 -- Grant execution to authenticated users
 GRANT EXECUTE ON FUNCTION public.ensure_clinical_relationship(UUID, UUID) TO authenticated;
+
+
+-- ───────────────────────────────────────────────────────────
+-- 2. UPDATE STORAGE BUCKET CONFIGURATION
+-- ───────────────────────────────────────────────────────────
+-- Ensure WEBP and standard image formats are permitted in medical-records bucket.
+UPDATE storage.buckets
+SET allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+WHERE id = 'medical-records';
