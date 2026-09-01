@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { LogOut, ChevronRight, Activity, X, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { roleConfig } from '../../lib/permissions';
