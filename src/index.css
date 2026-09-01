@@ -216,11 +216,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .dashboard-container {
   width: 100%;
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  /* Vertical: 16–32 px. Horizontal: 16–32 px. Fluid all the way. */
-  padding: clamp(var(--sp-4), 3vw, var(--sp-8)) clamp(var(--sp-4), 4vw, var(--sp-8));
+  max-width: 100%;          /* fill all available space — don't centre with gaps */
+  /* Tight fluid padding: 14 px phone → 24 px wide screen */
+  padding: clamp(var(--sp-3), 2.5vw, var(--sp-6)) clamp(var(--sp-4), 2.5vw, var(--sp-6));
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -874,7 +872,7 @@ h1, h2, h3, h4, h5, h6 {
   inset: 0;
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(4px);
-  z-index: 50;
+  z-index: 900;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-normal);

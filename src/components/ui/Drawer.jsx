@@ -1,11 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
+/**
+ * Drawer — renders via a portal into document.body so it always
+ * escapes any overflow:hidden / stacking-context ancestor.
+ */
 export function Drawer({ isOpen, onClose, title, children, width = 520, className = '' }) {
   const overlayRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
+      // Lock body scroll while drawer is open
       document.body.style.overflow = 'hidden';
       const handleEsc = (e) => e.key === 'Escape' && onClose?.();
       window.addEventListener('keydown', handleEsc);
@@ -20,9 +26,18 @@ export function Drawer({ isOpen, onClose, title, children, width = 520, classNam
 
   const resolvedWidth = typeof width === 'number' ? `${width}px` : (width || '560px');
 
-  return (
+  // Portal ensures the drawer sits at the very top of the DOM tree,
+  // completely outside any overflow:hidden or transform ancestors.
+  return createPortal(
     <>
-      <div className={`drawer-overlay ${isOpen ? 'open' : ''}`} ref={overlayRef} onClick={onClose} />
+      {/* Backdrop overlay */}
+      <div
+        className={`drawer-overlay ${isOpen ? 'open' : ''}`}
+        ref={overlayRef}
+        onClick={onClose}
+      />
+
+      {/* Drawer panel */}
       <aside
         className={`drawer ${isOpen ? 'open' : ''} ${className}`}
         style={{
@@ -42,6 +57,7 @@ export function Drawer({ isOpen, onClose, title, children, width = 520, classNam
         </div>
         <div className="drawer-body">{children}</div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }

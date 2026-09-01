@@ -73,8 +73,8 @@ export function DoctorDashboard() {
         subtitle="Manage your patients and access their healthcare records securely."
       />
 
-      {/* Quick Actions */}
-      <div className="grid-4" style={{ marginBottom: 'var(--sp-6)' }}>
+      {/* Quick Actions — 2 actions, so use grid-2 */}
+      <div className="grid-2" style={{ marginBottom: 'var(--sp-5)' }}>
         <QuickActionCard
           to="/doctor/prescriptions/new"
           icon={Plus}
@@ -112,8 +112,8 @@ export function DoctorDashboard() {
         </div>
       )}
 
-      {/* Overview Stat Cards — using canonical StatCard component */}
-      <div className="grid-4" style={{ gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
+      {/* Overview Stat Cards */}
+      <div className="grid-4" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
         <StatCard
           icon={Users}
           label="My Patients"
@@ -144,7 +144,7 @@ export function DoctorDashboard() {
       </div>
 
       {/* Recent Patient Activity */}
-      <div className="card" style={{ overflow: 'hidden' }}>
+      <div className="card" style={{ boxShadow: 'var(--shadow-sm)' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -298,7 +298,7 @@ export function DoctorDashboard() {
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() => handleViewDetail(rec)}
+                          onClick={() => handleOpenDetail(rec)}
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
                         >
                           <Eye size={14} /> View

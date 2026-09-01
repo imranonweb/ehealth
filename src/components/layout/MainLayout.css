@@ -20,9 +20,8 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-app);
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow: hidden;
+  /* Do NOT add overflow:hidden here — it creates a stacking context
+     that clips fixed-position portal elements (drawers, modals). */
 }
 
 /* On tablets / phones the sidebar slides in as a drawer — no body shift */

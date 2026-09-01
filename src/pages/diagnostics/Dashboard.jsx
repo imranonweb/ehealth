@@ -57,8 +57,8 @@ export function DiagnosticsDashboard() {
         subtitle="Diagnostics Center &amp; Pathology Lab Portal"
       />
 
-      {/* Quick Actions */}
-      <div className="grid-4" style={{ marginBottom: 'var(--sp-6)' }}>
+      {/* Quick Actions — 2 actions, so use grid-2 */}
+      <div className="grid-2" style={{ marginBottom: 'var(--sp-5)' }}>
         <QuickActionCard
           to="/diagnostics/reports/new"
           icon={Upload}
@@ -75,8 +75,8 @@ export function DiagnosticsDashboard() {
         />
       </div>
 
-      {/* Stats Ribbon — canonical StatCard components */}
-      <div className="grid-2" style={{ gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}>
+      {/* Stats Ribbon */}
+      <div className="grid-2" style={{ gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
         <StatCard
           icon={FlaskConical}
           label="Total Reports Issued"
@@ -92,7 +92,7 @@ export function DiagnosticsDashboard() {
       </div>
 
       {/* Recent Diagnostic Reports */}
-      <div className="card" style={{ overflow: 'hidden', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
+      <div className="card" style={{ boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-default)' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
